@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { LogIn, Lock, User, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import logo from '../../assets/logo.png';
+
 
 const Login = () => {
   const [loginValue, setLoginValue] = useState('');
@@ -47,20 +49,17 @@ const Login = () => {
         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
       }}>
         {/* Logo */}
-        <div style={{ marginBottom: '40px' }}>
-          <div style={{
-            fontSize: '32px',
-            fontWeight: '800',
-            letterSpacing: '-1px',
-            color: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px'
-          }}>
-            <span style={{ color: 'var(--accent-gold)' }}>EXPRESS</span> MEBEL
-          </div>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '8px' }}>
+        <div style={{ marginBottom: '30px' }}>
+          <img 
+            src={logo} 
+            alt="Express Mebel Logo" 
+            style={{ 
+              maxWidth: '240px', 
+              height: 'auto', 
+              marginBottom: '10px' 
+            }} 
+          />
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
             ERP Boshqaruv Tizimi
           </p>
         </div>
