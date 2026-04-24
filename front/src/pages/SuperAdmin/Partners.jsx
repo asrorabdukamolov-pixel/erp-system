@@ -1,0 +1,279 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Plus, 
+  Trash2, 
+  Image as ImageIcon, 
+  Search, 
+  X, 
+  Edit2,
+  Check
+} from 'lucide-react';
+
+const Partners = () => {
+  const [partners, setPartners] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editingPartner, setEditingPartner] = useState(null);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    logo: ''
+  });
+
+  useEffect(() => {
+    const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
+    setPartners(savedPartners);
+  }, []);
+
+  const handleSave = () => {
+    if (!formData.name || !formData.logo) {
+      alert('Iltimos, barcha maydonlarni to\'ldiring!');
+      return;
+    }
+
+    let updatedPartners;
+    if (editingPartner) {
+      updatedPartners = partners.map(p => p.id === editingPartner.id ? { ...p, ...formData } : p);
+    } else {
+      const newPartner = {
+        id: Date.now(),
+        ...formData
+      };
+      updatedPartners = [...partners, newPartner];
+    }
+
+    setPartners(updatedPartners);
+    localStorage.setItem('erp_partners', JSON.stringify(updatedPartners));
+    closeModal();
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Haqiqatdan ham ushbu hamkorni o\'chirmoqchimisiz?')) {
+      const updatedPartners = partners.filter(p => p.id !== id);
+      setPartners(updatedPartners);
+      localStorage.setItem('erp_partners', JSON.stringify(updatedPartners));
+    }
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 1024 * 500) { // 500KB limit
+        alert('Rasm hajmi juda katta! Maksimal 500KB.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, logo: reader.result });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const openModal = (partner = null) => {
+    if (partner) {
+      setEditingPartner(partner);
+      setFormData({ name: partner.name, logo: partner.logo });
+    } else {
+      setEditingPartner(null);
+      setFormData({ name: '', logo: '' });
+    }
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEditingPartner(null);
+    setFormData({ name: '', logo: '' });
+  };
+
+  const filteredPartners = partners.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div style={{ padding: '30px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+        <div>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Loyiha Hamkorlari</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Tijorat taklifida ishlatiladigan hamkorlar ro'yxatini boshqarish</p>
+        </div>
+        <button 
+          onClick={() => openModal()}
+          style={{ 
+            background: 'var(--accent-gold)', 
+            color: '#0f172a', 
+            padding: '14px 24px', 
+            borderRadius: '12px', 
+            fontWeight: '700',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'transform 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <Plus size={20} />
+          Yangi Hamkor
+        </button>
+      </div>
+
+      <div style={{ background: 'var(--secondary-bg)', borderRadius: '24px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+        <div style={{ padding: '24px', borderBottom: '1px solid var(--border-color)', display: 'flex', gap: '16px' }}>
+          <div style={{ position: 'relative', flex: 1 }}>
+            <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
+            <input 
+              type="text" 
+              placeholder="Hamkor nomi bo'yicha qidirish..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{ 
+                width: '100%', 
+                background: 'rgba(255,255,255,0.05)', 
+                border: '1px solid var(--border-color)', 
+                borderRadius: '14px', 
+                padding: '12px 16px 12px 48px',
+                color: 'white',
+                outline: 'none'
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ padding: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            {filteredPartners.length === 0 ? (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', color: 'var(--text-secondary)' }}>
+                {searchTerm ? 'Qidiruv bo\'yicha hamkor topilmadi.' : 'Hamkorlar hali qo\'shilmagan.'}
+              </div>
+            ) : (
+              filteredPartners.map((partner) => (
+                <div 
+                  key={partner.id} 
+                  style={{ 
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '20px', 
+                    padding: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '16px',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <div style={{ 
+                    height: '100px', 
+                    background: 'white', 
+                    borderRadius: '12px', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    padding: '15px'
+                  }}>
+                    <img src={partner.logo} alt={partner.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                  </div>
+                  
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700', color: 'white' }}>{partner.name}</h3>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button 
+                        onClick={() => openModal(partner)}
+                        style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
+                      >
+                        <Edit2 size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(partner.id)}
+                        style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Modern Modal */}
+      {isModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
+          <div style={{ background: 'var(--secondary-bg)', width: '100%', maxWidth: '500px', borderRadius: '28px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
+            <div style={{ padding: '30px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'white' }}>{editingPartner ? 'Hamkorni tahrirlash' : 'Yangi hamkor qo\'shish'}</h2>
+              <button onClick={closeModal} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer' }}>
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '14px' }}>Hamkor nomi (Firma nomi)</label>
+                <input 
+                  type="text" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Masalan: HOMAG"
+                  style={{ width: '100%', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '14px' }}>Logotip (PNG, JPG tavsiya etiladi)</label>
+                <div 
+                  onClick={() => document.getElementById('logo-upload').click()}
+                  style={{ 
+                    height: '160px', 
+                    border: '2px dashed var(--border-color)', 
+                    borderRadius: '20px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '12px',
+                    cursor: 'pointer',
+                    background: formData.logo ? 'white' : 'transparent',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {formData.logo ? (
+                    <img src={formData.logo} alt="Logo preview" style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }} />
+                  ) : (
+                    <>
+                      <ImageIcon size={40} color="var(--text-secondary)" />
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Rasm yuklash uchun bosing</span>
+                    </>
+                  )}
+                </div>
+                <input id="logo-upload" type="file" accept="image/*" onChange={handleLogoUpload} style={{ display: 'none' }} />
+              </div>
+            </div>
+
+            <div style={{ padding: '30px', borderTop: '1px solid var(--border-color)', display: 'flex', gap: '12px' }}>
+              <button 
+                onClick={closeModal}
+                style={{ flex: 1, padding: '14px', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'transparent', color: 'white', fontWeight: '700', cursor: 'pointer' }}
+              >
+                Bekor qilish
+              </button>
+              <button 
+                onClick={handleSave}
+                style={{ flex: 2, padding: '14px', borderRadius: '14px', border: 'none', background: 'var(--accent-gold)', color: '#0f172a', fontWeight: '900', cursor: 'pointer' }}
+              >
+                Saqlash
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Partners;

@@ -1,0 +1,12 @@
+{
+  "name": "erp-system-full",
+  "version": "1.0.0",
+  "description": "ERP System with React and Node.js",
+  "main": "back/server.js",
+  "scripts": {
+    "start": "node back/server.js",
+    "build": "cd front && npm install && npm run build",
+    "install-all": "npm install && cd back && npm install && cd ../front && npm install"
+  },
+  "dependencies": {}
+}
