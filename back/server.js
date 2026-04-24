@@ -26,7 +26,7 @@ app.use('/api/requests', require('./routes/requests'));
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../front/dist')));
 
-app.get('(.*)', (req, res) => {
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../front/dist/index.html'));
 });
 
