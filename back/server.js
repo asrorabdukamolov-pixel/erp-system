@@ -20,8 +20,9 @@ const path = require('path');
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/transactions', require('./routes/transactions'));
-app.use('/api/migrate', require('./routes/migration'));
+app.use('/api/migration', require('./routes/migration'));
 app.use('/api/requests', require('./routes/requests'));
+app.use('/api/stats', require('./routes/statsRoutes'));
 
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../front/dist')));

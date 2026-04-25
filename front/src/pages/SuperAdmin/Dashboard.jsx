@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Store, TrendingUp, Users, DollarSign } from 'lucide-react';
+import api from '../../utils/api';
 
 const DashboardCard = ({ title, value, icon: Icon, color, trend }) => (
   <div className="premium-card" style={{ flex: 1, minWidth: '240px' }}>
@@ -15,7 +16,7 @@ const DashboardCard = ({ title, value, icon: Icon, color, trend }) => (
       }}>
         <Icon size={24} />
       </div>
-      {trend && (
+      {trend && trend !== '0' && (
         <span style={{ 
           fontSize: '12px', 
           color: trend.startsWith('+') ? 'var(--success)' : 'var(--error)',
@@ -34,6 +35,30 @@ const DashboardCard = ({ title, value, icon: Icon, color, trend }) => (
 );
 
 const Dashboard = () => {
+  const [stats, setStats] = useState({
+    showroomsCount: 0,
+    activeAdminsCount: 0,
+    totalSales: 0,
+    monthlyGrowth: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get('/stats/superadmin');
+        setStats(res.data);
+      } catch (err) {
+        console.error('Stats loading error:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <div style={{ padding: '20px', color: 'white' }}>Yuklanmoqda...</div>;
+
   return (
     <div>
       <div style={{ marginBottom: '32px' }}>
@@ -44,30 +69,27 @@ const Dashboard = () => {
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '40px' }}>
         <DashboardCard 
           title="Umumiy Showroomlar" 
-          value="12 ta" 
+          value={`${stats.showroomsCount} ta`} 
           icon={Store} 
           color="#fbbf24" 
-          trend="+2 yangi"
         />
         <DashboardCard 
           title="Jami Sotuvlar" 
-          value="245 mln so'm" 
+          value={`${stats.totalSales.toLocaleString()} so'm`} 
           icon={DollarSign} 
           color="#10b981" 
-          trend="+12%"
         />
         <DashboardCard 
           title="Faol Adminlar" 
-          value="18 nafar" 
+          value={`${stats.activeAdminsCount} nafar`} 
           icon={Users} 
           color="#3b82f6" 
         />
         <DashboardCard 
           title="Oylik O'sish" 
-          value="24%" 
+          value={`${stats.monthlyGrowth}%`} 
           icon={TrendingUp} 
           color="#8b5cf6" 
-          trend="+5%"
         />
       </div>
 

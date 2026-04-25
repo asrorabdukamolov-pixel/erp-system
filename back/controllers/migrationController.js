@@ -123,7 +123,7 @@ exports.resetDatabase = async (req, res) => {
         const Showroom = require('../models/Showroom');
         const Customer = require('../models/Customer');
 
-        await User.deleteMany({});
+        await User.deleteMany({ role: { $ne: 'super' } });
         await Order.deleteMany({});
         await Transaction.deleteMany({});
         await Showroom.deleteMany({});
