@@ -67,7 +67,7 @@ const ProposalsModal = ({ onClose }) => {
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;900&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:'Inter', Arial, sans-serif; background:#fff; color:#1a1a1a; padding:40px; min-height:100vh; line-height:1.4; }
-    .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:20px; margin-bottom:30px; }
+    .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #ccc; padding-bottom:20px; margin-bottom:30px; }
     .logo-container { display: flex; align-items: center; gap: 15px; }
     .official-logo { height: 52px; width: auto; }
     .tt-badge-side { text-align: right; }
@@ -75,7 +75,7 @@ const ProposalsModal = ({ onClose }) => {
     .tt-meta { margin-top:10px; font-size:14px; font-weight:700; color:#888; }
     .tt-meta span { color:#008B8B; font-weight:900; }
     .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:25px; margin-bottom:35px; }
-    .info-card { background:#f9fafb; border:1px solid #f1f5f9; border-radius:16px; padding:20px; }
+    .info-card { background:#f9fafb; border:1px solid #ccc; border-radius:16px; padding:20px; }
     .card-title { font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
     .buyer-name { font-size:18px; font-weight:900; color:#1e293b; margin-bottom:4px; }
     .buyer-phone { font-size:14px; font-weight:600; color:#64748b; }
@@ -88,20 +88,20 @@ const ProposalsModal = ({ onClose }) => {
     .partner-logo-item { height:36px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:6px 12px; display:flex; alignItems:center; }
     .partner-logo-item img { height:100%; width:auto; object-fit:contain; }
     table { width:100%; border-collapse:collapse; margin-bottom:35px; }
-    th { text-align:left; padding:15px; background:#f8fafb; color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid #f1f5f9; }
-    td { padding:15px; border-bottom:1px solid #f1f5f9; vertical-align:middle; font-size:14px; }
+    th { text-align:left; padding:15px; background:#f8fafb; color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid #ccc; }
+    td { padding:15px; border-bottom:1px solid #ddd; vertical-align:middle; font-size:14px; }
     .item-img { width:60px; height:60px; border-radius:10px; object-fit:cover; background:#f9fafb; }
     .item-info strong { display:block; font-size:15px; color:#1e293b; margin-bottom:2px; }
     .item-info small { color:#94a3b8; font-size:12px; }
     .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:25px; margin-bottom:40px; }
-    .deadline-card { background:#fff8eb; border:1px solid #ffedd5; border-radius:20px; padding:25px; }
+    .deadline-card { background:#fff8eb; border:1px solid #ccc; border-radius:20px; padding:25px; }
     .deadline-val { font-size:24px; font-weight:900; color:#9a3412; margin-bottom:5px; font-family:'Outfit',sans-serif; }
     .deadline-sub { font-size:12px; color:#c2410c; font-weight:600; font-style:italic; }
     .grand-total-card { background:#008B8B; border-radius:24px; padding:30px; color:#fff; }
     .total-row { display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; opacity:0.9; }
     .grand-label { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin:15px 0 5px; opacity:0.8; }
     .grand-val { font-size:32px; font-weight:950; font-family:'Outfit',sans-serif; }
-    .footer { border-top:2px solid #f1f5f9; padding-top:30px; display:flex; justify-content:space-between; align-items:baseline; color:#94a3b8; font-size:12px; }
+    .footer { border-top:2px solid #ccc; padding-top:30px; display:flex; justify-content:space-between; align-items:baseline; color:#94a3b8; font-size:12px; }
     .footer-logo { color:#1e293b; font-weight:950; font-size:16px; text-transform:uppercase; letter-spacing:1px; }
   </style>
 </head>
