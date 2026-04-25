@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Proposal = require('../models/Proposal');
 
 // @desc    Get all orders
 // @access  Private
@@ -76,6 +77,11 @@ exports.updateOrder = async (req, res) => {
                     time: new Date()
                 }
             ];
+        }
+
+        // Automatic Proposal status update if order confirmed
+        if (req.body.status === 'tasdiqlandi' && order.proposalId) {
+            await Proposal.findByIdAndUpdate(order.proposalId, { status: 'sold' });
         }
 
         order = await Order.findByIdAndUpdate(

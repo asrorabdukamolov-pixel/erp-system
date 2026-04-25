@@ -311,12 +311,16 @@ const Orders = () => {
     customerSearch: '', selectedCustomer: null, amount: '', currency: 'UZS', exchangeRate: localStorage.getItem('erp_last_rate') || '', 
     propertyType: 'kvartira', orderDate: new Date().toISOString().split('T')[0], deliveryDate: '', durationDays: '',
     kpFiles: [], designFiles: [], checklist: { design3d: false, construction: false, color: false, handle: false, materials: false }, 
-    status: 'yangi', description: '', timeline: [] 
+    status: 'yangi', description: '', timeline: [],
+    proposalId: null, proposalNumber: ''
   };
 
   const [newOrder, setNewOrder] = useState(emptyOrder);
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [proposals, setProposals] = useState([]);
+  const [proposalSearch, setProposalSearch] = useState('');
+  const [proposalSuggestions, setProposalSuggestions] = useState([]);
   const [commentText, setCommentText] = useState('');
   
   const timelineEndRef = useRef(null);
@@ -333,12 +337,14 @@ const Orders = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [ordersRes, customersRes] = await Promise.all([
+        const [ordersRes, customersRes, proposalsRes] = await Promise.all([
           api.get('/orders'),
-          api.get('/customers')
+          api.get('/customers'),
+          api.get('/proposals')
         ]);
         setAllOrders(ordersRes.data);
         setCustomers(customersRes.data);
+        setProposals(proposalsRes.data);
       } catch (err) {
         console.error("Data load error", err);
       }
@@ -371,6 +377,29 @@ const Orders = () => {
   const handleSelectCustomer = (c) => {
     setNewOrder({ ...newOrder, selectedCustomer: c, customerSearch: `${c.firstName} ${c.lastName}` });
     setCustomerSuggestions([]);
+  };
+
+  useEffect(() => {
+    if (proposalSearch.length > 1) {
+      const filtered = proposals.filter(p => 
+        p.kpNumber.toLowerCase().includes(proposalSearch.toLowerCase()) ||
+        `${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(proposalSearch.toLowerCase())
+      );
+      setProposalSuggestions(filtered);
+    } else {
+      setProposalSuggestions([]);
+    }
+  }, [proposalSearch, proposals]);
+
+  const handleSelectProposal = (p) => {
+    setNewOrder({ 
+      ...newOrder, 
+      proposalId: p._id, 
+      proposalNumber: p.kpNumber,
+      amount: formatAmount(p.grandTotal || 0) // Pre-fill amount if KP selected
+    });
+    setProposalSearch(p.kpNumber);
+    setProposalSuggestions([]);
   };
 
   const handleKeyDown = (e) => {
@@ -818,6 +847,33 @@ const Orders = () => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}><Building size={18} color="var(--accent-gold)" /><h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Obyekt va Moliyaviy</h4></div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div style={{ position: 'relative' }}>
+                          <Lbl>Tijorat Taklifi (KP) biriktirish</Lbl>
+                          <IconInput 
+                            icon={FileText} 
+                            value={proposalSearch} 
+                            onChange={e => !isOrderLocked && setProposalSearch(e.target.value)}
+                            placeholder="KP raqami..."
+                            style={{ height: '54px' }}
+                            readOnly={isOrderLocked}
+                          />
+                          {proposalSuggestions.length > 0 && !isOrderLocked && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                              {proposalSuggestions.map(p => (
+                                <div key={p._id} onClick={() => handleSelectProposal(p)} style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                  <div style={{ fontWeight: '800', color: 'var(--accent-gold)' }}>{p.kpNumber}</div>
+                                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.customer?.firstName} {p.customer?.lastName} | {p.grandTotal?.toLocaleString()} so'm</div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div>
+                          <Lbl>Shartnoma Summasi</Lbl>
+                          <IconInput icon={DollarSign} name="amount" value={newOrder.amount} onChange={e => !isOrderLocked && setNewOrder({...newOrder, amount: formatAmount(e.target.value)})} placeholder="0" style={{ height: '54px' }} readOnly={isOrderLocked} />
+                        </div>
+                      </div>
                       <div>
                         <Lbl>Obyekt Turi</Lbl>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>

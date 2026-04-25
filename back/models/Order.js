@@ -19,6 +19,8 @@ const OrderSchema = new mongoose.Schema({
     uniqueId: { type: String }, // Deal ID
     productionId: { type: String }, // ORD-001
     orderSeq: { type: Number },
+    proposalId: { type: mongoose.Schema.Types.ObjectId, ref: 'Proposal' },
+    proposalNumber: { type: String },
     status: { 
         type: String, 
         required: true, 

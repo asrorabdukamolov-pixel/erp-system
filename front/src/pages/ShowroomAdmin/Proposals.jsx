@@ -10,6 +10,7 @@ const ShowroomProposals = ({ onBack }) => {
   const { user } = useAuth();
   const [proposals, setProposals] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // all, active, sold, rejected
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, proposalId: null });
 
   useEffect(() => {
@@ -41,6 +42,16 @@ const ShowroomProposals = ({ onBack }) => {
 
   const removeProposal = (id) => {
     setDeleteModal({ isOpen: true, proposalId: id });
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await api.put(`/proposals/${id}`, { status: newStatus });
+      loadProposals();
+    } catch (err) {
+      console.error("Status update error", err);
+      alert("Holatni yangilashda xatolik yuz berdi");
+    }
   };
 
   // ── PDF chop etish ───────────────────────────
@@ -144,8 +155,38 @@ const ShowroomProposals = ({ onBack }) => {
     w.document.close();
   };
 
-  const filteredProposals = proposals.filter(p => 
-    `${p.kpNumber} ${p.customer?.firstName} ${p.customer?.lastName} ${p.managerName}`.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProposals = proposals.filter(p => {
+    const matchesSearch = `${p.kpNumber} ${p.customer?.firstName} ${p.customer?.lastName} ${p.managerName}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'all' || p.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+  const stats = {
+    total: proposals.filter(p => p.status !== 'trash').length,
+    totalSum: proposals.filter(p => p.status !== 'trash').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    soldCount: proposals.filter(p => p.status === 'sold').length,
+    soldSum: proposals.filter(p => p.status === 'sold').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    rejectedCount: proposals.filter(p => p.status === 'rejected').length,
+    rejectedSum: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    activeCount: proposals.filter(p => p.status === 'active').length,
+    activeSum: proposals.filter(p => p.status === 'active').reduce((s, p) => s + (p.grandTotal || 0), 0),
+  };
+
+  const StatCard = ({ label, count, sum, color, icon: Icon }) => (
+    <div className="premium-card" style={{ padding: '20px', flex: 1, border: `1px solid ${color}33` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={20} />
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</p>
+          <p style={{ fontSize: '18px', fontWeight: '900', color: color }}>{count}</p>
+        </div>
+      </div>
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+        <p style={{ fontSize: '14px', fontWeight: '800' }}>{sum.toLocaleString()} <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>so'm</span></p>
+      </div>
+    </div>
   );
 
   return (
@@ -161,20 +202,56 @@ const ShowroomProposals = ({ onBack }) => {
             </button>
           )}
           <div>
-            <h2 style={{ fontSize: '32px', fontWeight: '900' }}>Tijorat Takliflari (Barchasi)</h2>
+            <h2 style={{ fontSize: '32px', fontWeight: '900' }}>Tijorat Takliflari</h2>
             <p style={{ color: 'var(--text-secondary)' }}>Menejerlar va PMlar yaratgan barcha tijorat takliflari.</p>
           </div>
         </div>
-        <div style={{ position: 'relative', width: '350px' }}>
-          <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}/>
-          <input 
-            type="text" 
-            placeholder="Qidiruv (KP raqami, mijoz yoki menejer)..." 
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            style={{ width: '100%', paddingLeft: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', height: '48px', color: 'white' }} 
-          />
+        <div style={{ display: 'flex', gap: '16px' }}>
+          <div style={{ position: 'relative', width: '300px' }}>
+            <Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }}/>
+            <input 
+              type="text" 
+              placeholder="Qidiruv..." 
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              style={{ width: '100%', paddingLeft: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', height: '48px', color: 'white' }} 
+            />
+          </div>
         </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
+        <StatCard label="Jami Takliflar" count={stats.total} sum={stats.totalSum} color="var(--accent-gold)" icon={FileText} />
+        <StatCard label="Sotilgan (Confirmed)" count={stats.soldCount} sum={stats.soldSum} color="#10b981" icon={DollarSign} />
+        <StatCard label="Jarayonda" count={stats.activeCount} sum={stats.activeSum} color="#3b82f6" icon={Clock} />
+        <StatCard label="O'tkaz (Rejected)" count={stats.rejectedCount} sum={stats.rejectedSum} color="#ef4444" icon={X} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.02)', padding: '4px', borderRadius: '12px', width: 'fit-content', border: '1px solid var(--border-color)' }}>
+        {[
+          { id: 'all', label: `Barchasi (${stats.total})` },
+          { id: 'active', label: `Jarayonda (${stats.activeCount})` },
+          { id: 'sold', label: `Sotilgan (${stats.soldCount})` },
+          { id: 'rejected', label: `O'tkaz (${stats.rejectedCount})` }
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            style={{
+              padding: '8px 20px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === t.id ? 'var(--accent-gold)' : 'transparent',
+              color: activeTab === t.id ? 'black' : 'var(--text-secondary)',
+              transition: '0.2s'
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
       <div className="premium-card" style={{ padding: '0px', overflow: 'hidden' }}>
@@ -183,8 +260,9 @@ const ShowroomProposals = ({ onBack }) => {
             <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '13px' }}>
               <th style={{ padding: '20px' }}>KP Raqami</th>
               <th style={{ padding: '20px' }}>Mijoz</th>
-              <th style={{ padding: '20px' }}>Tayyorladi (Menejer)</th>
+              <th style={{ padding: '20px' }}>Tayyorladi</th>
               <th style={{ padding: '20px' }}>Sana</th>
+              <th style={{ padding: '20px' }}>Holati</th>
               <th style={{ padding: '20px', textAlign: 'right' }}>Jami Summa</th>
               <th style={{ padding: '20px', textAlign: 'right' }}>Amallar</th>
             </tr>
@@ -212,6 +290,20 @@ const ShowroomProposals = ({ onBack }) => {
                       <Calendar size={14} /> {new Date(p.createdAt).toLocaleDateString()}
                     </div>
                   </td>
+                  <td style={{ padding: '20px' }}>
+                    <span style={{ 
+                      fontSize: '11px', 
+                      fontWeight: '800', 
+                      padding: '4px 10px', 
+                      borderRadius: '6px',
+                      textTransform: 'uppercase',
+                      background: p.status === 'sold' ? 'rgba(16,185,129,0.1)' : p.status === 'rejected' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
+                      color: p.status === 'sold' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : '#3b82f6',
+                      border: `1px solid ${p.status === 'sold' ? '#10b98133' : p.status === 'rejected' ? '#ef444433' : '#3b82f633'}`
+                    }}>
+                      {p.status === 'sold' ? 'Sotilgan' : p.status === 'rejected' ? 'O\'tkaz' : 'Jarayonda'}
+                    </span>
+                  </td>
                   <td style={{ padding: '20px', textAlign: 'right', fontWeight: '900' }}>
                     <div style={{ color: 'var(--accent-gold)' }}>{(p.grandTotal || 0).toLocaleString()} so'm</div>
                   </td>
@@ -220,7 +312,12 @@ const ShowroomProposals = ({ onBack }) => {
                       <button onClick={() => handlePrint(p)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Chop etish">
                         <Printer size={18} />
                       </button>
-                      <button onClick={() => removeProposal(p._id)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
+                      {p.status === 'active' && (
+                        <button onClick={() => handleStatusUpdate(p._id, 'rejected')} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'tkaz qilish">
+                          <X size={18} />
+                        </button>
+                      )}
+                      <button onClick={() => removeProposal(p._id)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
                         <Trash2 size={18} />
                       </button>
                     </div>
