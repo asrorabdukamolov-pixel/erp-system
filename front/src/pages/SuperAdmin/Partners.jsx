@@ -26,6 +26,8 @@ const Partners = () => {
 
   const [companySettings, setCompanySettings] = useState(null);
   const [logoSaving, setLogoSaving] = useState(false);
+  const [isLogoLoading, setIsLogoLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -77,8 +79,14 @@ const Partners = () => {
         return;
       }
       const reader = new FileReader();
+      setIsLogoLoading(true);
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, logo: reader.result }));
+        setIsLogoLoading(false);
+      };
+      reader.onerror = () => {
+        alert('Rasm o\'qishda xatolik yuz berdi!');
+        setIsLogoLoading(false);
       };
       reader.readAsDataURL(file);
     }
@@ -90,6 +98,7 @@ const Partners = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
       if (editingPartner) {
         const res = await api.put(`/partners/${editingPartner._id}`, formData);
@@ -102,6 +111,8 @@ const Partners = () => {
     } catch (err) {
       const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
       alert('Saqlashda xatolik: ' + errorMsg);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -357,6 +368,11 @@ const Partners = () => {
                 >
                   {formData.logo ? (
                     <img src={formData.logo} alt="Logo preview" style={{ maxWidth: '90%', maxHeight: '90%', objectFit: 'contain' }} />
+                  ) : isLogoLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <div className="spinner" style={{ width: '30px', height: '30px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--accent-gold)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                      <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Rasm yuklanmoqda...</span>
+                    </div>
                   ) : (
                     <>
                       <ImageIcon size={40} color="var(--text-secondary)" />
@@ -377,9 +393,23 @@ const Partners = () => {
               </button>
               <button 
                 onClick={handleSave}
-                style={{ flex: 2, padding: '14px', borderRadius: '14px', border: 'none', background: 'var(--accent-gold)', color: '#0f172a', fontWeight: '900', cursor: 'pointer' }}
+                disabled={isSaving || isLogoLoading}
+                style={{ 
+                  flex: 2, 
+                  padding: '14px', 
+                  borderRadius: '14px', 
+                  border: 'none', 
+                  background: isSaving || isLogoLoading ? 'rgba(255,255,255,0.1)' : 'var(--accent-gold)', 
+                  color: isSaving || isLogoLoading ? 'var(--text-secondary)' : '#0f172a', 
+                  fontWeight: '900', 
+                  cursor: isSaving || isLogoLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '10px'
+                }}
               >
-                Saqlash
+                {isSaving ? 'Saqlanmoqda...' : 'Saqlash'}
               </button>
             </div>
           </div>

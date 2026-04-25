@@ -16,6 +16,9 @@ exports.getPartners = async (req, res) => {
 
 exports.createPartner = async (req, res) => {
     try {
+        if (!req.body.name || !req.body.logo) {
+            return res.status(400).json({ message: 'Hamkor nomi va logotipi bo\'lishi shart!' });
+        }
         console.log("Creating partner:", req.body.name);
         const newPartner = new Partner({
             ...req.body,
