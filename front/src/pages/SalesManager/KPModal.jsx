@@ -414,9 +414,9 @@ const KPModal = ({ onClose, editData = null }) => {
   <div class="hdr">
     <div class="logo-container">
       <svg class="official-logo" viewBox="0 0 455 130">
-        <polygon points="40,15 140,15 125,31 25,31" fill="#fbbf24"/>
-        <polygon points="25,41 140,41 125,57 10,57" fill="#fbbf24"/>
-        <polygon points="10,67 140,67 125,83 0,83"  fill="#fbbf24"/>
+        <polygon points="40,15 140,15 125,31 25,31" fill="#008B8B"/>
+        <polygon points="25,41 140,41 125,57 10,57" fill="#008B8B"/>
+        <polygon points="10,67 140,67 125,83 0,83"  fill="#008B8B"/>
         <text x="155" y="75" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="65" fill="#333" letter-spacing="-2">express</text>
         <text x="175" y="125" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="55" fill="#333" letter-spacing="-1">mebel</text>
         <text x="430" y="45" font-family="Arial, sans-serif" font-size="16" fill="#333">®</text>

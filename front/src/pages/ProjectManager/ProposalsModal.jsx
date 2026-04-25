@@ -50,26 +50,26 @@ const ProposalsModal = ({ onClose }) => {
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:Arial,sans-serif;background:#0f1117;color:#fff;padding:44px}
-  .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding-bottom:24px;border-bottom:2px solid #fbbf24}
-  .co{font-size:30px;font-weight:900;color:#fbbf24}.kpn{font-size:14px;color:rgba(255,255,255,0.5);margin-top:5px}
+  .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding-bottom:24px;border-bottom:2px solid #008B8B}
+  .co{font-size:30px;font-weight:900;color:#008B8B}.kpn{font-size:14px;color:rgba(255,255,255,0.5);margin-top:5px}
   .mb{display:flex;align-items:center;gap:14px}
-  .ma{width:58px;height:58px;border-radius:50%;border:2px solid #fbbf24;object-fit:cover}
-  .mi{width:58px;height:58px;border-radius:50%;background:rgba(251,191,36,0.12);border:2px solid #fbbf24;display:flex;align-items:center;justify-content:center;color:#fbbf24;font-weight:900;font-size:22px}
+  .ma{width:58px;height:58px;border-radius:50%;border:2px solid #008B8B;object-fit:cover}
+  .mi{width:58px;height:58px;border-radius:50%;background:rgba(0,139,139,0.12);border:2px solid #008B8B;display:flex;align-items:center;justify-content:center;color:#008B8B;font-weight:900;font-size:22px}
   .minfo{text-align:right;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7}
   .mn{font-weight:900;color:#fff;font-size:15px}
-  .st{font-size:16px;font-weight:700;color:#fbbf24;margin:32px 0 14px;text-transform:uppercase;letter-spacing:1px}
-  .cb{background:rgba(255,255,255,0.04);border:1px solid rgba(251,191,36,0.2);border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .st{font-size:16px;font-weight:700;color:#008B8B;margin:32px 0 14px;text-transform:uppercase;letter-spacing:1px}
+  .cb{background:rgba(255,255,255,0.04);border:1px solid rgba(0,139,139,0.2);border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .cf span{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px}.cf{font-size:14px;font-weight:600}
   table{width:100%;border-collapse:collapse}
-  th{background:#fbbf24;color:#0f1117;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase}
+  th{background:#008B8B;color:#0f1117;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase}
   td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13px;vertical-align:middle}
   .ni{width:56px;height:56px;background:rgba(255,255,255,0.07);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:22px}
-  .amt{font-weight:700;color:#fbbf24}
-  .tb{background:linear-gradient(135deg,#fbbf24,#d97706);border-radius:16px;padding:24px 32px;display:flex;justify-content:space-between;align-items:center;margin-top:32px}
+  .amt{font-weight:700;color:#008B8B}
+  .tb{background:linear-gradient(135deg,#008B8B,#006666);border-radius:16px;padding:24px 32px;display:flex;justify-content:space-between;align-items:center;margin-top:32px}
   .tl{font-size:15px;font-weight:700;color:#0f1117}.ta{font-size:32px;font-weight:900;color:#0f1117}
-  .db{background:rgba(255,255,255,0.03);border:1px solid rgba(251,191,36,0.15);border-radius:12px;padding:16px 22px;font-size:13px}
-  .dv{color:#fbbf24;font-weight:700;font-size:22px}
-  .bb{margin-top:14px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid #fbbf24;border-radius:0 10px 10px 0;font-size:12px;color:rgba(255,255,255,0.6);font-style:italic}
+  .db{background:rgba(255,255,255,0.03);border:1px solid rgba(0,139,139,0.15);border-radius:12px;padding:16px 22px;font-size:13px}
+  .dv{color:#008B8B;font-weight:700;font-size:22px}
+  .bb{margin-top:14px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid #008B8B;border-radius:0 10px 10px 0;font-size:12px;color:rgba(255,255,255,0.6);font-style:italic}
   .pg{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
   .pc{background:#fff;border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px}
   .pn{font-size:10px;font-weight:700;color:#555;text-transform:uppercase}
