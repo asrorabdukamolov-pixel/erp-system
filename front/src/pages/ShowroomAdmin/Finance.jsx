@@ -5,6 +5,8 @@ import {
   Users, ArrowRight, ShoppingCart, Clock, Eye, X, Filter, RotateCcw,
   Handshake, Hash
 } from 'lucide-react';
+import api from '../../utils/api';
+
 
 const ORDER_STAGES = [
   { id: 'tasdiqlandi', title: 'Tasdiqlandi ✅', color: '#0ea5e9', bg: 'rgba(14,165,233,0.1)' },
@@ -51,57 +53,34 @@ const Finance = () => {
     loadPartnersAndPurchases();
   }, []);
 
-  const loadPartnersAndPurchases = () => {
+  const loadPartnersAndPurchases = async () => {
     try {
-      const savedPartners = JSON.parse(localStorage.getItem('erp_showroom_partners') || '[]');
-      const savedPurchases = JSON.parse(localStorage.getItem('erp_showroom_purchases') || '[]');
-      setPartners(savedPartners);
-      setPurchases(savedPurchases);
-    } catch {
-      setPartners([]);
-      setPurchases([]);
+      const [pRes, purRes] = await Promise.all([
+        api.get('/partners'),
+        api.get('/purchases')
+      ]);
+      setPartners(pRes.data);
+      setPurchases(purRes.data);
+    } catch (err) {
+      console.error("Partner loading error", err);
     }
   };
 
-  const loadTransactions = () => {
+  const loadTransactions = async () => {
     try {
-      const all = JSON.parse(localStorage.getItem('erp_transactions') || '[]');
-      setTransactions(all.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    } catch {
-      setTransactions([]);
+      const res = await api.get('/transactions');
+      setTransactions(res.data);
+    } catch (err) {
+      console.error("Transaction loading error", err);
     }
   };
 
-  const loadOrders = () => {
+  const loadOrders = async () => {
     try {
-      const storedOrders = JSON.parse(localStorage.getItem('erp_orders') || '[]');
-      let currentSeq = Number(localStorage.getItem('erp_production_seq') || '0');
-      let needsUpdate = false;
-
-      const repairedOrders = storedOrders.map(order => {
-        const isConfirmed = ORDER_STAGES.some(s => s.id === order.status);
-        if (isConfirmed && !order.productionId) {
-          currentSeq += 1;
-          needsUpdate = true;
-          return {
-            ...order,
-            productionId: `ORD-${currentSeq.toString().padStart(3, '0')}`,
-            confirmedAt: order.confirmedAt || order.createdAt || new Date().toISOString(),
-            orderSeq: currentSeq
-          };
-        }
-        return order;
-      });
-
-      if (needsUpdate) {
-        localStorage.setItem('erp_orders', JSON.stringify(repairedOrders));
-        localStorage.setItem('erp_production_seq', currentSeq.toString());
-        setOrders(repairedOrders);
-      } else {
-        setOrders(storedOrders);
-      }
-    } catch (error) {
-       setOrders([]);
+      const res = await api.get('/orders');
+      setOrders(res.data);
+    } catch (err) {
+      console.error("Order loading error", err);
     }
   };
 

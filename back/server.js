@@ -20,6 +20,8 @@ const path = require('path');
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
+app.use('/api/partners', require('./routes/partnerRoutes'));
+app.use('/api/purchases', require('./routes/purchaseRoutes'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/migration', require('./routes/migration'));
