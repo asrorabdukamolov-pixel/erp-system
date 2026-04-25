@@ -7,15 +7,33 @@ exports.getSuperAdminStats = async (req, res) => {
         const showroomsCount = await Showroom.countDocuments();
         const activeAdminsCount = await User.countDocuments({ role: { $ne: 'super' }, status: 'active' });
         
-        // Jami sotuvlarni hisoblash
-        const orders = await Order.find({ status: { $ne: 'bekor_qilindi' } });
-        const totalSales = orders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+        // Oxirgi amallarni yig'ish
+        const latestUsers = await User.find({ role: { $ne: 'super' } }).sort({ createdAt: -1 }).limit(5);
+        const latestShowrooms = await Showroom.find().sort({ createdAt: -1 }).limit(5);
+
+        const recentActivities = [
+            ...latestUsers.map(u => ({
+                id: u._id,
+                type: 'user',
+                title: `Yangi xodim: ${u.name} ${u.surname}`,
+                time: u.createdAt,
+                role: u.role
+            })),
+            ...latestShowrooms.map(s => ({
+                id: s._id,
+                type: 'showroom',
+                title: `Yangi showroom: ${s.name}`,
+                time: s.createdAt,
+                address: s.address
+            }))
+        ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
 
         res.json({
             showroomsCount,
             activeAdminsCount,
             totalSales,
-            monthlyGrowth: 0 // Hozircha 0, keyinchalik hisoblash mumkin
+            monthlyGrowth: 0,
+            recentActivities
         });
     } catch (err) {
         console.error('Stats error:', err);

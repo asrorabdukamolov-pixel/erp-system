@@ -39,9 +39,21 @@ const Dashboard = () => {
     showroomsCount: 0,
     activeAdminsCount: 0,
     totalSales: 0,
-    monthlyGrowth: 0
+    monthlyGrowth: 0,
+    recentActivities: []
   });
   const [loading, setLoading] = useState(true);
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000); // sekundda
+
+    if (diff < 60) return 'Hozirgina';
+    if (diff < 3600) return `${Math.floor(diff / 60)} daqiqa oldin`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} soat oldin`;
+    return date.toLocaleDateString();
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -103,15 +115,38 @@ const Dashboard = () => {
         <div className="premium-card">
           <h3 style={{ marginBottom: '20px', fontSize: '18px' }}>Oxirgi Amallar</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ display: 'flex', gap: '12px', paddingBottom: '16px', borderBottom: i !== 4 ? '1px solid var(--border-color)' : 'none' }}>
-                <div style={{ width: '40px', height: '40px', background: 'var(--secondary-bg)', borderRadius: '10px', flexShrink: 0 }}></div>
-                <div>
-                  <p style={{ fontSize: '14px', fontWeight: '500' }}>Yangi showroom ochildi</p>
-                  <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>2 soat oldin</p>
+            {stats.recentActivities && stats.recentActivities.length > 0 ? (
+              stats.recentActivities.map((activity, i) => (
+                <div key={activity.id} style={{ 
+                  display: 'flex', 
+                  gap: '12px', 
+                  paddingBottom: '16px', 
+                  borderBottom: i !== stats.recentActivities.length - 1 ? '1px solid var(--border-color)' : 'none' 
+                }}>
+                  <div style={{ 
+                    width: '40px', 
+                    height: '40px', 
+                    background: activity.type === 'user' ? '#3b82f620' : '#fbbf2420', 
+                    color: activity.type === 'user' ? '#3b82f6' : '#fbbf24',
+                    borderRadius: '10px', 
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    {activity.type === 'user' ? <Users size={20} /> : <Store size={20} />}
+                  </div>
+                  <div>
+                    <p style={{ fontSize: '14px', fontWeight: '500' }}>{activity.title}</p>
+                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{formatTime(activity.time)}</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p style={{ color: 'var(--text-secondary)', fontSize: '14px', textAlign: 'center', padding: '20px' }}>
+                Hozircha harakatlar yo'q
+              </p>
+            )}
           </div>
         </div>
       </div>
