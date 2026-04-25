@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, Search, MapPin, Phone, Store, User, Calendar, Share2 } from 'lucide-react';
+import api from '../../utils/api';
 
 const SOURCE_LABELS = {
   instagram: { label: 'Instagram', icon: '📸', color: '#e1306c' },
@@ -11,15 +12,35 @@ const SOURCE_LABELS = {
 
 const ShowroomCustomersPage = () => {
   const [tab, setTab] = useState('customers');
-  const [customers] = useState(() => JSON.parse(localStorage.getItem('erp_customers') || '[]'));
-  const [agents] = useState(() => JSON.parse(localStorage.getItem('erp_agents') || '[]'));
+  const [customers, setCustomers] = useState([]);
+  const [agents, setAgents] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [custRes, agentRes] = await Promise.all([
+        api.get('/customers', { params: { type: 'customer' } }),
+        api.get('/customers', { params: { type: 'agent' } })
+      ]);
+      setCustomers(custRes.data);
+      setAgents(agentRes.data);
+    } catch (err) {
+      console.error("Data loading error", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   const filteredCustomers = customers.filter(c =>
-    `${c.firstName} ${c.lastName} ${c.phone}`.toLowerCase().includes(search.toLowerCase())
+    `${c.firstName} ${c.lastName || ''} ${c.phone}`.toLowerCase().includes(search.toLowerCase())
   );
   const filteredAgents = agents.filter(a =>
-    `${a.firstName} ${a.lastName} ${a.phone} ${a.firm || ''}`.toLowerCase().includes(search.toLowerCase())
+    `${a.firstName} ${a.lastName || ''} ${a.phone} ${a.firm || ''}`.toLowerCase().includes(search.toLowerCase())
   );
 
   const TabBtn = ({ id, label }) => (

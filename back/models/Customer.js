@@ -7,8 +7,11 @@ const CustomerSchema = new mongoose.Schema({
     phone2: { type: String },
     address: { type: String },
     source: { type: String }, // Instagram, FB, etc.
+    type: { type: String, default: 'customer' }, // customer or agent
+    firm: { type: String }, // For agents
     showroom: { type: String },
     addedBy: { type: String },
+    managerName: { type: String },
     status: { type: String, default: 'active' }
 }, { timestamps: true });
 
