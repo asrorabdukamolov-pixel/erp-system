@@ -9,7 +9,7 @@ const UserSchema = new mongoose.Schema({
     role: { 
         type: String, 
         required: true, 
-        enum: ['super', 'showroom', 'sotuv_manager', 'proekt_manager', 'kassa'] 
+        enum: ['super', 'showroom', 'sotuv_manager', 'proekt_manager', 'kassa', 'ofiss_manager'] 
     },
     showroom: { type: String },
     photo: { type: String, default: '' },
