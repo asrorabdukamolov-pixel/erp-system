@@ -115,17 +115,14 @@ const Sidebar = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <div style={{ marginBottom: '32px', padding: '0 5px' }}>
+      <div style={{ marginBottom: '32px', padding: '0 10px' }}>
         <div style={{ 
           width: '100%', 
-          height: '110px', 
-          background: '#fff', 
-          borderRadius: '16px', 
+          height: '80px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          padding: '15px',
-          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
+          padding: '5px',
           flexShrink: 0
         }}>
           <img 
