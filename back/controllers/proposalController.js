@@ -8,7 +8,7 @@ exports.getProposals = async (req, res) => {
         if (req.user.role !== 'super') {
             query.showroom = req.user.showroom;
         }
-        if (req.user.role === 'sotuv_manager' || req.user.role === 'pm') {
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'proekt_manager') {
             query.managerId = req.user.id;
         }
         const proposals = await Proposal.find(query).sort({ createdAt: -1 });
@@ -86,7 +86,7 @@ exports.getTrashedProposals = async (req, res) => {
         if (req.user.role !== 'super') {
             query.showroom = req.user.showroom;
         }
-        if (req.user.role === 'sotuv_manager' || req.user.role === 'pm') {
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'proekt_manager') {
             query.managerId = req.user.id;
         }
         const proposals = await Proposal.find(query).sort({ deletedAt: -1 });

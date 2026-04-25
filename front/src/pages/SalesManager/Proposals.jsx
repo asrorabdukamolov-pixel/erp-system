@@ -33,12 +33,13 @@ const Proposals = () => {
   const confirmDelete = async (reason) => {
     if (!reason) { alert("O'chirish sababini yozing."); return; }
     try {
-      await api.delete(`/proposals/${deleteModal.proposalId}`, { data: { reason } });
+      const res = await api.delete(`/proposals/${deleteModal.proposalId}`, { data: { reason } });
+      alert(res.data.message || "Taklif savatga tashlandi.");
       setDeleteModal({ isOpen: false, proposalId: null });
       loadProposals();
     } catch (err) {
       console.error("Delete error", err);
-      alert("Taklifni o'chirishda xatolik yuz berdi");
+      alert("Xatolik: " + (err.response?.data?.message || err.message));
     }
   };
 
