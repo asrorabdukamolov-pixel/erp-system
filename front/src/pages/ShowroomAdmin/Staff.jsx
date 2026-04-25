@@ -239,13 +239,13 @@ const Staff = () => {
                           <User size={20} />
                         </div>
                         <div>
-                          <p style={{ fontWeight: '600' }}>{staff.name} {staff.surname}</p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: #{staff._id.slice(-4)}</p>
+                          <p style={{ fontWeight: '600' }}>{(staff.name || '')} {(staff.surname || '')}</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: #{staff._id ? staff._id.slice(-4) : '...'}</p>
                         </div>
                       </div>
                     </td>
                     <td style={{ padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                      {staff.login}
+                      {staff.login || '—'}
                     </td>
                     <td style={{ padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
                       {staff.phone || '—'}
@@ -259,13 +259,13 @@ const Staff = () => {
                     <td style={{ padding: '20px 8px' }}>
                       <span style={{ 
                         fontSize: '11px', 
-                        background: staff.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: staff.status === 'active' ? '#10b981' : '#ef4444',
+                        background: (staff.status || 'active') === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: (staff.status || 'active') === 'active' ? '#10b981' : '#ef4444',
                         padding: '4px 10px',
                         borderRadius: '20px',
                         fontWeight: '600'
                       }}>
-                        {staff.status === 'active' ? 'FAOL' : 'BLOKLANGAN'}
+                        {(staff.status || 'active') === 'active' ? 'FAOL' : 'BLOKLANGAN'}
                       </span>
                     </td>
                     <td style={{ padding: '20px 8px', textAlign: 'right' }}>
