@@ -67,33 +67,34 @@ const Partners = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.name || !formData.logo) {
       alert('Iltimos, barcha maydonlarni to\'ldiring!');
       return;
     }
 
-    let updatedPartners;
-    if (editingPartner) {
-      updatedPartners = partners.map(p => p.id === editingPartner.id ? { ...p, ...formData } : p);
-    } else {
-      const newPartner = {
-        id: Date.now(),
-        ...formData
-      };
-      updatedPartners = [...partners, newPartner];
+    try {
+      if (editingPartner) {
+        const res = await api.put(`/partners/${editingPartner._id}`, formData);
+        setPartners(partners.map(p => p._id === editingPartner._id ? res.data : p));
+      } else {
+        const res = await api.post('/partners', formData);
+        setPartners([...partners, res.data]);
+      }
+      closeModal();
+    } catch (err) {
+      alert('Saqlashda xatolik: ' + (err.response?.data?.message || err.message));
     }
-
-    setPartners(updatedPartners);
-    localStorage.setItem('erp_partners', JSON.stringify(updatedPartners));
-    closeModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Haqiqatdan ham ushbu hamkorni o\'chirmoqchimisiz?')) {
-      const updatedPartners = partners.filter(p => p.id !== id);
-      setPartners(updatedPartners);
-      localStorage.setItem('erp_partners', JSON.stringify(updatedPartners));
+      try {
+        await api.delete(`/partners/${id}`);
+        setPartners(partners.filter(p => p._id !== id));
+      } catch (err) {
+        alert('O\'chirishda xatolik!');
+      }
     }
   };
 
@@ -130,7 +131,7 @@ const Partners = () => {
   };
 
   const filteredPartners = partners.filter(p => 
-    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -260,7 +261,7 @@ const Partners = () => {
             ) : (
               filteredPartners.map((partner) => (
                 <div 
-                  key={partner.id} 
+                  key={partner._id} 
                   style={{ 
                     background: 'rgba(255,255,255,0.03)', 
                     border: '1px solid var(--border-color)', 
@@ -294,7 +295,7 @@ const Partners = () => {
                         <Edit2 size={18} />
                       </button>
                       <button 
-                        onClick={() => handleDelete(partner.id)}
+                        onClick={() => handleDelete(partner._id)}
                         style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
                       >
                         <Trash2 size={18} />

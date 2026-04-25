@@ -91,11 +91,14 @@ const KPModal = ({ onClose, editData = null }) => {
       }
 
       // Load dynamic partners
-      const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
-      setPartnersList(savedPartners);
-      
-      if (savedPartners.length > 0 && selectedPartners.length === 0) {
-        setSelectedPartners(savedPartners.slice(0, 3).map(p => p.id));
+      try {
+        const pRes = await api.get('/partners');
+        setPartnersList(pRes.data);
+        if (pRes.data.length > 0 && selectedPartners.length === 0) {
+          setSelectedPartners(pRes.data.slice(0, 3).map(p => p._id));
+        }
+      } catch (err) {
+        console.error("Partners load error", err);
       }
 
       // Load company settings
@@ -155,7 +158,7 @@ const KPModal = ({ onClose, editData = null }) => {
     return DEADLINE_OPTIONS.find(o => o.id === deadlineBasis)?.label || '';
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanItems = items.map(i => ({
       ...i,
       price: Number(i.price?.toString().replace(/\D/g, '') || 0)
@@ -167,8 +170,7 @@ const KPModal = ({ onClose, editData = null }) => {
       cleanServicePrices[k] = Number(v?.toString().replace(/\D/g, '') || 0);
     });
 
-    const proposal = {
-      id: editData ? editData.id : Date.now(),
+    const proposalData = {
       kpNumber,
       customer: selectedCustomer,
       deadline, deadlineBasis, customBasis,
@@ -176,28 +178,26 @@ const KPModal = ({ onClose, editData = null }) => {
       items: cleanItems, 
       services, 
       servicePrices: cleanServicePrices,
-      grandTotal, managerId: user?.id, managerName: user?.name,
-      managerPhone: user?.phone, showroom: user?.showroom,
-      createdAt: editData ? editData.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      grandTotal,
     };
     
-    const existing = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-    let updated;
-    if (editData) {
-      updated = existing.map(p => p.id === editData.id ? proposal : p);
-    } else {
-      updated = [proposal, ...existing];
+    try {
+      if (editData) {
+        await api.put(`/proposals/${editData._id}`, proposalData);
+      } else {
+        await api.post('/proposals', proposalData);
+      }
+      alert(editData ? "Taklif muvaffaqiyatli yangilandi!" : "KP muvaffaqiyatli saqlandi!");
+      onClose();
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Taklifni saqlashda xatolik: " + (err.response?.data?.message || err.message));
     }
-    
-    localStorage.setItem('erp_proposals', JSON.stringify(updated));
-    alert(editData ? "Taklif muvaffaqiyatli yangilandi!" : "KP muvaffaqiyatli saqlandi!");
-    onClose();
   };
 
   // в”Ђв”Ђ PDF chop etish (Professional Design V3.2) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
   const handlePrint = () => {
-    const activePartners = partnersList.filter(p => selectedPartners.includes(p.id));
+    const activePartners = partnersList.filter(p => selectedPartners.includes(p._id));
     const basisText     = getBasisText();
 
     const printContent = `<!DOCTYPE html>

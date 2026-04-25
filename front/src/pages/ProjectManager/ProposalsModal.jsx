@@ -1,20 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { X, Printer, Trash2 } from 'lucide-react';
+import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 // PARTNERS_MAP will be built dynamically from localStorage
 
 const ProposalsModal = ({ onClose }) => {
+  const { user } = useAuth();
   const [proposals, setProposals] = useState([]);
   const [partnersMap, setPartnersMap] = useState({});
+  const [companySettings, setCompanySettings] = useState({
+    companyName: 'EXPRESS MEBEL',
+    companyPhone: '+998 88 737 54 43',
+    companyLogo: '',
+    companyAddress: "Toshkent sh. Jomiy ko'chasi",
+    instagram: 'instagram.com/express_mebel__uz',
+    telegram: 't.me/expressmebel'
+  });
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [propRes, partRes] = await Promise.all([
+        const [propRes, partRes, settRes] = await Promise.all([
           api.get('/proposals'),
-          api.get('/partners')
+          api.get('/partners'),
+          api.get('/settings')
         ]);
         setProposals(propRes.data);
+        if (settRes.data) setCompanySettings(settRes.data);
         const pMap = partRes.data.reduce((acc, curr) => {
           acc[curr._id] = curr;
           return acc;
@@ -46,73 +59,83 @@ const ProposalsModal = ({ onClose }) => {
       p.deadlineBasis === 'tayyor'   ? "muddat hisobi obyekt tayyor bo'lgan kundan hisoblanadi" : '';
 
     const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Tijorat Taklifi ${p.kpNumber}</title>
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:Arial,sans-serif;background:#0f1117;color:#fff;padding:44px}
-  .hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:40px;padding-bottom:24px;border-bottom:2px solid #008B8B}
-  .co{font-size:30px;font-weight:900;color:#008B8B}.kpn{font-size:14px;color:rgba(255,255,255,0.5);margin-top:5px}
-  .mb{display:flex;align-items:center;gap:14px}
-  .ma{width:58px;height:58px;border-radius:50%;border:2px solid #008B8B;object-fit:cover}
-  .mi{width:58px;height:58px;border-radius:50%;background:rgba(0,139,139,0.12);border:2px solid #008B8B;display:flex;align-items:center;justify-content:center;color:#008B8B;font-weight:900;font-size:22px}
-  .minfo{text-align:right;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7}
-  .mn{font-weight:900;color:#fff;font-size:15px}
-  .st{font-size:16px;font-weight:700;color:#008B8B;margin:32px 0 14px;text-transform:uppercase;letter-spacing:1px}
-  .logo-container { display: flex; align-items: center; gap: 15px; }
-  .official-logo { height: 48px; width: auto; }
-  .cb{background:rgba(255,255,255,0.04);border:1px solid rgba(0,139,139,0.2);border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
-  .cf span{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px}.cf{font-size:14px;font-weight:600}
-  table{width:100%;border-collapse:collapse}
-  th{background:#008B8B;color:#0f1117;padding:12px 16px;text-align:left;font-size:11px;text-transform:uppercase}
-  td{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.07);font-size:13px;vertical-align:middle}
-  .ni{width:56px;height:56px;background:rgba(255,255,255,0.07);border-radius:8px;display:inline-flex;align-items:center;justify-content:center;font-size:22px}
-  .amt{font-weight:700;color:#008B8B}
-  .tb{background:linear-gradient(135deg,#008B8B,#006666);border-radius:16px;padding:24px 32px;display:flex;justify-content:space-between;align-items:center;margin-top:32px}
-  .tl{font-size:15px;font-weight:700;color:#0f1117}.ta{font-size:32px;font-weight:900;color:#0f1117}
-  .db{background:rgba(255,255,255,0.03);border:1px solid rgba(0,139,139,0.15);border-radius:12px;padding:16px 22px;font-size:13px}
-  .dv{color:#008B8B;font-weight:700;font-size:22px}
-  .bb{margin-top:14px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid #008B8B;border-radius:0 10px 10px 0;font-size:12px;color:rgba(255,255,255,0.6);font-style:italic}
-  .pg{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
-  .pc{background:#fff;border-radius:10px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:5px}
-  .pn{font-size:10px;font-weight:700;color:#555;text-transform:uppercase}
-  .ft{margin-top:50px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);border-top:1px solid rgba(255,255,255,0.08);padding-top:20px}
-</style></head><body>
-<div class="hdr">
-      <div></div>
-  <div><div class="kpn">${p.kpNumber} &middot; ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('uz-UZ') : ''}</div></div>
-  <div class="mb">
-    <div class="minfo"><div class="mn">${p.managerName || 'Menejer'}</div>${p.deadline ? `<div>Muddat: <b>${p.deadline} ish kuni</b></div>` : ''}</div>
-    ${user?.photo ? `<img src="${user.photo}" class="ma"/>` : `<div class="mi">${(p.managerName || 'M').charAt(0)}</div>`}
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Tijorat Taklifi ${p.kpNumber}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@700;900&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Inter', Arial, sans-serif; background:#fff; color:#1a1a1a; padding:40px; min-height:100vh; line-height:1.4; }
+    .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #eee; padding-bottom:20px; margin-bottom:30px; }
+    .logo-container { display: flex; align-items: center; gap: 15px; }
+    .official-logo { height: 52px; width: auto; }
+    .tt-badge-side { text-align: right; }
+    .tt-badge { background:#000; color:#fff; padding:8px 24px; border-radius:8px; font-size:11px; font-weight:950; text-transform:uppercase; letter-spacing:2px; display:inline-block; }
+    .tt-meta { margin-top:10px; font-size:14px; font-weight:700; color:#888; }
+    .tt-meta span { color:#008B8B; font-weight:900; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:25px; margin-bottom:35px; }
+    .info-card { background:#f9fafb; border:1px solid #f1f5f9; border-radius:16px; padding:20px; }
+    .card-title { font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+    .buyer-name { font-size:18px; font-weight:900; color:#1e293b; margin-bottom:4px; }
+    .buyer-phone { font-size:14px; font-weight:600; color:#64748b; }
+    .manager-box { display:flex; align-items:center; gap:12px; }
+    .manager-photo { width:45px; height:45px; border-radius:50%; border:2px solid #008B8B; object-fit:cover; }
+    .manager-placeholder { width:45px; height:45px; border-radius:50%; background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:#94a3b8; font-size:20px; }
+    .partners-section { margin-bottom:35px; }
+    .partners-label { font-size:11px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+    .partners-row { display:flex; flex-wrap:wrap; gap:10px; }
+    .partner-logo-item { height:36px; background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:6px 12px; display:flex; alignItems:center; }
+    .partner-logo-item img { height:100%; width:auto; object-fit:contain; }
+    table { width:100%; border-collapse:collapse; margin-bottom:35px; }
+    th { text-align:left; padding:15px; background:#f8fafb; color:#64748b; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; border-bottom:2px solid #f1f5f9; }
+    td { padding:15px; border-bottom:1px solid #f1f5f9; vertical-align:middle; font-size:14px; }
+    .item-img { width:60px; height:60px; border-radius:10px; object-fit:cover; background:#f9fafb; }
+    .item-info strong { display:block; font-size:15px; color:#1e293b; margin-bottom:2px; }
+    .item-info small { color:#94a3b8; font-size:12px; }
+    .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:25px; margin-bottom:40px; }
+    .deadline-card { background:#fff8eb; border:1px solid #ffedd5; border-radius:20px; padding:25px; }
+    .deadline-val { font-size:24px; font-weight:900; color:#9a3412; margin-bottom:5px; font-family:'Outfit',sans-serif; }
+    .deadline-sub { font-size:12px; color:#c2410c; font-weight:600; font-style:italic; }
+    .grand-total-card { background:#008B8B; border-radius:24px; padding:30px; color:#fff; }
+    .total-row { display:flex; justify-content:space-between; margin-bottom:10px; font-size:14px; opacity:0.9; }
+    .grand-label { font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:2px; margin:15px 0 5px; opacity:0.8; }
+    .grand-val { font-size:32px; font-weight:950; font-family:'Outfit',sans-serif; }
+    .footer { border-top:2px solid #f1f5f9; padding-top:30px; display:flex; justify-content:space-between; align-items:baseline; color:#94a3b8; font-size:12px; }
+    .footer-logo { color:#1e293b; font-weight:950; font-size:16px; text-transform:uppercase; letter-spacing:1px; }
+  </style>
+</head>
+<body>
+  <div class="hdr">
+    <div class="logo-container">
+      ${companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>'}
+    </div>
+    <div class="tt-badge-side">
+      <div class="tt-badge">Tijorat Taklifi</div>
+      <div class="tt-meta">#${p.kpNumber} | <span>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('uz-UZ') : ''}</span></div>
+    </div>
   </div>
-</div>
-<div class="st">Mijoz Ma'lumotlari</div>
-<div class="cb">
-  <div class="cf"><span>Ism Familiya</span>${p.customer ? `${p.customer.firstName} ${p.customer.lastName}` : '&mdash;'}</div>
-  <div class="cf"><span>Telefon</span>${p.customer?.phone || '&mdash;'}</div>
-</div>
-<div class="st">Mahsulotlar Ro'yxati</div>
-<table>
-  <thead><tr><th>#</th><th></th><th>Mahsulot</th><th>Soni</th><th>Birligi</th><th>Narxi</th><th>Jami</th></tr></thead>
-  <tbody>
-    ${(p.items || []).filter(i => i.name).map((item, idx) => `
-      <tr>
-        <td>${idx + 1}</td>
-        <td>${item.image ? `<img src="${item.image}" style="width:56px;height:56px;object-fit:cover;border-radius:8px" alt=""/>` : '<span class="ni">&#128715;</span>'}</td>
-        <td><strong>${item.name}</strong>${item.desc ? `<br/><small style="color:rgba(255,255,255,0.4)">${item.desc}</small>` : ''}</td>
-        <td>${item.qty}</td><td>${item.unit}</td>
-        <td>${(parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0).toLocaleString()} so'm</td>
-        <td class="amt">${((parseFloat(item.qty) || 0) * (parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0)).toLocaleString()} so'm</td>
-      </tr>`).join('')}
-  </tbody>
-</table>
-<div class="tb"><span class="tl">JAMI TO'LOV SUMMASI</span><span class="ta">${(p.grandTotal || 0).toLocaleString()} so'm</span></div>
-${p.deadline ? `
-<div class="st">Tayyor Bo'lish Muddati</div>
-<div class="db">Tayyor bo'lish muddati: <span class="dv">${p.deadline} ish kuni</span>${basisText ? `<div class="bb">${basisText}</div>` : ''}</div>` : ''}
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="card-title">Buyurtmachi</div>
+      <div class="buyer-name">${p.customer ? `${p.customer.firstName} ${p.customer.lastName}` : '—'}</div>
+      <div class="buyer-phone">Tel: ${p.customer?.phone || '—'}</div>
+    </div>
+    <div class="info-card">
+      <div class="card-title">Taklif Tayyorladi</div>
+      <div class="manager-box">
+        <div class="manager-placeholder">👤</div>
+        <div class="person-details">
+          <div class="person-name" style="font-size:16px; margin-bottom:2px;">${p.managerName || 'Menejer'}</div>
+          <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">${companySettings.companyName}</div>
+          <div>Tel: <b>${p.managerPhone || companySettings.companyPhone}</b></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   ${activePartners.length > 0 ? `
-<div class="st">Loyihadagi Hamkorlarimiz</div>
-<div class="pg">${activePartners.map(pt => `
-  <div class="pc">
     <div style="width:100%;max-height:36px;display:flex;justify-content:center;align-items:center;">
       ${pt.logo.startsWith('<svg') ? pt.logo : `<img src="${pt.logo}" style="max-width:100%;max-height:100%;object-fit:contain;" />`}
     </div>
