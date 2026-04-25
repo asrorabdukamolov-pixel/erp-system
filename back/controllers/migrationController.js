@@ -40,6 +40,20 @@ exports.migrateData = async (req, res) => {
                 if (!exists) {
                     const newS = new Showroom({ ...s, _id: undefined });
                     await newS.save();
+                    
+                    // Create associated User so they can login
+                    const userExists = await User.findOne({ login: s.login.toLowerCase() });
+                    if (!userExists) {
+                        const newUser = new User({
+                            name: s.adminName || s.name,
+                            surname: s.adminSurname || '-',
+                            login: s.login.toLowerCase(),
+                            password: s.password || '123',
+                            role: 'showroom',
+                            showroom: s.name
+                        });
+                        await newUser.save();
+                    }
                     showroomsAdded++;
                 }
             } catch (e) {

@@ -51,16 +51,29 @@ const Showrooms = () => {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
-    } else if (countdown === 0 && isActiveDelete) {
+    } else if (countdown === 0 && isActiveDelete && showroomToDelete) {
       // Finalize Deletion
-      api.delete(`/showrooms/${showroomToDelete._id}`).then(() => {
+      const deleteId = showroomToDelete._id;
+      if (!deleteId) {
+          // If no ID (local storage old item), just clear it
+          loadShowrooms();
+          setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setShowroomToDelete(null);
+          return;
+      }
+
+      api.delete(`/showrooms/${deleteId}`).then(() => {
           loadShowrooms();
           setIsActiveDelete(false);
           setDeleteModalOpen(false);
           setShowroomToDelete(null);
       }).catch(err => {
+          console.error("Delete error", err);
           alert("O'chirishda xatolik yuz berdi");
           setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setShowroomToDelete(null);
       });
     }
     return () => clearInterval(timer);

@@ -50,15 +50,27 @@ const Staff = () => {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
-    } else if (countdown === 0 && isActiveDelete) {
-      api.delete(`/users/${staffToDelete._id}`).then(() => {
+    } else if (countdown === 0 && isActiveDelete && staffToDelete) {
+      const deleteId = staffToDelete._id;
+      if (!deleteId) {
+          loadStaff();
+          setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setStaffToDelete(null);
+          return;
+      }
+
+      api.delete(`/users/${deleteId}`).then(() => {
           loadStaff();
           setIsActiveDelete(false);
           setDeleteModalOpen(false);
           setStaffToDelete(null);
       }).catch(err => {
+          console.error("Staff delete error", err);
           alert("Xodimni o'chirishda xatolik");
           setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setStaffToDelete(null);
       });
     }
     return () => clearInterval(timer);
