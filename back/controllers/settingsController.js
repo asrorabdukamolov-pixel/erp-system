@@ -18,7 +18,7 @@ exports.updateSettings = async (req, res) => {
       return res.status(403).json({ message: 'Faqat Super Admin o\'zgartirishi mumkin' });
     }
 
-    const { companyName, companyPhone, companyLogo, companyAddress, instagram, telegram } = req.body;
+    const { companyName, companyPhone, companyLogo, kpLogo, companyAddress, instagram, telegram } = req.body;
 
     let settings = await Settings.findOne();
     
@@ -27,6 +27,7 @@ exports.updateSettings = async (req, res) => {
         companyName,
         companyPhone,
         companyLogo,
+        kpLogo,
         companyAddress,
         instagram,
         telegram
@@ -35,6 +36,7 @@ exports.updateSettings = async (req, res) => {
       settings.companyName = companyName || settings.companyName;
       settings.companyPhone = companyPhone || settings.companyPhone;
       settings.companyLogo = companyLogo !== undefined ? companyLogo : settings.companyLogo;
+      settings.kpLogo = kpLogo !== undefined ? kpLogo : settings.kpLogo;
       settings.companyAddress = companyAddress || settings.companyAddress;
       settings.instagram = instagram || settings.instagram;
       settings.telegram = telegram || settings.telegram;
