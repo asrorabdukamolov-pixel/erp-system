@@ -28,4 +28,9 @@ router.put('/:id', auth, orderController.updateOrder);
 // @access  Private
 router.delete('/:id', auth, orderController.deleteOrder);
 
+// @route   POST api/orders/:id/log
+// @desc    Add timeline log to order
+// @access  Private
+router.post('/:id/log', auth, orderController.addOrderLog);
+
 module.exports = router;

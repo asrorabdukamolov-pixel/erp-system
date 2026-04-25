@@ -116,3 +116,26 @@ exports.deleteOrder = async (req, res) => {
         res.status(500).send('Server xatosi');
     }
 };
+
+// @desc    Add timeline log to order
+// @access  Private
+exports.addOrderLog = async (req, res) => {
+    try {
+        const { text, type = 'comment' } = req.body;
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+
+        order.timeline.push({
+            type,
+            text,
+            user: req.user.name,
+            time: new Date()
+        });
+
+        await order.save();
+        res.json(order);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};

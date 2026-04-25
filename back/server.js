@@ -18,6 +18,7 @@ const path = require('path');
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/orders', require('./routes/orders'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/migration', require('./routes/migration'));

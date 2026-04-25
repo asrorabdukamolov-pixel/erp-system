@@ -109,11 +109,15 @@ const AdminOrders = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Simplified PM list loading (should be from API too)
+  // Load PM list from API
   useEffect(() => {
      const loadPMs = async () => {
-        // For now, still mock or need a new API route /api/users/pms
-        setPmList(JSON.parse(localStorage.getItem('erp_staff_list') || '[]').filter(s => s.role === 'proekt_manager'));
+        try {
+          const res = await api.get('/users', { params: { role: 'proekt_manager' } });
+          setPmList(res.data);
+        } catch (e) {
+          console.error("PM loading error:", e);
+        }
      };
      loadPMs();
   }, []);
@@ -195,13 +199,19 @@ const AdminOrders = () => {
     }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!commentText.trim() || !selectedOrder) return;
-    const log = { type: 'comment', text: commentText, time: new Date().toISOString(), user: user.name };
-    const updated = orders.map(o => o.id === selectedOrder.id ? { ...o, timeline: [...(o.timeline || []), log] } : o);
-    setOrders(updated); localStorage.setItem('erp_orders', JSON.stringify(updated));
-    setSelectedOrder(prev => ({ ...prev, timeline: [...(prev.timeline || []), log] }));
-    setCommentText('');
+    try {
+        const res = await api.post(`/orders/${selectedOrder._id}/log`, { text: commentText, type: 'comment' });
+        
+        // Update local state
+        const updatedOrders = orders.map(o => o._id === selectedOrder._id ? res.data : o);
+        setOrders(updatedOrders);
+        setSelectedOrder(res.data);
+        setCommentText('');
+    } catch (err) {
+        alert("Izoh qo'shishda xatolik yuz berdi");
+    }
   };
 
   const scrollToBottom = () => { timelineEndRef.current?.scrollIntoView({ behavior: 'smooth' }); };
