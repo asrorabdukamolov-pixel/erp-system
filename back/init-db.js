@@ -8,26 +8,26 @@ const init = async () => {
         await mongoose.connect(mongoURI);
         console.log("Bazaga ulanish muvaffaqiyatli!");
 
-        let admin = await User.findOne({ login: 'admin' });
-        if (!admin) {
-            admin = new User({
-                name: 'Super',
-                surname: 'Admin',
-                login: 'admin',
-                password: 'admin123',
-                role: 'super'
-            });
-            console.log("Super Admin yangidan yaratildi.");
-        } else {
-            admin.password = 'admin123';
-            console.log("Mavjud Admin paroli yangilandi.");
-        }
+        // Eskisini o'chirib, yangisini yaratamiz (parol aniq admin123 bo'lishi uchun)
+        await User.deleteMany({ login: 'admin' });
+        console.log("Eski admin o'chirildi.");
+
+        const admin = new User({
+            name: 'Super',
+            surname: 'Admin',
+            login: 'admin',
+            password: 'admin123',
+            role: 'super'
+        });
+
         await admin.save();
         console.log("--------------------------------------");
+        console.log("Yangi Super Admin yaratildi!");
         console.log("Login: admin");
         console.log("Parol: admin123");
         console.log("--------------------------------------");
-        process.exit();
+
+        process.exit(0);
     } catch (err) {
         console.error("Xatolik:", err);
         process.exit(1);
