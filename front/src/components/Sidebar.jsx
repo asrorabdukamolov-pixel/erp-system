@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../utils/api';
 import { 
   LayoutDashboard, 
   Store, 
@@ -25,6 +26,19 @@ import logo from '../assets/logo.png';
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [settings, setSettings] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await api.get('/settings');
+        setSettings(res.data);
+      } catch (err) {
+        console.error("Sidebar settings error", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const superAdminLinks = [
     { name: 'Bosh sahifa', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
@@ -101,13 +115,51 @@ const Sidebar = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <div style={{ marginBottom: '32px', padding: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ width: '45px', height: '45px', background: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px' }}>
-          <img src={logo} alt="Express Mebel Logo" style={{ width: '100%', height: 'auto', pointerEvents: 'none' }} />
+      <div style={{ marginBottom: '32px', padding: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <div style={{ 
+          width: '65px', 
+          height: '65px', 
+          background: '#fff', 
+          borderRadius: '16px', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          padding: '8px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          flexShrink: 0
+        }}>
+          <img 
+            src={settings?.companyLogo || logo} 
+            alt="Logo" 
+            style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
+          />
         </div>
-        <div>
-          <h1 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>Express Mebel</h1>
-          <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent-gold)', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>ERP System</p>
+        <div style={{ overflow: 'hidden' }}>
+          <h1 style={{ 
+            fontSize: '20px', 
+            fontWeight: '950', 
+            color: '#fff', 
+            margin: 0, 
+            letterSpacing: '-0.5px',
+            lineHeight: '1.1',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}>
+            {settings?.companyName || 'Express Mebel'}
+          </h1>
+          <p style={{ 
+            fontSize: '11px', 
+            fontWeight: '800', 
+            color: 'var(--accent-gold)', 
+            margin: '4px 0 0 0', 
+            textTransform: 'uppercase', 
+            letterSpacing: '1.5px',
+            opacity: 0.8
+          }}>
+            ERP TIZIMI
+          </p>
         </div>
       </div>
 
