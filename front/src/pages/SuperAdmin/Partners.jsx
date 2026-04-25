@@ -38,9 +38,6 @@ const Partners = () => {
         setCompanySettings(settRes.data);
       } catch (err) {
         console.error("Data load error", err);
-        // Fallback to local storage if API fails (for compatibility)
-        const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
-        if (savedPartners.length > 0) setPartners(savedPartners);
       }
     };
     loadData();

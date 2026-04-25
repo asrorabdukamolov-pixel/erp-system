@@ -684,10 +684,10 @@ const KPModal = ({ onClose, editData = null }) => {
                             </div>
                           )}
                           <div style={{ width:'100%', height:'44px', display:'flex', alignItems:'center', justifyContent:'center', background: '#fff', borderRadius: '8px', padding: '4px', marginBottom: '4px' }}>
-                            {p.logo.startsWith('<svg') ? (
+                            {p.logo && p.logo.startsWith('<svg') ? (
                               <div style={{ width: '100%', height: '100%' }} dangerouslySetInnerHTML={{ __html: p.logo }} />
                             ) : (
-                              <img src={p.logo} alt={p.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                              <img src={p.logo || ''} alt={p.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                             )}
                           </div>
                           <span style={{ fontSize:'9px', fontWeight:'800', color: active ? '#008B8B' : '#555', textTransform:'uppercase', letterSpacing:'0.5px', textAlign: 'center' }}>{p.name}</span>
