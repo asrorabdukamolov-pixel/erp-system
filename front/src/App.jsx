@@ -23,6 +23,7 @@ import Proposals from './pages/SalesManager/Proposals';
 import SalesTrash from './pages/SalesManager/Trash';
 import SalesFinance from './pages/SalesManager/Finance';
 import Migration from './pages/SuperAdmin/Migration';
+import CompanySettings from './pages/SuperAdmin/CompanySettings';
 
 // Project Manager
 import ProjectOrders from './pages/ProjectManager/Orders';
@@ -88,6 +89,11 @@ const AppContent = () => {
       <Route path="/super-admin/migration" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><Migration /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/super-admin/company-settings" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><CompanySettings /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/super-admin/settings" element={

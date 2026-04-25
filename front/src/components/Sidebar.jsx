@@ -17,7 +17,8 @@ import {
   FileText,
   User,
   Wallet,
-  History
+  History,
+  Building2
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -32,6 +33,7 @@ const Sidebar = () => {
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
     { name: 'Hamkorlar', path: '/super-admin/partners', icon: <Handshake size={20} /> },
     { name: 'Ma\'lumotlar Migratsiyasi', path: '/super-admin/migration', icon: <History size={20} /> },
+    { name: 'Kompaniya Ma\'lumotlari', path: '/super-admin/company-settings', icon: <Building2 size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },
   ];
 

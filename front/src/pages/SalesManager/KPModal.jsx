@@ -55,6 +55,14 @@ const KPModal = ({ onClose, editData = null }) => {
   const [servicePrices, setServicePrices]       = useState({ eco: 0, cleaning: 0, packing: 0 });
 
   const [kpNumber, setKpNumber] = useState('');
+  const [companySettings, setCompanySettings] = useState({
+    companyName: 'EXPRESS MEBEL',
+    companyPhone: '+998 88 737 54 43',
+    companyLogo: '',
+    companyAddress: "Toshkent sh. Jomiy ko'chasi",
+    instagram: 'instagram.com/express_mebel__uz',
+    telegram: 't.me/expressmebel'
+  });
 
   // Edit mode initialization
   useEffect(() => {
@@ -89,6 +97,14 @@ const KPModal = ({ onClose, editData = null }) => {
         }
       } catch (err) {
         console.error("Data load error", err);
+      }
+
+      // Load company settings
+      try {
+        const sRes = await api.get('/settings');
+        if (sRes.data) setCompanySettings(sRes.data);
+      } catch (err) {
+        console.error("Settings load error", err);
       }
     };
     loadData();
@@ -254,6 +270,8 @@ const KPModal = ({ onClose, editData = null }) => {
     }
     .tt-meta { margin-top: 10px; font-size: 14px; font-weight: 700; color: #888; }
     .tt-meta span { color: #008B8B; font-weight: 900; }
+    .logo-container { display: flex; align-items: center; gap: 15px; }
+    .official-logo { height: 60px; width: auto; object-fit: contain; }
 
     /* Info Section (Buyer & Manager) */
     .info-grid { 
@@ -398,7 +416,8 @@ const KPModal = ({ onClose, editData = null }) => {
       color: #999;
       font-size: 12px;
     }
-    .footer-brand { color: #111; font-weight: 950; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-logo { color: #111; font-weight: 950; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
+    .footer-details { text-align: right; }
 
     @media print {
       @page { margin: 1.2cm; size: A4; }
@@ -412,7 +431,9 @@ const KPModal = ({ onClose, editData = null }) => {
 </head>
 <body>
   <div class="hdr">
-      <div></div>
+    <div class="logo-container">
+      ${companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>'}
+    </div>
     <div class="tt-badge-side">
       <div class="tt-badge">Tijorat Taklifi</div>
       <div class="tt-meta">#${kpNumber} | <span>${new Date().toLocaleDateString('uz-UZ')}</span></div>
@@ -435,8 +456,8 @@ const KPModal = ({ onClose, editData = null }) => {
         ${user?.photo ? `<img src="${user.photo}" class="manager-photo" />` : '<div class="manager-placeholder">👤</div>'}
         <div class="person-details">
           <div class="person-name" style="font-size:16px; margin-bottom:2px;">${user?.name || 'Menejer'}</div>
-          <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">Express mebel</div>
-          <div>Tel: <b>${user?.phone || '—'}</b></div>
+          <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">${companySettings.companyName}</div>
+          <div>Tel: <b>${user?.phone || companySettings.companyPhone}</b></div>
         </div>
       </div>
     </div>
@@ -523,9 +544,9 @@ const KPModal = ({ onClose, editData = null }) => {
   </div>
 
   <div class="footer">
-    <div class="footer-brand">express mebel</div>
-    <div style="text-align: right">
-      Toshkent sh. Jomiy ko'chasi &middot; t.me/expressmebel &middot; instagram.com/express_mebel__uz
+    <div class="footer-logo">${companySettings.companyName}</div>
+    <div class="footer-details">
+      ${companySettings.companyAddress} &middot; ${companySettings.telegram} &middot; ${companySettings.instagram}
     </div>
   </div>
 </body>
