@@ -674,9 +674,9 @@ const KPModal = ({ onClose, editData = null }) => {
                     <p style={{ gridColumn: 'span 4', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '12px' }}>Hamkorlar topilmadi. Super Admin orqali qo'shing.</p>
                   ) : (
                     partnersList.map(p => {
-                      const active = selectedPartners.includes(p.id);
+                      const active = selectedPartners.includes(p._id);
                       return (
-                        <button key={p.id} type="button" onClick={() => togglePartner(p.id)}
+                        <button key={p._id} type="button" onClick={() => togglePartner(p._id)}
                           style={{ background: active ? 'rgba(251,191,36,0.08)' : '#fff', border:`2px solid ${active ? '#008B8B' : '#e5e7eb'}`, borderRadius:'12px', padding:'10px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', transition:'0.2s', position:'relative', overflow:'hidden', minHeight: '80px' }}>
                           {active && (
                             <div style={{ position:'absolute', top:'4px', right:'4px', width:'18px', height:'18px', background:'#008B8B', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
