@@ -38,9 +38,9 @@ const STAGES = [...DEAL_STAGES, ...ORDER_STAGES];
 const LOCKED_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
 
 const PROPERTY_TYPES = [
-  { value: 'uchastka', label: 'Uchastka', icon: '🏡' },
-  { value: 'kvartira', label: 'Kvartira', icon: '🏢' },
-  { value: 'dacha', label: 'Dacha', icon: '🌳' },
+  { label: 'Hovli', value: 'hovli' },
+  { label: 'Dom', value: 'dom' },
+  { label: 'Ofis', value: 'ofis' }
 ];
 
 const CHECKLIST_LABELS = {
@@ -239,6 +239,22 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
               <div><Lbl>Jinsi</Lbl><div style={{ display: 'flex', gap: '8px' }}>{['erkak', 'ayol'].map(g => (<button key={g} type="button" onClick={() => setForm({...form, gender: g})} style={{ flex: 1, height: '54px', borderRadius: '12px', background: form.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: g === form.gender ? 'black' : 'white', border: '1px solid var(--border-color)', fontWeight: '700' }}>{g}</button>))}</div></div>
             </div>
             <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+            
+            <div>
+              <Lbl>Uy Turi</Lbl>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                {PROPERTY_TYPES.map(pt => (
+                  <button 
+                    key={pt.value} 
+                    type="button" 
+                    onClick={() => setForm({...form, propertyType: pt.value})} 
+                    style={{ height: '54px', borderRadius: '12px', background: form.propertyType === pt.value ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: pt.value === form.propertyType ? 'black' : 'white', border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '700' }}
+                  >
+                    {pt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div><Lbl>Platforma</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>{SOURCE_OPTIONS.map(opt => (<button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'white', fontSize: '12px', fontWeight: '800' }}>{opt.label}</button>))}</div></div>
             {form.source === 'agent' && (
               <div style={{ position: 'relative' }}>
