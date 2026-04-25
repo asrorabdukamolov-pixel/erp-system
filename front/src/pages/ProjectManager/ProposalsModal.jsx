@@ -58,6 +58,8 @@ const ProposalsModal = ({ onClose }) => {
   .minfo{text-align:right;font-size:13px;color:rgba(255,255,255,0.7);line-height:1.7}
   .mn{font-weight:900;color:#fff;font-size:15px}
   .st{font-size:16px;font-weight:700;color:#008B8B;margin:32px 0 14px;text-transform:uppercase;letter-spacing:1px}
+  .logo-container { display: flex; align-items: center; gap: 15px; }
+  .official-logo { height: 48px; width: auto; }
   .cb{background:rgba(255,255,255,0.04);border:1px solid rgba(0,139,139,0.2);border-radius:14px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
   .cf span{font-size:11px;color:rgba(255,255,255,0.4);display:block;margin-bottom:3px}.cf{font-size:14px;font-weight:600}
   table{width:100%;border-collapse:collapse}
@@ -76,6 +78,16 @@ const ProposalsModal = ({ onClose }) => {
   .ft{margin-top:50px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);border-top:1px solid rgba(255,255,255,0.08);padding-top:20px}
 </style></head><body>
 <div class="hdr">
+  <div class="logo-container">
+    <svg class="official-logo" viewBox="0 0 455 130">
+      <polygon points="65,20 155,20 135,32 45,32" fill="#008B8B"/>
+      <polygon points="32,40 142,40 122,52 12,52" fill="#008B8B"/>
+      <polygon points="0,60 130,60 110,72 -20,72" fill="#008B8B"/>
+      <text x="155" y="75" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="65" fill="#333" letter-spacing="-2">express</text>
+      <text x="175" y="125" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="55" fill="#333" letter-spacing="-1">mebel</text>
+      <text x="430" y="45" font-family="Arial, sans-serif" font-size="16" fill="#333">®</text>
+    </svg>
+  </div>
   <div><div class="kpn">${p.kpNumber} &middot; ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('uz-UZ') : ''}</div></div>
   <div class="mb">
     <div class="minfo"><div class="mn">${p.managerName || 'Menejer'}</div>${p.deadline ? `<div>Muddat: <b>${p.deadline} ish kuni</b></div>` : ''}</div>
