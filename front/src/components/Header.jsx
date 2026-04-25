@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Bell, Search, User as UserIcon } from 'lucide-react';
+import { Bell, Search, User as UserIcon, RotateCw } from 'lucide-react';
+
 
 const Header = () => {
   const { user, updateUser } = useAuth();
@@ -58,6 +59,25 @@ const Header = () => {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <button 
+            title="Tizimni yangilash"
+            onClick={() => window.location.reload()}
+            style={{ 
+              background: 'transparent', 
+              color: 'var(--text-secondary)', 
+              border: 'none', 
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--accent-gold)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--text-secondary)'}
+          >
+            <RotateCw size={20} />
+          </button>
+
           <button style={{ position: 'relative', background: 'transparent', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
             <Bell size={22} />
             <span style={{ 
