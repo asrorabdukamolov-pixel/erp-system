@@ -157,6 +157,38 @@ exports.getDashboardStats = async (req, res) => {
         });
         const cashflowChart = Object.values(dailyData).sort((a, b) => a.date.localeCompare(b.date));
 
+        // Manager Sales Performance
+        const managerStats = {};
+        orders.forEach(o => {
+            const mName = o.managerName || 'Noma\'lum';
+            if (!managerStats[mName]) managerStats[mName] = { name: mName, sales: 0, profit: 0 };
+            managerStats[mName].sales += (o.totalAmount || 0);
+            managerStats[mName].profit += ((o.totalAmount || 0) - (o.totalCost || 0));
+        });
+        const salesPerformance = Object.values(managerStats).sort((a, b) => b.sales - a.sales);
+
+        // Recent Order Profits (latest 10)
+        const orderProfits = orders
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .slice(0, 10)
+            .map(o => {
+                const totalAmount = o.totalAmount || 0;
+                const totalCost = o.totalCost || 0;
+                const profit = totalAmount - totalCost;
+                const margin = totalAmount > 0 ? (profit / totalAmount) * 100 : 0;
+                return {
+                    id: o._id,
+                    order_number: o.uniqueId || o.productionId || 'ORD-000',
+                    date: o.createdAt,
+                    customer: `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''}`.trim() || 'Mijoz',
+                    manager: o.managerName || '-',
+                    total_amount: totalAmount,
+                    total_cost: totalCost,
+                    profit,
+                    margin
+                };
+            });
+
         res.json({
             overview: {
                 totalSales,
@@ -170,7 +202,9 @@ exports.getDashboardStats = async (req, res) => {
             orderStats,
             debitor: { total: debitorTotal, list: debitorList },
             kreditor: { total: kreditorTotal, list: kreditorList },
-            cashflowChart
+            cashflowChart,
+            salesPerformance,
+            orderProfits
         });
     } catch (err) {
         console.error(err.message);
