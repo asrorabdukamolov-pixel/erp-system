@@ -40,7 +40,9 @@ const CompanySettings = () => {
       setMessage({ type: 'success', text: 'Ma\'lumotlar muvaffaqiyatli saqlandi!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (err) {
-      setMessage({ type: 'error', text: 'Saqlashda xatolik yuz berdi.' });
+      console.error("Save error details:", err);
+      const errorMsg = err.response?.data?.message || 'Saqlashda xatolik yuz berdi.';
+      setMessage({ type: 'error', text: errorMsg });
     } finally {
       setSaving(false);
     }

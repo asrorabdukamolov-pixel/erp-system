@@ -19,15 +19,19 @@ exports.updateSettings = async (req, res) => {
     }
 
     let settings = await Settings.findOne();
+    
+    // Exclude internal fields from request body to prevent Mongoose errors
+    const { _id, __v, ...updateData } = req.body;
+
     if (!settings) {
-      settings = new Settings(req.body);
+      settings = new Settings(updateData);
     } else {
-      Object.assign(settings, req.body);
+      Object.assign(settings, updateData);
     }
     await settings.save();
     res.json(settings);
   } catch (error) {
     console.error("Update Settings Error:", error);
-    res.status(500).json({ message: "Saqlashda xatolik: " + error.message });
+    res.status(500).json({ message: "Serverda saqlashda xatolik: " + error.message });
   }
 };
