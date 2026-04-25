@@ -6,8 +6,12 @@ import {
   Search, 
   X, 
   Edit2,
-  Check
+  Check,
+  Building2,
+  Upload,
+  Info
 } from 'lucide-react';
+import api from '../../utils/api';
 
 const Partners = () => {
   const [partners, setPartners] = useState([]);
@@ -20,10 +24,48 @@ const Partners = () => {
     logo: ''
   });
 
+  const [companySettings, setCompanySettings] = useState(null);
+  const [logoSaving, setLogoSaving] = useState(false);
+
   useEffect(() => {
-    const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
-    setPartners(savedPartners);
+    const loadData = async () => {
+      try {
+        const [partRes, settRes] = await Promise.all([
+          api.get('/partners'),
+          api.get('/settings')
+        ]);
+        setPartners(partRes.data);
+        setCompanySettings(settRes.data);
+      } catch (err) {
+        console.error("Data load error", err);
+        // Fallback to local storage if API fails (for compatibility)
+        const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
+        if (savedPartners.length > 0) setPartners(savedPartners);
+      }
+    };
+    loadData();
   }, []);
+
+  const handleCompanyLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        setLogoSaving(true);
+        try {
+          const updated = { ...companySettings, companyLogo: reader.result };
+          await api.put('/settings', updated);
+          setCompanySettings(updated);
+          alert('Kompaniya logotipi muvaffaqiyatli yangilandi!');
+        } catch (err) {
+          alert('Xatolik: ' + (err.response?.data?.message || err.message));
+        } finally {
+          setLogoSaving(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSave = () => {
     if (!formData.name || !formData.logo) {
@@ -93,6 +135,72 @@ const Partners = () => {
 
   return (
     <div style={{ padding: '30px' }}>
+      {/* Company Logo Section */}
+      <div style={{ 
+        background: 'rgba(255,255,255,0.02)', 
+        border: '1px dashed var(--border-color)', 
+        borderRadius: '24px', 
+        padding: '30px', 
+        marginBottom: '40px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '30px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+          <div style={{ 
+            width: '120px', 
+            height: '120px', 
+            background: 'white', 
+            borderRadius: '20px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            padding: '12px',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.3)',
+            flexShrink: 0,
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            {companySettings?.companyLogo ? (
+              <img src={companySettings.companyLogo} alt="Company Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+            ) : (
+              <Building2 size={40} color="#ccc" />
+            )}
+            {logoSaving && (
+              <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '12px' }}>...</div>
+            )}
+          </div>
+          <div>
+            <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'white', marginBottom: '6px' }}>Kompaniya Logotipi</h2>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '400px' }}>
+              Ushbu logotip barcha Tijorat Takliflari (KP) va tizimning boshqa qismlarida asosiy brend belgisi sifatida ishlatiladi.
+            </p>
+          </div>
+        </div>
+        
+        <label style={{ 
+          background: 'rgba(255,255,255,0.05)', 
+          color: 'white', 
+          padding: '14px 24px', 
+          borderRadius: '12px', 
+          border: '1px solid var(--border-color)',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          fontWeight: '600',
+          transition: 'all 0.2s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+        >
+          <Upload size={20} />
+          {companySettings?.companyLogo ? 'Logotipni almashtirish' : 'Logotip yuklash'}
+          <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCompanyLogoUpload} disabled={logoSaving} />
+        </label>
+      </div>
+
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Loyiha Hamkorlari</h1>
