@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Store, TrendingUp, Users, DollarSign } from 'lucide-react';
+import { Store, TrendingUp, Users, DollarSign, RotateCw } from 'lucide-react';
 import api from '../../utils/api';
 
 const DashboardCard = ({ title, value, icon: Icon, color, trend }) => (
@@ -43,6 +43,7 @@ const Dashboard = () => {
     recentActivities: []
   });
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const formatTime = (dateString) => {
     const date = new Date(dateString);
@@ -55,17 +56,20 @@ const Dashboard = () => {
     return date.toLocaleDateString();
   };
 
+  const fetchStats = async (isManual = false) => {
+    if (isManual) setRefreshing(true);
+    try {
+      const res = await api.get('/stats/superadmin');
+      setStats(res.data);
+    } catch (err) {
+      console.error('Stats loading error:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await api.get('/stats/superadmin');
-        setStats(res.data);
-      } catch (err) {
-        console.error('Stats loading error:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStats();
   }, []);
 
@@ -73,9 +77,30 @@ const Dashboard = () => {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
-        <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>Xush kelibsiz, Supper Admin!</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Bugun tizim bo'yicha umumiy holat va yangiliklar.</p>
+      <div style={{ 
+        marginBottom: '32px', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'flex-start' 
+      }}>
+        <div>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>Xush kelibsiz, Supper Admin!</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Bugun tizim bo'yicha umumiy holat va yangiliklar.</p>
+        </div>
+        <button 
+          onClick={() => fetchStats(true)}
+          disabled={refreshing}
+          className="gold-btn"
+          style={{ 
+            padding: '10px 20px', 
+            fontSize: '14px',
+            gap: '10px',
+            opacity: refreshing ? 0.7 : 1
+          }}
+        >
+          <RotateCw size={18} className={refreshing ? 'spin-animation' : ''} />
+          Yangilash
+        </button>
       </div>
 
       <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '40px' }}>
