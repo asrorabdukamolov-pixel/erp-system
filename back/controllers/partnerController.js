@@ -28,3 +28,33 @@ exports.createPartner = async (req, res) => {
         res.status(500).send('Server xatosi');
     }
 };
+
+exports.updatePartner = async (req, res) => {
+    try {
+        let partner = await Partner.findById(req.params.id);
+        if (!partner) return res.status(404).json({ message: 'Hamkor topilmadi' });
+
+        partner = await Partner.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true }
+        );
+        res.json(partner);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+exports.deletePartner = async (req, res) => {
+    try {
+        const partner = await Partner.findById(req.params.id);
+        if (!partner) return res.status(404).json({ message: 'Hamkor topilmadi' });
+
+        await Partner.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Hamkor o\'chirildi' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
