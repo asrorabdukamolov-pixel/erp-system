@@ -216,7 +216,8 @@ const KPModal = ({ onClose, editData = null }) => {
       onClose();
     } catch (err) {
       console.error("Save error", err);
-      alert("Taklifni saqlashda xatolik!");
+      const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
+      alert("Taklifni saqlashda xatolik: " + errorMsg);
     }
   };
 

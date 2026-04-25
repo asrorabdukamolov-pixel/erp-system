@@ -11,8 +11,8 @@ exports.getProposals = async (req, res) => {
         const proposals = await Proposal.find(query).sort({ createdAt: -1 });
         res.json(proposals);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server xatosi');
+        console.error("Get Proposals Error:", err.message);
+        res.status(500).json({ message: 'Takliflarni yuklashda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -29,8 +29,27 @@ exports.createProposal = async (req, res) => {
         const proposal = await newProposal.save();
         res.json(proposal);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server xatosi');
+        console.error("Create Proposal Error:", err.message);
+        res.status(500).json({ message: 'Taklifni saqlashda serverda xatolik yuz berdi: ' + err.message });
+    }
+};
+
+// @desc    Update proposal
+// @access  Private
+exports.updateProposal = async (req, res) => {
+    try {
+        let proposal = await Proposal.findById(req.params.id);
+        if (!proposal) return res.status(404).json({ message: 'Taklif topilmadi' });
+
+        proposal = await Proposal.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true }
+        );
+        res.json(proposal);
+    } catch (err) {
+        console.error("Update Proposal Error:", err.message);
+        res.status(500).json({ message: 'Taklifni yangilashda serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -39,11 +58,12 @@ exports.createProposal = async (req, res) => {
 exports.deleteProposal = async (req, res) => {
     try {
         const proposal = await Proposal.findById(req.params.id);
-        if (!proposal) return res.status(404).json({ msg: 'Taklif topilmadi' });
-        await proposal.remove();
-        res.json({ msg: 'Taklif o\'chirildi' });
+        if (!proposal) return res.status(404).json({ message: 'Taklif topilmadi' });
+        
+        await Proposal.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Taklif o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server xatosi');
+        console.error("Delete Proposal Error:", err.message);
+        res.status(500).json({ message: 'Taklifni o\'chirishda serverda xatolik yuz berdi: ' + err.message });
     }
 };

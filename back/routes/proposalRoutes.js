@@ -5,6 +5,7 @@ const auth = require('../middleware/auth');
 
 router.get('/', auth, proposalController.getProposals);
 router.post('/', auth, proposalController.createProposal);
+router.put('/:id', auth, proposalController.updateProposal);
 router.delete('/:id', auth, proposalController.deleteProposal);
 
 module.exports = router;

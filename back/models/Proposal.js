@@ -1,30 +1,41 @@
 const mongoose = require('mongoose');
 
 const ProposalSchema = new mongoose.Schema({
-    uniqueId: { type: String, unique: true },
-    kpNumber: { type: String }, // For search
-    orderId: { type: String }, // Optional link
-    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    kpNumber: { type: String, required: true },
     customer: {
         firstName: { type: String },
         lastName: { type: String },
-        phone: { type: String }
+        phone: { type: String },
+        address: { type: String }
     },
+    deadline: { type: String },
+    deadlineBasis: { type: String },
+    customBasis: { type: String },
+    selectedPartners: [{ type: String }],
     items: [
         {
             name: { type: String },
-            quantity: { type: Number },
+            desc: { type: String },
+            qty: { type: Number },
+            unit: { type: String },
             price: { type: Number },
-            total: { type: Number },
-            unit: { type: String }
+            image: { type: String } // Base64
         }
     ],
-    totalAmount: { type: Number },
-    discount: { type: Number, default: 0 },
+    services: {
+        eco: { type: Boolean, default: false },
+        cleaning: { type: Boolean, default: false },
+        packing: { type: Boolean, default: false }
+    },
+    servicePrices: {
+        eco: { type: Number, default: 0 },
+        cleaning: { type: Number, default: 0 },
+        packing: { type: Number, default: 0 }
+    },
+    grandTotal: { type: Number },
     managerId: { type: String },
     managerName: { type: String },
     showroom: { type: String },
-    date: { type: Date, default: Date.now },
     status: { type: String, default: 'active' }, // active, trash
     deletedAt: { type: Date },
     deleteReason: { type: String },
