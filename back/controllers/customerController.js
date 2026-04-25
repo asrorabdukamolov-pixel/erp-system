@@ -50,3 +50,37 @@ exports.createCustomer = async (req, res) => {
         res.status(500).json({ message: 'Mijozni saqlashda xatolik yuz berdi: ' + err.message });
     }
 };
+
+// @desc    Update a customer
+// @access  Private
+exports.updateCustomer = async (req, res) => {
+    try {
+        let customer = await Customer.findById(req.params.id);
+        if (!customer) return res.status(404).json({ message: 'Mijoz topilmadi' });
+
+        customer = await Customer.findByIdAndUpdate(
+            req.params.id,
+            { $set: req.body },
+            { new: true }
+        );
+        res.json(customer);
+    } catch (err) {
+        console.error("Update Customer Error:", err.message);
+        res.status(500).json({ message: 'Mijozni yangilashda xatolik yuz berdi: ' + err.message });
+    }
+};
+
+// @desc    Delete a customer
+// @access  Private
+exports.deleteCustomer = async (req, res) => {
+    try {
+        const customer = await Customer.findById(req.params.id);
+        if (!customer) return res.status(404).json({ message: 'Mijoz topilmadi' });
+        
+        await Customer.findByIdAndDelete(req.params.id);
+        res.json({ message: 'Mijoz o\'chirildi' });
+    } catch (err) {
+        console.error("Delete Customer Error:", err.message);
+        res.status(500).json({ message: 'Mijozni o\'chirishda xatolik yuz berdi: ' + err.message });
+    }
+};

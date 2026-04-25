@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Store } from 'lucide-react';
+import { Search, Store, Trash2, ShieldAlert, X, Check } from 'lucide-react';
 import api from '../../utils/api';
 
 const SOURCE_LABELS = {
@@ -17,6 +17,7 @@ const SuperCustomerBase = () => {
   const [search, setSearch] = useState('');
   const [filterShowroom, setFilterShowroom] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, item: null });
 
   const loadData = async () => {
     setLoading(true);
@@ -37,16 +38,27 @@ const SuperCustomerBase = () => {
     loadData();
   }, []);
 
+  const handleDelete = async () => {
+    if (!deleteModal.item) return;
+    try {
+      await api.delete(`/customers/${deleteModal.item._id}`);
+      setDeleteModal({ isOpen: false, item: null });
+      loadData();
+    } catch (err) {
+      alert("O'chirishda xatolik: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   const uniqueShowrooms = [...new Set(customers.map(c => c.showroom).filter(Boolean))];
 
   const filteredCustomers = customers.filter(c => {
-    const matchSearch = `${c.firstName} ${c.lastName} ${c.phone}`.toLowerCase().includes(search.toLowerCase());
+    const matchSearch = `${c.firstName} ${c.lastName || ''} ${c.phone}`.toLowerCase().includes(search.toLowerCase());
     const matchShowroom = filterShowroom === 'all' || c.showroom === filterShowroom;
     return matchSearch && matchShowroom;
   });
 
   const filteredAgents = agents.filter(a =>
-    `${a.firstName} ${a.lastName} ${a.phone} ${a.firm || ''}`.toLowerCase().includes(search.toLowerCase())
+    `${a.firstName} ${a.lastName || ''} ${a.phone} ${a.firm || ''}`.toLowerCase().includes(search.toLowerCase())
   );
 
   const TabBtn = ({ id, label }) => (
@@ -95,13 +107,15 @@ const SuperCustomerBase = () => {
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'left' }}>
                   <th style={{ padding: '14px 10px' }}>ID & Mijoz</th>
+                  <th style={{ padding: '14px 10px' }}>Ma'lumotlar</th>
                   <th style={{ padding: '14px 10px' }}>Showroom</th>
                   <th style={{ padding: '14px 10px' }}>Manba</th>
+                  <th style={{ padding: '14px 10px' }}>Amallar</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCustomers.length === 0 && (
-                  <tr><td colSpan={3} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Mijozlar topilmadi</td></tr>
+                  <tr><td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Mijozlar topilmadi</td></tr>
                 )}
                 {filteredCustomers.map(c => {
                   const src = SOURCE_LABELS[c.source];
@@ -112,6 +126,15 @@ const SuperCustomerBase = () => {
                         <p style={{ fontWeight: '600' }}>{c.firstName} {c.lastName}</p>
                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{c.phone}</p>
                       </td>
+                      <td style={{ padding: '18px 10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Jinsi:</span> {c.gender === 'erkak' ? 'Erkak' : c.gender === 'ayol' ? 'Ayol' : '—'}</p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Yoshi:</span> {c.age || '—'}</p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Uy:</span> <span style={{ textTransform: 'capitalize' }}>{c.propertyType || '—'}</span></p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Manzil:</span> {c.address || '—'}</p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Sana:</span> {new Date(c.createdAt).toLocaleDateString()}</p>
+                        </div>
+                      </td>
                       <td style={{ padding: '18px 10px', fontSize: '13px' }}>{c.showroom}</td>
                       <td style={{ padding: '18px 10px' }}>
                         {src ? (
@@ -119,6 +142,14 @@ const SuperCustomerBase = () => {
                             {src.icon} {src.label}
                           </span>
                         ) : <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>—</span>}
+                      </td>
+                      <td style={{ padding: '18px 10px' }}>
+                        <button 
+                          onClick={() => setDeleteModal({ isOpen: true, item: c })}
+                          style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </td>
                     </tr>
                   );
@@ -136,11 +167,13 @@ const SuperCustomerBase = () => {
                   <th style={{ padding: '14px 10px' }}>ID & Agent</th>
                   <th style={{ padding: '14px 10px' }}>Telefon</th>
                   <th style={{ padding: '14px 10px' }}>Firma</th>
+                  <th style={{ padding: '14px 10px' }}>Sana</th>
+                  <th style={{ padding: '14px 10px' }}>Amallar</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAgents.length === 0 && (
-                  <tr><td colSpan={3} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
+                  <tr><td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
                 )}
                 {filteredAgents.map(a => (
                   <tr key={a._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -157,6 +190,15 @@ const SuperCustomerBase = () => {
                     </td>
                     <td style={{ padding: '18px 10px', fontSize: '13px' }}>{a.phone}</td>
                     <td style={{ padding: '18px 10px' }}>{a.firm || '—'}</td>
+                    <td style={{ padding: '18px 10px', fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(a.createdAt).toLocaleDateString()}</td>
+                    <td style={{ padding: '18px 10px' }}>
+                      <button 
+                        onClick={() => setDeleteModal({ isOpen: true, item: a })}
+                        style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -164,6 +206,27 @@ const SuperCustomerBase = () => {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1100 }}>
+          <div className="premium-card" style={{ width: '400px', padding: '32px', textAlign: 'center', border: '1px solid #ef4444' }}>
+            <div style={{ width: '60px', height: '60px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+              <ShieldAlert size={32} />
+            </div>
+            <h3 style={{ fontSize: '20px', marginBottom: '12px' }}>O'chirishni tasdiqlaysizmi?</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>
+              <b>{deleteModal.item?.firstName} {deleteModal.item?.lastName}</b> {tab === 'customers' ? 'mijozini' : 'agentini'} bazadan butunlay o'chirib yubormoqchisiz. Bu amalni bekor qilib bo'lmaydi.
+            </p>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setDeleteModal({ isOpen: false, item: null })} className="secondary-btn" style={{ flex: 1 }}>Bekor qilish</button>
+              <button onClick={handleDelete} className="gold-btn" style={{ flex: 1, background: '#ef4444', color: 'white', justifyContent: 'center' }}>
+                <Check size={18} /> O'chirish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

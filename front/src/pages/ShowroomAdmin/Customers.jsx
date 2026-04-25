@@ -80,13 +80,16 @@ const ShowroomCustomersPage = () => {
                 <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'left' }}>
                   <th style={{ padding: '14px 10px' }}>ID & Mijoz</th>
                   <th style={{ padding: '14px 10px' }}>Aloqa</th>
+                  <th style={{ padding: '14px 10px' }}>Ma'lumotlar</th>
+                  <th style={{ padding: '14px 10px' }}>Manzil</th>
                   <th style={{ padding: '14px 10px' }}>Manba</th>
                   <th style={{ padding: '14px 10px' }}>Kiritdi</th>
+                  <th style={{ padding: '14px 10px' }}>Sana</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCustomers.length === 0 && (
-                  <tr><td colSpan={4} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Mijozlar topilmadi</td></tr>
+                  <tr><td colSpan={7} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Mijozlar topilmadi</td></tr>
                 )}
                 {filteredCustomers.map(c => {
                   const src = SOURCE_LABELS[c.source];
@@ -98,6 +101,14 @@ const ShowroomCustomersPage = () => {
                       </td>
                       <td style={{ padding: '18px 10px', fontSize: '13px' }}>{c.phone}</td>
                       <td style={{ padding: '18px 10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px' }}>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Jinsi:</span> {c.gender === 'erkak' ? 'Erkak' : c.gender === 'ayol' ? 'Ayol' : '—'}</p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Yoshi:</span> {c.age || '—'}</p>
+                          <p><span style={{ color: 'var(--text-secondary)' }}>Uy:</span> <span style={{ textTransform: 'capitalize' }}>{c.propertyType || '—'}</span></p>
+                        </div>
+                      </td>
+                      <td style={{ padding: '18px 10px', fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '200px' }}>{c.address}</td>
+                      <td style={{ padding: '18px 10px' }}>
                         {src ? (
                           <span style={{ fontSize: '12px', fontWeight: '600', color: src.color, background: src.color + '18', padding: '3px 10px', borderRadius: '20px' }}>
                             {src.icon} {src.label}
@@ -108,6 +119,7 @@ const ShowroomCustomersPage = () => {
                         )}
                       </td>
                       <td style={{ padding: '18px 10px', fontSize: '13px' }}>{c.managerName}</td>
+                      <td style={{ padding: '18px 10px', fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(c.createdAt).toLocaleDateString()}</td>
                     </tr>
                   );
                 })}
