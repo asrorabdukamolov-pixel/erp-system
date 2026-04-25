@@ -8,24 +8,25 @@ const init = async () => {
         await mongoose.connect(mongoURI);
         console.log("Bazaga ulanish muvaffaqiyatli!");
 
-        const adminExists = await User.findOne({ login: 'admin' });
-        if (!adminExists) {
-            const admin = new User({
+        let admin = await User.findOne({ login: 'admin' });
+        if (!admin) {
+            admin = new User({
                 name: 'Super',
                 surname: 'Admin',
                 login: 'admin',
                 password: 'admin123',
                 role: 'super'
             });
-            await admin.save();
-            console.log("--------------------------------------");
-            console.log("Birinchi Super Admin yaratildi!");
-            console.log("Login: admin");
-            console.log("Parol: admin123");
-            console.log("--------------------------------------");
+            console.log("Super Admin yangidan yaratildi.");
         } else {
-            console.log("Admin foydalanuvchisi allaqachon mavjud.");
+            admin.password = 'admin123';
+            console.log("Mavjud Admin paroli yangilandi.");
         }
+        await admin.save();
+        console.log("--------------------------------------");
+        console.log("Login: admin");
+        console.log("Parol: admin123");
+        console.log("--------------------------------------");
         process.exit();
     } catch (err) {
         console.error("Xatolik:", err);
