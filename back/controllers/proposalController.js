@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Proposal = require('../models/Proposal');
 
 // @desc    Get all active proposals
@@ -62,7 +63,13 @@ exports.updateProposal = async (req, res) => {
 exports.deleteProposal = async (req, res) => {
     try {
         const { reason } = req.body;
-        const proposal = await Proposal.findById(req.params.id);
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Noto\'g\'ri ID formati' });
+        }
+
+        const proposal = await Proposal.findById(id);
         if (!proposal) return res.status(404).json({ message: 'Taklif topilmadi' });
         
         proposal.status = 'trash';
@@ -74,7 +81,7 @@ exports.deleteProposal = async (req, res) => {
         res.json({ message: 'Taklif savatga tashlandi' });
     } catch (err) {
         console.error("Delete Proposal Error:", err.message);
-        res.status(500).json({ message: 'Taklifni o\'chirishda serverda xatolik yuz berdi: ' + err.message });
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
