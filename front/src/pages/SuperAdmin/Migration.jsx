@@ -77,17 +77,27 @@ const Migration = () => {
     };
 
     const resetDatabase = async () => {
-        if (!window.confirm("⚠️ DIQQAT! MongoDB dagi BARCHA ma'lumotlar o'chiriladi. Davom etasizmi?")) return;
+        if (!window.confirm("⚠️ DIQQAT! Tizim TO'LIQ tozalanadi (Brauzer va Server). Barcha ma'lumotlar o'chib ketadi. Davom etasizmi?")) return;
 
         setStatus('migrating');
         setLog([]);
-        addLog("Baza tozalanmoqda...");
+        addLog("Tizim tozalanmoqda...");
 
         try {
+            // 1. Clear Server Database
             const res = await api.delete('/migrate/reset');
-            addLog("Server javobi: " + res.data.msg);
+            addLog("Server tozalandi: " + res.data.msg);
+
+            // 2. Clear Browser LocalStorage
+            addLog("Brauzer xotirasi tozalanmoqda...");
+            localStorage.clear();
+            
             setStatus('idle');
-            addLog("✅ Baza muvaffaqiyatli tozalandi. Endi qaytadan migratsiya qilishingiz mumkin.");
+            addLog("✅ Tizim to'liq tozalandi! Endi sahifani yangilab, ishingizni noldan boshlashingiz mumkin.");
+            
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 2000);
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.msg || err.message);
