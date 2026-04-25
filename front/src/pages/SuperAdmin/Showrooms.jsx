@@ -1,41 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Store, Plus, Search, Edit2, Trash2, MapPin, User, ShieldAlert, X, Check, ArrowRight, ShieldCheck, Clock, Ban, Eye, EyeOff } from 'lucide-react';
+import api from '../../utils/api';
 
 const Showrooms = () => {
-  // Load initial showrooms from localStorage
-  const [showrooms, setShowrooms] = useState(() => {
-    const saved = localStorage.getItem('erp_showrooms');
-    if (saved) return JSON.parse(saved);
-    
-    // Default data if empty
-    return [
-      {
-        id: 1,
-        name: 'Olmazor',
-        address: 'Toshkent sh., Olmazor tumani, Kichik xalqa yo\'li, 12-uy',
-        adminName: 'Aziz',
-        adminSurname: 'Rahimov',
-        login: 'olmazor',
-        password: '123',
-        status: 'Faol'
-      },
-      {
-        id: 2,
-        name: 'Shayxontohur',
-        address: 'Toshkent sh., Shayxontohur tumani, Labzak ko\'chasi, 45-uy',
-        adminName: 'Malika',
-        adminSurname: 'Karimova',
-        login: 'shayxon',
-        password: '123',
-        status: 'Faol'
-      }
-    ];
-  });
+  const [showrooms, setShowrooms] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Save to localStorage whenever showrooms list changes
+  const loadShowrooms = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/showrooms');
+      setShowrooms(res.data);
+    } catch (err) {
+      console.error("Showroom loading error", err);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    localStorage.setItem('erp_showrooms', JSON.stringify(showrooms));
-  }, [showrooms]);
+    loadShowrooms();
+  }, []);
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,10 +53,15 @@ const Showrooms = () => {
       }, 1000);
     } else if (countdown === 0 && isActiveDelete) {
       // Finalize Deletion
-      setShowrooms(showrooms.filter(s => s.id !== showroomToDelete.id));
-      setIsActiveDelete(false);
-      setDeleteModalOpen(false);
-      setShowroomToDelete(null);
+      api.delete(`/showrooms/${showroomToDelete._id}`).then(() => {
+          loadShowrooms();
+          setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setShowroomToDelete(null);
+      }).catch(err => {
+          alert("O'chirishda xatolik yuz berdi");
+          setIsActiveDelete(false);
+      });
     }
     return () => clearInterval(timer);
   }, [isActiveDelete, countdown, showrooms, showroomToDelete]);
@@ -96,19 +85,19 @@ const Showrooms = () => {
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (modalMode === 'add') {
-      const newShowroom = {
-        id: Date.now(),
-        ...formData,
-        status: 'Faol'
-      };
-      setShowrooms([...showrooms, newShowroom]);
-    } else {
-      setShowrooms(showrooms.map(s => s.id === currentShowroom.id ? { ...s, ...formData } : s));
+    try {
+      if (modalMode === 'add') {
+        await api.post('/showrooms', formData);
+      } else {
+        await api.put(`/showrooms/${currentShowroom._id}`, formData);
+      }
+      loadShowrooms();
+      setIsModalOpen(false);
+    } catch (err) {
+      alert(err.response?.data?.msg || "Saqlashda xatolik yuz berdi");
     }
-    setIsModalOpen(false);
   };
 
   const startDeleteProcess = (showroom) => {
@@ -135,10 +124,14 @@ const Showrooms = () => {
     setShowroomToDelete(null);
   };
 
-  const toggleStatus = (id) => {
-    setShowrooms(showrooms.map(s => 
-      s.id === id ? { ...s, status: s.status === 'Faol' ? 'Bloklangan' : 'Faol' } : s
-    ));
+  const toggleStatus = async (showroom) => {
+    try {
+        const newStatus = showroom.status === 'Faol' ? 'Bloklangan' : 'Faol';
+        await api.put(`/showrooms/${showroom._id}`, { ...showroom, status: newStatus });
+        loadShowrooms();
+    } catch (err) {
+        alert("Statusni o'zgartirishda xatolik");
+    }
   };
 
   return (
@@ -171,7 +164,7 @@ const Showrooms = () => {
               </thead>
               <tbody>
                 {showrooms.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
+                  <tr key={s._id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
                     <td style={{ padding: '20px 8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--accent-gold)', padding: '10px', borderRadius: '10px' }}>
@@ -211,7 +204,7 @@ const Showrooms = () => {
                     </td>
                     <td style={{ padding: '20px 8px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                        <button onClick={() => toggleStatus(s.id)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title="Bloklash/Aktivlashtirish">
+                        <button onClick={() => toggleStatus(s)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title="Bloklash/Aktivlashtirish">
                           <Ban size={18} />
                         </button>
                         <button onClick={() => handleOpenModal('edit', s)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title="Tahrirlash">

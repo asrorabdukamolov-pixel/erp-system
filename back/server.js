@@ -19,6 +19,7 @@ const path = require('path');
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/showrooms', require('./routes/showroomRoutes'));
 app.use('/api/customers', require('./routes/customerRoutes'));
 app.use('/api/partners', require('./routes/partnerRoutes'));
 app.use('/api/purchases', require('./routes/purchaseRoutes'));
