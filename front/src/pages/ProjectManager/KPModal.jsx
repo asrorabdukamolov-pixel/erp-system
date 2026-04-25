@@ -228,7 +228,7 @@ const KPModal = ({ onClose, editData = null }) => {
       display: inline-block;
     }
     .tt-meta { margin-top: 10px; font-size: 14px; font-weight: 700; color: #888; }
-    .tt-meta span { color: #d4af37; font-weight: 900; }
+    .tt-meta span { color: #008B8B; font-weight: 900; }
 
     /* Info Section (Buyer & Manager) */
     .info-grid { 
@@ -328,7 +328,7 @@ const KPModal = ({ onClose, editData = null }) => {
       border-radius: 14px; 
       padding: 22px 26px;
     }
-    .deadline-val { font-size: 30px; font-weight: 900; color: #d4af37; letter-spacing: -1px; margin-bottom: 6px; }
+    .deadline-val { font-size: 30px; font-weight: 900; color: #008B8B; letter-spacing: -1px; margin-bottom: 6px; }
     .deadline-sub { font-size: 12px; color: #999; line-height: 1.5; }
 
     .grand-total-card { 
@@ -344,7 +344,7 @@ const KPModal = ({ onClose, editData = null }) => {
     .total-label { font-size: 13px; color: #888; }
     .total-val { font-size: 13px; font-weight: 700; color: #ddd; }
     .grand-label { font-size: 11px; font-weight: 900; color: #888; border-top: 1px solid #2a2a2a; padding-top: 14px; margin-top: 6px; text-transform: uppercase; letter-spacing: 1px; }
-    .grand-val { font-size: 28px; font-weight: 900; color: #fbbf24; letter-spacing: -0.5px; text-align: right; margin-top: 4px; }
+    .grand-val { font-size: 28px; font-weight: 900; color: #008B8B; letter-spacing: -0.5px; text-align: right; margin-top: 4px; }
 
     /* Services Section (Bonus tags) */
     .services-title { font-size: 10px; font-weight: 900; color: #b5a38a; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 15px; margin-top: 40px; }
@@ -360,7 +360,7 @@ const KPModal = ({ onClose, editData = null }) => {
     }
     .service-name { font-size: 14px; font-weight: 800; color: #222; }
     .service-desc { font-size: 12px; color: #888; margin-top: 3px; }
-    .bonus-tag { background: #fff; color: #d4af37; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 950; border: 1px solid #f0f0ed; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .bonus-tag { background: #fff; color: #008B8B; padding: 6px 14px; border-radius: 8px; font-size: 11px; font-weight: 950; border: 1px solid #f0f0ed; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
 
     /* Footer */
     .footer { 
@@ -573,8 +573,8 @@ const KPModal = ({ onClose, editData = null }) => {
                 </div>
                 {selectedCustomer && (
                   <div style={{ marginTop:'12px', background:'rgba(251,191,36,0.05)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:'12px', padding:'14px 18px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px' }}>
-                    <div style={{ display:'flex', gap:'8px', alignItems:'center', fontSize:'13px' }}><User size={14} color="#fbbf24"/> {selectedCustomer.firstName} {selectedCustomer.lastName}</div>
-                    <div style={{ display:'flex', gap:'8px', alignItems:'center', fontSize:'13px' }}><Phone size={14} color="#fbbf24"/> {selectedCustomer.phone}</div>
+                    <div style={{ display:'flex', gap:'8px', alignItems:'center', fontSize:'13px' }}><User size={14} color="#008B8B"/> {selectedCustomer.firstName} {selectedCustomer.lastName}</div>
+                    <div style={{ display:'flex', gap:'8px', alignItems:'center', fontSize:'13px' }}><Phone size={14} color="#008B8B"/> {selectedCustomer.phone}</div>
                   </div>
                 )}
               </div>
@@ -610,8 +610,8 @@ const KPModal = ({ onClose, editData = null }) => {
                   {DEADLINE_OPTIONS.map(opt => (
                     <label key={opt.id}
                       style={{ display:'flex', alignItems:'center', gap:'12px', padding:'13px 16px', background: deadlineBasis === opt.id ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.03)', border:`1px solid ${deadlineBasis === opt.id ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius:'10px', cursor:'pointer', transition:'0.2s', fontSize:'13px' }}>
-                      <div style={{ width:'18px', height:'18px', borderRadius:'50%', border:`2px solid ${deadlineBasis === opt.id ? '#fbbf24' : 'rgba(255,255,255,0.25)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                        {deadlineBasis === opt.id && <div style={{ width:'9px', height:'9px', borderRadius:'50%', background:'#fbbf24' }}/>}
+                      <div style={{ width:'18px', height:'18px', borderRadius:'50%', border:`2px solid ${deadlineBasis === opt.id ? '#008B8B' : 'rgba(255,255,255,0.25)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
+                        {deadlineBasis === opt.id && <div style={{ width:'9px', height:'9px', borderRadius:'50%', background:'#008B8B' }}/>}
                       </div>
                       <input type="radio" name="deadlineBasis" value={opt.id} checked={deadlineBasis === opt.id}
                         onChange={() => setDeadlineBasis(opt.id)} style={{ display:'none' }}/>
@@ -665,9 +665,9 @@ const KPModal = ({ onClose, editData = null }) => {
                       const active = selectedPartners.includes(p.id);
                       return (
                         <button key={p.id} type="button" onClick={() => togglePartner(p.id)}
-                          style={{ background: active ? 'rgba(251,191,36,0.08)' : '#fff', border:`2px solid ${active ? '#fbbf24' : '#e5e7eb'}`, borderRadius:'12px', padding:'10px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', transition:'0.2s', position:'relative', overflow:'hidden', minHeight: '80px' }}>
+                          style={{ background: active ? 'rgba(251,191,36,0.08)' : '#fff', border:`2px solid ${active ? '#008B8B' : '#e5e7eb'}`, borderRadius:'12px', padding:'10px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', transition:'0.2s', position:'relative', overflow:'hidden', minHeight: '80px' }}>
                           {active && (
-                            <div style={{ position:'absolute', top:'4px', right:'4px', width:'18px', height:'18px', background:'#fbbf24', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            <div style={{ position:'absolute', top:'4px', right:'4px', width:'18px', height:'18px', background:'#008B8B', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <CheckCircle2 size={12} color="#0f1117" strokeWidth={3}/>
                             </div>
                           )}
@@ -678,7 +678,7 @@ const KPModal = ({ onClose, editData = null }) => {
                               <img src={p.logo} alt={p.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                             )}
                           </div>
-                          <span style={{ fontSize:'9px', fontWeight:'800', color: active ? '#fbbf24' : '#555', textTransform:'uppercase', letterSpacing:'0.5px', textAlign: 'center' }}>{p.name}</span>
+                          <span style={{ fontSize:'9px', fontWeight:'800', color: active ? '#008B8B' : '#555', textTransform:'uppercase', letterSpacing:'0.5px', textAlign: 'center' }}>{p.name}</span>
                         </button>
                       );
                     })
