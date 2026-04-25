@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import KPModal from './KPModal';
+import api from '../../utils/api';
 
 // --- Constants ---
 const DEAL_STAGES = [
@@ -264,8 +265,23 @@ const Orders = () => {
   }, [isOrderModalOpen, newOrder.timeline]);
 
   useEffect(() => {
-    const handleStorage = () => { setAllOrders(JSON.parse(localStorage.getItem('erp_orders') || '[]')); setCustomers(JSON.parse(localStorage.getItem('erp_customers') || '[]')); };
-    window.addEventListener('storage', handleStorage); return () => window.removeEventListener('storage', handleStorage);
+    const loadData = async () => {
+      try {
+        const [ordersRes, customersRes] = await Promise.all([
+          api.get('/orders'),
+          api.get('/customers')
+        ]);
+        setAllOrders(ordersRes.data);
+        setCustomers(customersRes.data);
+      } catch (err) {
+        console.error("Data load error", err);
+      }
+    };
+    loadData();
+    
+    const handleStorage = () => { loadData(); };
+    window.addEventListener('storage', handleStorage); 
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   useEffect(() => {
@@ -329,18 +345,27 @@ const Orders = () => {
   const handleDragStart = (e, orderId) => { e.dataTransfer.setData('orderId', orderId); e.target.style.opacity = '0.5'; };
   const handleDragEnd = (e) => { e.target.style.opacity = '1'; };
   const handleDragOver = (e) => { e.preventDefault(); };
-  const handleDrop = (e, stageId) => {
+  const handleDrop = async (e, stageId) => {
     const orderId = e.dataTransfer.getData('orderId');
-    const order = allOrders.find(o => o.id === Number(orderId));
+    const order = allOrders.find(o => o._id === orderId || o.id === Number(orderId));
     if (!order) return;
+    
     if (LOCKED_STAGES.includes(order.status)) return alert("Ishlab chiqarishdagi buyurtmani surib bo'lmaydi.");
     if (LOCKED_STAGES.includes(stageId)) return alert("Tasdiqlash bosqichiga o'tkazish faqat Admin tomonidan amalga oshiriladi.");
     
     const prevStage = STAGES.find(s => s.id === order.status)?.title || order.status;
     const nextStage = STAGES.find(s => s.id === stageId)?.title || stageId;
     const log = { type: 'stage', text: `Bosqich o'zgardi: ${prevStage} → ${nextStage}`, time: new Date().toISOString(), user: user.name };
-    const updated = allOrders.map(o => o.id === Number(orderId) ? { ...o, status: stageId, timeline: [...(o.timeline || []), log] } : o);
-    setAllOrders(updated); localStorage.setItem('erp_orders', JSON.stringify(updated));
+    
+    try {
+      const res = await api.put(`/orders/${order._id || orderId}`, { 
+        status: stageId, 
+        timeline: [...(order.timeline || []), log] 
+      });
+      setAllOrders(allOrders.map(o => o._id === (order._id || orderId) ? res.data : o));
+    } catch (err) {
+      console.error("Drop error", err);
+    }
   };
 
   const handleAddComment = () => {
@@ -354,16 +379,45 @@ const Orders = () => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddComment(); }
   };
 
-  const handleCreateOrder = (e) => {
-    e.preventDefault(); if (!newOrder.selectedCustomer) return alert('Mijozni tanlang!');
+  const handleCreateOrder = async (e) => {
+    e.preventDefault(); 
+    if (!newOrder.selectedCustomer) return alert('Mijozni tanlang!');
     if (editingId && LOCKED_STAGES.includes(newOrder.status)) return alert("Ishlab chiqarishdagi buyurtma ma'lumotlarini o'zgartirib bo'lmaydi.");
-    const cleanAmount = newOrder.amount.toString().replace(/\s/g, ''); let finalAmount = Number(cleanAmount);
+    
+    const cleanAmount = newOrder.amount.toString().replace(/\s/g, ''); 
+    let finalAmount = Number(cleanAmount);
     const isNew = !editingId;
-    const log = isNew ? { type: 'system', text: "Buyurtma yaratildi", time: new Date().toISOString(), user: user.name } : { type: 'system', text: "Ma'lumotlar yangilandi", time: new Date().toISOString(), user: user.name };
-    const payload = { ...newOrder, amount: finalAmount, currency: 'UZS', timeline: [...(newOrder.timeline || []), log] };
-    const updated = editingId ? allOrders.map(o => o.id === editingId ? { ...o, ...payload } : o) : [...allOrders, { id: Date.now(), uniqueId: `EXP-${allOrders.length + 1001}`, ...payload, managerId: user.id, managerName: user.name, showroom: user.showroom, createdAt: new Date().toISOString() }];
-    setAllOrders(updated); localStorage.setItem('erp_orders', JSON.stringify(updated));
-    setIsOrderModalOpen(false); setEditingId(null); setNewOrder(emptyOrder);
+    
+    const log = isNew 
+      ? { type: 'system', text: "Buyurtma yaratildi", time: new Date().toISOString(), user: user.name } 
+      : { type: 'system', text: "Ma'lumotlar yangilandi", time: new Date().toISOString(), user: user.name };
+    
+    const payload = { 
+      ...newOrder, 
+      amount: finalAmount, 
+      currency: 'UZS', 
+      timeline: [...(newOrder.timeline || []), log] 
+    };
+
+    try {
+      if (isNew) {
+        const res = await api.post('/orders', {
+          ...payload,
+          uniqueId: `EXP-${allOrders.length + 1001}`
+        });
+        setAllOrders([...allOrders, res.data]);
+      } else {
+        const res = await api.put(`/orders/${editingId}`, payload);
+        setAllOrders(allOrders.map(o => o._id === editingId ? res.data : o));
+      }
+      
+      setIsOrderModalOpen(false); 
+      setEditingId(null); 
+      setNewOrder(emptyOrder);
+    } catch (err) {
+      console.error("Order save error", err);
+      alert("Buyurtmani saqlashda xatolik!");
+    }
   };
 
   if (!user) return <div style={{ padding: '40px', textAlign: 'center' }}>Yuklanmoqda...</div>;
@@ -454,7 +508,7 @@ const Orders = () => {
                       <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Arxivda buyurtmalar yo'q.</td></tr>
                     ) : (
                       filteredOrders.map(o => (
-                        <tr key={o.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                           <td style={{ padding: '15px', color: 'var(--accent-gold)', fontWeight: '800' }}>{o.uniqueId}</td>
                           <td style={{ padding: '15px' }}>{o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}</td>
                           <td style={{ padding: '15px' }}>{o.managerName}</td>
@@ -466,7 +520,7 @@ const Orders = () => {
                             })()}
                           </td>
                           <td style={{ padding: '15px' }}>
-                            <button onClick={() => { setEditingId(o.id); setNewOrder(o); setIsOrderModalOpen(true); }} className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }}><Eye size={14} /> Ko'rish</button>
+                            <button onClick={() => { setEditingId(o._id); setNewOrder(o); setIsOrderModalOpen(true); }} className="secondary-btn" style={{ padding: '6px 12px', fontSize: '12px' }}><Eye size={14} /> Ko'rish</button>
                           </td>
                         </tr>
                       ))
@@ -514,11 +568,12 @@ const Orders = () => {
                     const isLocked = LOCKED_STAGES.includes(order.status);
                     return (
                       <div 
-                        key={order.id} 
+                        key={order._id} 
                         draggable={!isLocked} 
-                        onDragStart={(e) => handleDragStart(e, order.id)} 
+                        onDragStart={(e) => handleDragStart(e, order._id)} 
                         onDragEnd={handleDragEnd} 
                         style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '20px', marginBottom: '16px', position: 'relative', cursor: isLocked ? 'default' : 'grab' }}
+                        onClick={() => { setEditingId(order._id); setNewOrder(order); setIsOrderModalOpen(true); }}
                       >
                           <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: stage.color, borderRadius: '4px 0 0 4px' }} />
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>

@@ -28,6 +28,16 @@ router.put('/:id', auth, orderController.updateOrder);
 // @access  Private
 router.delete('/:id', auth, orderController.deleteOrder);
 
+// @route   GET api/orders/trash/all
+// @desc    Get all trashed orders
+// @access  Private
+router.get('/trash/all', auth, orderController.getTrashedOrders);
+
+// @route   POST api/orders/:id/restore
+// @desc    Restore an order
+// @access  Private
+router.post('/:id/restore', auth, orderController.restoreOrder);
+
 // @route   POST api/orders/:id/log
 // @desc    Add timeline log to order
 // @access  Private

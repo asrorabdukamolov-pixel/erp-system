@@ -1,32 +1,43 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Printer, Trash2 } from 'lucide-react';
 
 // PARTNERS_MAP will be built dynamically from localStorage
 
-const ProposalsModal = ({ onClose, user }) => {
+const ProposalsModal = ({ onClose }) => {
   const [proposals, setProposals] = useState([]);
+  const [partnersMap, setPartnersMap] = useState({});
 
   useEffect(() => {
-    try {
-      const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-      setProposals(all.filter(p => p.managerId === user?.id));
-    } catch { setProposals([]); }
-  }, [user?.id]);
+    const loadData = async () => {
+      try {
+        const [propRes, partRes] = await Promise.all([
+          api.get('/proposals'),
+          api.get('/partners')
+        ]);
+        setProposals(propRes.data);
+        const pMap = partRes.data.reduce((acc, curr) => {
+          acc[curr._id] = curr;
+          return acc;
+        }, {});
+        setPartnersMap(pMap);
+      } catch (err) {
+        console.error("Proposals load error", err);
+      }
+    };
+    loadData();
+  }, []);
 
-  const removeProposal = (id) => {
+  const removeProposal = async (id) => {
     if (!window.confirm("Bu taklifni o'chirishni xohlaysizmi?")) return;
-    const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-    localStorage.setItem('erp_proposals', JSON.stringify(all.filter(x => x.id !== id)));
-    setProposals(prev => prev.filter(x => x.id !== id));
+    try {
+      await api.delete(`/proposals/${id}`);
+      setProposals(prev => prev.filter(x => x._id !== id));
+    } catch (err) {
+      alert("O'chirishda xatolik!");
+    }
   };
 
   const handlePrint = (p) => {
-    const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
-    const partnersMap = savedPartners.reduce((acc, curr) => {
-      acc[curr.id] = curr;
-      return acc;
-    }, {});
-
     const activePartners = (p.selectedPartners || []).map(id => partnersMap[id]).filter(Boolean);
     const basisText =
       p.deadlineBasis === 'custom'   ? (p.customBasis || '') :
@@ -123,7 +134,7 @@ ${p.deadline ? `
         ) : (
           <div style={{ display:'flex', flexDirection:'column', gap:'12px' }}>
             {proposals.map(p => (
-              <div key={p.id} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid var(--border-color)', borderRadius:'16px', padding:'20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+              <div key={p._id} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid var(--border-color)', borderRadius:'16px', padding:'20px', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                 <div>
                   <p style={{ fontSize:'11px', color:'var(--accent-gold)', fontWeight:'800' }}>{p.kpNumber}</p>
                   <h4 style={{ fontSize:'16px', fontWeight:'700' }}>{p.customer?.firstName} {p.customer?.lastName}</h4>
@@ -133,7 +144,7 @@ ${p.deadline ? `
                 </div>
                 <div style={{ display:'flex', gap:'8px' }}>
                   <button onClick={() => handlePrint(p)} style={{ padding:'10px', borderRadius:'10px', background:'rgba(251,191,36,0.1)', color:'var(--accent-gold)', border:'none', cursor:'pointer' }}><Printer size={18}/></button>
-                  <button onClick={() => removeProposal(p.id)} style={{ padding:'10px', borderRadius:'10px', background:'rgba(239,68,68,0.1)', color:'#ef4444', border:'none', cursor:'pointer' }}><Trash2 size={18}/></button>
+                  <button onClick={() => removeProposal(p._id)} style={{ padding:'10px', borderRadius:'10px', background:'rgba(239,68,68,0.1)', color:'#ef4444', border:'none', cursor:'pointer' }}><Trash2 size={18}/></button>
                 </div>
               </div>
             ))}

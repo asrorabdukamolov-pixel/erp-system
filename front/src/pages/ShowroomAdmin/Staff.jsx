@@ -113,37 +113,28 @@ const Staff = () => {
         firstName: staff.name,
         lastName: staff.surname,
         login: staff.login,
-        phone: staff.phone || '',
+        phone: staff.phone || '+998 ',
         role: staff.role,
         password: ''
       });
     } else {
-      setFormData({ firstName: '', lastName: '', login: '', phone: '', role: 'kassa', password: '' });
+      setFormData({ firstName: '', lastName: '', login: '', phone: '+998 ', role: 'kassa', password: '' });
     }
     setShowPassword(false);
     setIsModalOpen(true);
   };
 
   const handlePhoneChange = (e) => {
-    let input = e.target.value.replace(/\D/g, ''); // Faqat raqamlarni qoldirish
+    let val = e.target.value;
+    if (!val.startsWith('+998 ')) val = '+998 ' + val.replace(/\D/g, '').substring(3);
     
-    if (input.length === 0) {
-      setFormData({...formData, phone: ''});
-      return;
-    }
-
-    // Har doim 998 dan boshlanadi deb faraz qilamiz agar foydalanuvchi to'g'ridan to'g'ri kodni yozsa
-    if (!input.startsWith('998') && input.length <= 12) {
-        input = '998' + input;
-    }
-
-    let formatted = '+';
-    if (input.length > 0) formatted += input.substring(0, 3);
-    if (input.length > 3) formatted += ' ' + input.substring(3, 5);
-    if (input.length > 5) formatted += ' ' + input.substring(5, 8);
-    if (input.length > 8) formatted += ' ' + input.substring(8, 10);
-    if (input.length > 10) formatted += ' ' + input.substring(10, 12);
-
+    const digits = val.replace(/\D/g, '').substring(3, 12);
+    let formatted = '+998 ';
+    if (digits.length > 0) formatted += digits.substring(0, 2);
+    if (digits.length > 2) formatted += ' ' + digits.substring(2, 5);
+    if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
+    if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
+    
     setFormData({...formData, phone: formatted});
   };
 
@@ -358,7 +349,7 @@ const Staff = () => {
                     style={{ width: '100%', padding: '14px', paddingRight: '50px', fontSize: '16px' }} 
                     value={formData.password} 
                     onChange={e => setFormData({...formData, password: e.target.value})} 
-                    placeholder="••••••••" 
+                    placeholder={modalMode === 'edit' ? "O'zgartirmasangiz bo'sh qoldiring" : "••••••••"} 
                     required={modalMode === 'add'} 
                   />
                   <button 

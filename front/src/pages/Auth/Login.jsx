@@ -36,11 +36,29 @@ const Login = () => {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
       background: 'radial-gradient(circle at top right, #1a1a1a, #0a0a0a)',
       padding: '20px'
     }}>
+      {/* Top Branding Header */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        padding: '30px 40px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center',
+        gap: '12px'
+      }}>
+        <div style={{ width: '40px', height: '40px', background: '#fff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px' }}>
+          <img src={logo} alt="Express Mebel Logo" style={{ width: '100%', height: 'auto' }} />
+        </div>
+        <h1 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>Express Mebel <span style={{ color: 'var(--accent-gold)' }}>ERP</span></h1>
+      </div>
       <div className="premium-card" style={{
         width: '100%',
         maxWidth: '420px',

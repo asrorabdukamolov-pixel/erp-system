@@ -13,6 +13,7 @@ const UserSchema = new mongoose.Schema({
     },
     showroom: { type: String },
     photo: { type: String, default: '' },
+    phone: { type: String, default: '' },
     status: { type: String, default: 'active', enum: ['active', 'inactive'] }
 }, { timestamps: true });
 

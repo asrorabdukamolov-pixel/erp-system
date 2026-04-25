@@ -10,6 +10,7 @@ import {
   Phone,
   MapPin
 } from 'lucide-react';
+import api from '../../utils/api';
 
 const ShowroomPartners = () => {
   const [partners, setPartners] = useState([]);
@@ -24,39 +25,48 @@ const ShowroomPartners = () => {
     address: ''
   });
 
+  const loadPartners = async () => {
+    try {
+      const res = await api.get('/partners');
+      setPartners(res.data);
+    } catch (err) {
+      console.error("Partners fetch error", err);
+    }
+  };
+
   useEffect(() => {
-    const savedPartners = JSON.parse(localStorage.getItem('erp_showroom_partners') || '[]');
-    setPartners(savedPartners);
+    loadPartners();
   }, []);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.companyName || !formData.responsiblePerson || !formData.phone || !formData.address) {
       alert('Iltimos, barcha maydonlarni to\'ldiring!');
       return;
     }
 
-    let updatedPartners;
-    if (editingPartner) {
-      updatedPartners = partners.map(p => p.id === editingPartner.id ? { ...p, ...formData } : p);
-    } else {
-      const newPartner = {
-        id: Date.now(),
-        createdAt: new Date().toISOString(),
-        ...formData
-      };
-      updatedPartners = [...partners, newPartner];
+    try {
+      if (editingPartner) {
+        await api.put(`/partners/${editingPartner._id}`, formData);
+      } else {
+        await api.post('/partners', formData);
+      }
+      loadPartners();
+      closeModal();
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Xatolik yuz berdi");
     }
-
-    setPartners(updatedPartners);
-    localStorage.setItem('erp_showroom_partners', JSON.stringify(updatedPartners));
-    closeModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Haqiqatdan ham ushbu hamkorni o\'chirmoqchimisiz?')) {
-      const updatedPartners = partners.filter(p => p.id !== id);
-      setPartners(updatedPartners);
-      localStorage.setItem('erp_showroom_partners', JSON.stringify(updatedPartners));
+      try {
+        await api.delete(`/partners/${id}`);
+        loadPartners();
+      } catch (err) {
+        console.error("Delete error", err);
+        alert("Xatolik yuz berdi");
+      }
     }
   };
 
@@ -177,7 +187,7 @@ const ShowroomPartners = () => {
                 </tr>
               ) : (
                 filteredPartners.map((partner) => (
-                  <tr key={partner.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: '0.3s' }}>
+                  <tr key={partner._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: '0.3s' }}>
                     <td style={{ padding: '20px 24px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                           <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}>
@@ -213,7 +223,7 @@ const ShowroomPartners = () => {
                             <Edit2 size={18} />
                           </button>
                           <button 
-                            onClick={() => handleDelete(partner.id)}
+                            onClick={() => handleDelete(partner._id)}
                             style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer' }}
                           >
                             <Trash2 size={18} />

@@ -5,6 +5,7 @@ const ShowroomSchema = new mongoose.Schema({
     address: { type: String },
     adminName: { type: String },
     adminSurname: { type: String },
+    phone: { type: String, default: '' },
     login: { type: String, required: true, unique: true },
     password: { type: String, default: '123' },
     status: { type: String, default: 'Faol' }

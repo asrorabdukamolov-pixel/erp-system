@@ -13,7 +13,7 @@ exports.register = async (req, res) => {
         user = new User({ name, surname, login, password, role, showroom });
         await user.save();
 
-        const payload = { user: { id: user.id, role: user.role, name: user.name, showroom: user.showroom } };
+        const payload = { user: { id: user.id, role: user.role, name: user.name, showroom: user.showroom, phone: user.phone } };
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
             if (err) throw err;

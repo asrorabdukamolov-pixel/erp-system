@@ -4,6 +4,7 @@ import {
   User, Phone, Clock, Package, CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 // PARTNERS array moved inside the component to be dynamic
 
@@ -74,16 +75,23 @@ const KPModal = ({ onClose, editData = null }) => {
   }, [editData]);
 
   useEffect(() => {
-    setCustomers(JSON.parse(localStorage.getItem('erp_customers') || '[]'));
-    
-    // Load dynamic partners
-    const savedPartners = JSON.parse(localStorage.getItem('erp_partners') || '[]');
-    setPartnersList(savedPartners);
-    
-    // Default select first few if any
-    if (savedPartners.length > 0 && selectedPartners.length === 0) {
-      setSelectedPartners(savedPartners.slice(0, 3).map(p => p.id));
-    }
+    const loadData = async () => {
+      try {
+        const [customersRes, partnersRes] = await Promise.all([
+          api.get('/customers'),
+          api.get('/partners')
+        ]);
+        setCustomers(customersRes.data);
+        setPartnersList(partnersRes.data);
+        
+        if (partnersRes.data.length > 0 && selectedPartners.length === 0) {
+          setSelectedPartners(partnersRes.data.slice(0, 3).map(p => p._id));
+        }
+      } catch (err) {
+        console.error("Data load error", err);
+      }
+    };
+    loadData();
   }, []);
 
   useEffect(() => {
@@ -139,8 +147,17 @@ const KPModal = ({ onClose, editData = null }) => {
   const togglePartner = id => setSelectedPartners(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
   // Totals
-  const itemsTotal   = items.reduce((s, i) => s + (Number(i.qty) * Number(i.price) || 0), 0);
-  const servicesTotal = Object.entries(services).reduce((s, [k, v]) => s + (v ? Number(servicePrices[k]) || 0 : 0), 0);
+  const itemsTotal = items.reduce((s, i) => {
+    const qty = parseFloat(i.qty) || 0;
+    const price = parseFloat(i.price?.toString().replace(/\D/g, '')) || 0;
+    return s + (qty * price);
+  }, 0);
+
+  const servicesTotal = Object.entries(services).reduce((s, [k, v]) => {
+    const price = parseFloat(servicePrices[k]?.toString().replace(/\D/g, '')) || 0;
+    return s + (v ? price : 0);
+  }, 0);
+  
   const grandTotal   = itemsTotal + servicesTotal;
 
   const getBasisText = () => {
@@ -148,21 +165,19 @@ const KPModal = ({ onClose, editData = null }) => {
     return DEADLINE_OPTIONS.find(o => o.id === deadlineBasis)?.label || '';
   };
 
-  const handleSave = () => {
-    // Clean items prices
+  const handleSave = async () => {
     const cleanItems = items.map(i => ({
       ...i,
-      price: Number(i.price?.toString().replace(/\s/g, '') || 0)
+      price: parseFloat(i.price?.toString().replace(/\D/g, '')) || 0
     }));
 
     // Clean service prices
     const cleanServicePrices = {};
     Object.entries(servicePrices).forEach(([k, v]) => {
-      cleanServicePrices[k] = Number(v?.toString().replace(/\s/g, '') || 0);
+      cleanServicePrices[k] = parseFloat(v?.toString().replace(/\D/g, '')) || 0;
     });
 
-    const proposal = {
-      id: editData ? editData.id : Date.now(),
+    const proposalData = {
       kpNumber,
       customer: selectedCustomer,
       deadline, deadlineBasis, customBasis,
@@ -170,23 +185,21 @@ const KPModal = ({ onClose, editData = null }) => {
       items: cleanItems, 
       services, 
       servicePrices: cleanServicePrices,
-      grandTotal, managerId: user?.id, managerName: user?.name,
-      managerPhone: user?.phone, showroom: user?.showroom,
-      createdAt: editData ? editData.createdAt : new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      grandTotal,
     };
     
-    const existing = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-    let updated;
-    if (editData) {
-      updated = existing.map(p => p.id === editData.id ? proposal : p);
-    } else {
-      updated = [proposal, ...existing];
+    try {
+      if (editData) {
+        await api.put(`/proposals/${editData._id}`, proposalData);
+      } else {
+        await api.post('/proposals', proposalData);
+      }
+      alert(editData ? "Taklif muvaffaqiyatli yangilandi!" : "KP muvaffaqiyatli saqlandi!");
+      onClose();
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Taklifni saqlashda xatolik!");
     }
-    
-    localStorage.setItem('erp_proposals', JSON.stringify(updated));
-    alert(editData ? "Taklif muvaffaqiyatli yangilandi!" : "KP muvaffaqiyatli saqlandi!");
-    onClose();
   };
 
   // ── PDF chop etish (Professional Design V3.2) ───────────────────────────
@@ -399,15 +412,12 @@ const KPModal = ({ onClose, editData = null }) => {
   <div class="hdr">
     <div class="logo-container">
       <svg class="official-logo" viewBox="0 0 455 130">
-        <!-- 3 teal speed-line stripes -->
-        <polygon points="55,8  150,8  133,24 38,24"  fill="#008B8B"/>
-        <polygon points="37,34 150,34 133,50 20,50"  fill="#008B8B"/>
-        <polygon points="19,60 150,60 133,76 2,76"   fill="#008B8B"/>
-        <!-- express bold italic -->
-        <text x="163" y="72" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-style="italic" font-size="60" fill="#2a2a2a">express</text>
-        <text x="413" y="54" font-family="Arial,sans-serif" font-size="14" fill="#2a2a2a">®</text>
-        <!-- mebel bold italic -->
-        <text x="178" y="118" font-family="'Arial Black',Arial,sans-serif" font-weight="900" font-style="italic" font-size="50" fill="#2a2a2a">mebel</text>
+        <polygon points="40,15 140,15 125,31 25,31" fill="#fbbf24"/>
+        <polygon points="25,41 140,41 125,57 10,57" fill="#fbbf24"/>
+        <polygon points="10,67 140,67 125,83 0,83"  fill="#fbbf24"/>
+        <text x="155" y="75" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="65" fill="#333" letter-spacing="-2">express</text>
+        <text x="175" y="125" font-family="'Arial Black', sans-serif" font-weight="900" font-style="italic" font-size="55" fill="#333" letter-spacing="-1">mebel</text>
+        <text x="430" y="45" font-family="Arial, sans-serif" font-size="16" fill="#333">®</text>
       </svg>
     </div>
     <div class="tt-badge-side">
@@ -540,7 +550,7 @@ const KPModal = ({ onClose, editData = null }) => {
   const inp = { width:'100%', height:'50px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', color:'white', padding:'0 14px', fontSize:'14px' };
 
   return (
-    <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)', backdropFilter:'blur(16px)', display:'flex', justifyContent:'center', alignItems:'center', zIndex:3000, padding:'20px' }}>
+    <div translate="no" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)', backdropFilter:'blur(16px)', display:'flex', justifyContent:'center', alignItems:'center', zIndex:3000, padding:'20px' }}>
       <div style={{ width:'1440px', maxWidth:'98vw', maxHeight:'95vh', background:'var(--secondary-bg)', borderRadius:'28px', border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 120px rgba(0,0,0,0.8)' }}>
 
         {/* ── Header ── */}
@@ -575,7 +585,7 @@ const KPModal = ({ onClose, editData = null }) => {
                   {customerSuggestions.length > 0 && (
                     <div style={{ position:'absolute', top:'100%', left:0, width:'100%', background:'#1a1a2e', zIndex:100, borderRadius:'12px', border:'1px solid rgba(255,255,255,0.1)', marginTop:'6px', overflow:'hidden', boxShadow:'0 20px 60px rgba(0,0,0,0.7)' }}>
                       {customerSuggestions.map((c, idx) => (
-                        <div key={c.id}
+                        <div key={c._id}
                           onClick={() => { setSelectedCustomer(c); setCustomerSearch(`${c.firstName} ${c.lastName}`); setSuggestions([]); }}
                           onMouseEnter={() => setSelectedSuggestionIndex(idx)}
                           style={{ 
@@ -757,11 +767,11 @@ const KPModal = ({ onClose, editData = null }) => {
                       <div>
                         <p style={{ fontSize:'10px', color:'var(--text-secondary)', marginBottom:'4px', textTransform:'uppercase' }}>Birligi</p>
                         <select value={item.unit} onChange={e => updateItem(item.id, 'unit', e.target.value)}
-                          style={{ width:'100%', height:'38px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', color:'white', padding:'0 10px', fontSize:'13px' }}>
-                          <option value="dona">dona</option>
-                          <option value="m²">m²</option>
-                          <option value="m">m</option>
-                          <option value="komplekt">komplekt</option>
+                          style={{ width:'100%', height:'38px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', color:'white', padding:'0 10px', fontSize:'13px', outline: 'none' }}>
+                          <option value="dona" style={{ background: '#1a1a2e', color: 'white' }}>dona</option>
+                          <option value="kv/m" style={{ background: '#1a1a2e', color: 'white' }}>kv/m</option>
+                          <option value="m/p" style={{ background: '#1a1a2e', color: 'white' }}>m/p</option>
+                          <option value="komplekt" style={{ background: '#1a1a2e', color: 'white' }}>komplekt</option>
                         </select>
                       </div>
                       <div>
@@ -776,7 +786,7 @@ const KPModal = ({ onClose, editData = null }) => {
                       <div>
                         <p style={{ fontSize:'10px', color:'var(--text-secondary)', marginBottom:'4px', textTransform:'uppercase' }}>Jami</p>
                         <div style={{ height:'38px', background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:'8px', padding:'0 10px', display:'flex', alignItems:'center', fontSize:'14px', fontWeight:'700', color:'var(--accent-gold)' }}>
-                          {(Number(item.qty) * Number(item.price) || 0).toLocaleString()}
+                          {((parseFloat(item.qty) || 0) * (parseFloat(item.price?.toString().replace(/\D/g, '')) || 0)).toLocaleString()}
                         </div>
                       </div>
                     </div>

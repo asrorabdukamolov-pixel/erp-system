@@ -10,6 +10,7 @@ exports.getOrders = async (req, res) => {
         if (req.user.role !== 'super') {
             query.showroom = req.user.showroom;
         }
+        query.status = { $ne: 'trash' };
 
         const orders = await Order.find(query).sort({ createdAt: -1 });
         res.json(orders);
@@ -128,6 +129,43 @@ exports.addOrderLog = async (req, res) => {
         order.timeline.push({
             type,
             text,
+            user: req.user.name,
+            time: new Date()
+        });
+
+        await order.save();
+        res.json(order);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+// @desc    Get trashed orders
+// @access  Private
+exports.getTrashedOrders = async (req, res) => {
+    try {
+        const query = { status: 'trash' };
+        if (req.user.role === 'showroom_admin') query.showroom = req.user.showroom;
+        
+        const orders = await Order.find(query).sort({ deletedAt: -1 });
+        res.json(orders);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+// @desc    Restore order from trash
+// @access  Private
+exports.restoreOrder = async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id);
+        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+
+        order.status = 'pm'; // Restore to PM or some default state
+        order.timeline.push({
+            type: 'system',
+            text: `Buyurtma tiklandi.`,
             user: req.user.name,
             time: new Date()
         });

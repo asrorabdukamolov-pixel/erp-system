@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Store } from 'lucide-react';
+import api from '../../utils/api';
 
 const SOURCE_LABELS = {
   instagram: { label: 'Instagram', icon: '📸', color: '#e1306c' },
@@ -11,10 +12,30 @@ const SOURCE_LABELS = {
 
 const SuperCustomerBase = () => {
   const [tab, setTab] = useState('customers');
-  const [customers] = useState(() => JSON.parse(localStorage.getItem('erp_customers') || '[]'));
-  const [agents] = useState(() => JSON.parse(localStorage.getItem('erp_agents') || '[]'));
+  const [customers, setCustomers] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [search, setSearch] = useState('');
   const [filterShowroom, setFilterShowroom] = useState('all');
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [custRes, agentRes] = await Promise.all([
+        api.get('/customers', { params: { type: 'customer', showroom: 'all' } }),
+        api.get('/customers', { params: { type: 'agent', showroom: 'all' } })
+      ]);
+      setCustomers(custRes.data);
+      setAgents(agentRes.data);
+    } catch (err) {
+      console.error("Super load data error", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
 
   const uniqueShowrooms = [...new Set(customers.map(c => c.showroom).filter(Boolean))];
 
@@ -83,9 +104,9 @@ const SuperCustomerBase = () => {
                 {filteredCustomers.map(c => {
                   const src = SOURCE_LABELS[c.source];
                   return (
-                    <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={c._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '18px 10px' }}>
-                        <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700' }}>#{c.id}</p>
+                        <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700' }}>#{c._id?.slice(-4)}</p>
                         <p style={{ fontWeight: '600' }}>{c.firstName} {c.lastName}</p>
                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{c.phone}</p>
                       </td>
@@ -120,7 +141,7 @@ const SuperCustomerBase = () => {
                   <tr><td colSpan={3} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
                 )}
                 {filteredAgents.map(a => (
-                  <tr key={a.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr key={a._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '18px 10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(139,92,246,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -128,7 +149,7 @@ const SuperCustomerBase = () => {
                         </div>
                         <div>
                           <p style={{ fontWeight: '600' }}>{a.firstName} {a.lastName}</p>
-                          <p style={{ fontSize: '11px', color: 'var(--accent-gold)' }}>#{a.id}</p>
+                          <p style={{ fontSize: '11px', color: 'var(--accent-gold)' }}>#{a._id?.slice(-4)}</p>
                         </div>
                       </div>
                     </td>

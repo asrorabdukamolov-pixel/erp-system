@@ -28,6 +28,7 @@ app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/migration', require('./routes/migration'));
 app.use('/api/requests', require('./routes/requests'));
 app.use('/api/stats', require('./routes/statsRoutes'));
+app.use('/api/proposals', require('./routes/proposalRoutes'));
 
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../front/dist')));

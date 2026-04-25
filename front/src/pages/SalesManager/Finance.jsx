@@ -5,6 +5,7 @@ import {
   ShoppingCart, Package, Truck, User, Hash, MessageSquare, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const CATEGORIES = [
   { id: 'travel', label: 'Yo\'l xarajati uchun', icon: <Truck size={16} /> },
@@ -16,8 +17,28 @@ const CATEGORIES = [
 const Finance = () => {
   const { user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [requests, setRequests] = useState(() => JSON.parse(localStorage.getItem('erp_money_requests') || '[]'));
-  const [orders, setOrders] = useState(() => JSON.parse(localStorage.getItem('erp_orders') || '[]'));
+  const [requests, setRequests] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [reqsRes, ordersRes] = await Promise.all([
+        api.get('/requests'),
+        api.get('/orders')
+      ]);
+      setRequests(reqsRes.data);
+      setOrders(ordersRes.data);
+    } catch (err) {
+      console.error("Finance data load error", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
   
   // Form State
   const [category, setCategory] = useState('travel');
@@ -38,9 +59,7 @@ const Finance = () => {
   // Suggestion State
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  useEffect(() => {
-    localStorage.setItem('erp_money_requests', JSON.stringify(requests));
-  }, [requests]);
+  // Suggestions logic remains same, but uses API-sourced orders
 
   const myOrders = orders.filter(o => o.managerId === user.id);
   const filteredOrders = myOrders.filter(o => 
@@ -126,33 +145,30 @@ const Finance = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     if (e) e.preventDefault();
     if (!amount || Number(amount) <= 0) return alert('Summani kiriting!');
     if (!neededDate) return alert('Sanani tanlang!');
     if ((category === 'travel' || category === 'food') && !selectedOrderId) return alert('Buyurtmani tanlang!');
 
     const newRequest = {
-      id: 'REQ-' + Date.now(),
-      managerId: user.id,
-      managerName: user.name,
       category: CATEGORIES.find(c => c.id === category).label,
       orderId: (category === 'travel' || category === 'food') ? selectedOrderId : null,
       amount: Number(amount),
       neededDate,
       comment,
-      status: 'pending',
-      createdAt: new Date().toISOString()
     };
 
-    setRequests([newRequest, ...requests]);
-    setIsModalOpen(false);
-    resetForm();
-    // Reset to first category for next session
-    setTimeout(() => {
-      setIsModalOpen(true);
-      setTimeout(() => categoryRefs.current[0]?.focus(), 100);
-    }, 500); // Small delay to let modal close animation finish if any
+    try {
+      const res = await api.post('/requests', newRequest);
+      setRequests([res.data, ...requests]);
+      setIsModalOpen(false);
+      resetForm();
+      // Re-open logic removed to avoid infinite loops if not needed, or keep if preferred
+    } catch (err) {
+      console.error("Request error", err);
+      alert("So'rov yuborishda xatolik!");
+    }
   };
 
   const resetForm = () => {
@@ -205,9 +221,9 @@ const Finance = () => {
                 <tr><td colSpan="6" style={{ padding: '100px', textAlign: 'center', color: 'var(--text-secondary)' }}>Hozircha so'rovlar yo'q.</td></tr>
               ) : (
                 myRequests.map(req => (
-                  <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr key={req._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '20px' }}>
-                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req.id}</p>
+                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req._id?.slice(-6).toUpperCase()}</p>
                       <p style={{ fontSize: '14px', fontWeight: '700' }}>{req.category}</p>
                     </td>
                     <td style={{ padding: '20px' }}>
@@ -360,7 +376,7 @@ const Finance = () => {
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 100, maxHeight: '200px', overflowY: 'auto', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                       {filteredOrders.map((o, index) => (
                         <div 
-                          key={o.id} 
+                          key={o._id} 
                           onClick={() => {handleSelectOrder(o); commentRef.current?.focus();}} 
                           onMouseEnter={() => setSelectedIndex(index)}
                           style={{ 

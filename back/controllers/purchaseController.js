@@ -2,9 +2,11 @@ const Purchase = require('../models/Purchase');
 
 exports.getPurchases = async (req, res) => {
     try {
-        // Purchases don't have showroom field in model yet, but they are linked to orders.
-        // For now, get all or we can add showroom to Purchase model too.
-        const purchases = await Purchase.find().sort({ createdAt: -1 });
+        const query = {};
+        if (req.user.role !== 'super') {
+            query.showroom = req.user.showroom;
+        }
+        const purchases = await Purchase.find(query).sort({ createdAt: -1 });
         res.json(purchases);
     } catch (err) {
         console.error(err.message);
@@ -15,7 +17,8 @@ exports.getPurchases = async (req, res) => {
 exports.createPurchase = async (req, res) => {
     try {
         const newPurchase = new Purchase({
-            ...req.body
+            ...req.body,
+            showroom: req.user.showroom
         });
         const purchase = await newPurchase.save();
         res.json(purchase);
@@ -33,6 +36,17 @@ exports.updatePurchase = async (req, res) => {
             { new: true }
         );
         res.json(purchase);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+exports.deletePurchase = async (req, res) => {
+    try {
+        const purchase = await Purchase.findByIdAndDelete(req.params.id);
+        if (!purchase) return res.status(404).json({ msg: 'Xarid topilmadi' });
+        res.json({ msg: 'Xarid o\'chirildi' });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server xatosi');

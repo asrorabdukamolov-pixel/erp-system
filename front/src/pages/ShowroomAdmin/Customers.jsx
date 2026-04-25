@@ -91,9 +91,9 @@ const ShowroomCustomersPage = () => {
                 {filteredCustomers.map(c => {
                   const src = SOURCE_LABELS[c.source];
                   return (
-                    <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={c._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '18px 10px' }}>
-                        <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700' }}>#{c.id}</p>
+                        <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700' }}>#{c._id?.slice(-4)}</p>
                         <p style={{ fontWeight: '600' }}>{c.firstName} {c.lastName}</p>
                       </td>
                       <td style={{ padding: '18px 10px', fontSize: '13px' }}>{c.phone}</td>
@@ -132,7 +132,7 @@ const ShowroomCustomersPage = () => {
                   <tr><td colSpan={4} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
                 )}
                 {filteredAgents.map(a => (
-                  <tr key={a.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr key={a._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '18px 10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(139,92,246,.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -140,7 +140,7 @@ const ShowroomCustomersPage = () => {
                         </div>
                         <div>
                           <p style={{ fontWeight: '600' }}>{a.firstName} {a.lastName}</p>
-                          <p style={{ fontSize: '11px', color: 'var(--accent-gold)' }}>#{a.id}</p>
+                          <p style={{ fontSize: '11px', color: 'var(--accent-gold)' }}>#{a._id?.slice(-4)}</p>
                         </div>
                       </div>
                     </td>

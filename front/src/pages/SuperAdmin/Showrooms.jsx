@@ -40,6 +40,7 @@ const Showrooms = () => {
     address: '',
     adminName: '',
     adminSurname: '',
+    phone: '',
     login: '',
     password: ''
   });
@@ -51,8 +52,13 @@ const Showrooms = () => {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
       }, 1000);
-    } else if (countdown === 0 && isActiveDelete && showroomToDelete) {
+    } else if (countdown === 0 && isActiveDelete) {
       // Finalize Deletion
+      if (!showroomToDelete) {
+          setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          return;
+      }
       const deleteId = showroomToDelete._id;
       if (!deleteId) {
           // If no ID (local storage old item), just clear it
@@ -88,6 +94,7 @@ const Showrooms = () => {
         address: showroom.address,
         adminName: showroom.adminName,
         adminSurname: showroom.adminSurname,
+        phone: showroom.phone || '',
         login: showroom.login,
         password: '' 
       });
@@ -284,6 +291,10 @@ const Showrooms = () => {
                 <div>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Login</label>
                   <input style={{ width: '100%' }} value={formData.login} onChange={e => setFormData({...formData, login: e.target.value})} required />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Telefon raqami</label>
+                  <input style={{ width: '100%' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} required placeholder="+998 90 123 45 67" />
                 </div>
                 <div style={{ position: 'relative' }}>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Parol</label>

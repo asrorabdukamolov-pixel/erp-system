@@ -10,6 +10,7 @@ exports.getTransactions = async (req, res) => {
         if (req.user.role !== 'super') {
             query.showroom = req.user.showroom;
         }
+        query.status = { $ne: 'trash' };
 
         const transactions = await Transaction.find(query).sort({ date: -1 });
         res.json(transactions);
@@ -206,6 +207,61 @@ exports.getDashboardStats = async (req, res) => {
             salesPerformance,
             orderProfits
         });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+// @desc    Remove transaction (soft delete)
+// @access  Private
+exports.removeTransaction = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const transaction = await Transaction.findById(req.params.id);
+        if (!transaction) return res.status(404).json({ msg: 'Tranzaksiya topilmadi' });
+
+        transaction.status = 'trash';
+        transaction.deleteReason = reason || 'Sabab ko\'rsatilmadi';
+        transaction.deletedAt = new Date();
+        transaction.deletedBy = req.user.name;
+
+        await transaction.save();
+        res.json({ msg: 'Tranzaksiya o\'chirildi' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+// @desc    Get trashed transactions
+// @access  Private
+exports.getTrashedTransactions = async (req, res) => {
+    try {
+        const query = { status: 'trash' };
+        if (req.user.role !== 'super') {
+            query.showroom = req.user.showroom;
+        }
+        const transactions = await Transaction.find(query).sort({ deletedAt: -1 });
+        res.json(transactions);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+// @desc    Restore transaction
+// @access  Private
+exports.restoreTransaction = async (req, res) => {
+    try {
+        const transaction = await Transaction.findById(req.params.id);
+        if (!transaction) return res.status(404).json({ msg: 'Tranzaksiya topilmadi' });
+
+        transaction.status = 'active'; // or just undefined
+        transaction.deletedAt = undefined;
+        transaction.deleteReason = undefined;
+
+        await transaction.save();
+        res.json(transaction);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server xatosi');

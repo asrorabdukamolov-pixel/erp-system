@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserPlus, Check, X, Phone, MapPin, Home, FileText, Smartphone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const NewCustomer = () => {
   const { user } = useAuth();
@@ -49,38 +50,31 @@ const NewCustomer = () => {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
     
-    // Get existing customers
-    const customers = JSON.parse(localStorage.getItem('erp_customers') || '[]');
-    
-    // Generate Sequential ID
-    const lastId = customers.length > 0 ? Math.max(...customers.map(c => c.id)) : 0;
-    
-    const newCustomer = {
-      id: lastId + 1,
-      ...formData,
-      managerId: user.id,
-      managerName: user.name,
-      showroom: user.showroom || 'Toshkent Central', // Mock showroom
-      createdAt: new Date().toISOString()
-    };
-    
-    localStorage.setItem('erp_customers', JSON.stringify([...customers, newCustomer]));
-    
-    setMessage('Mijoz muvaffaqiyatli saqlandi!');
-    setFormData({
-      firstName: '',
-      lastName: '',
-      phone: '+998 ',
-      address: '',
-      houseNumber: '',
-      apartmentNumber: '',
-      extraInfo: ''
-    });
+    try {
+      await api.post('/customers', {
+        ...formData,
+        type: 'customer'
+      });
+      
+      setMessage('Mijoz muvaffaqiyatli saqlandi!');
+      setFormData({
+        firstName: '',
+        lastName: '',
+        phone: '+998 ',
+        address: '',
+        houseNumber: '',
+        apartmentNumber: '',
+        extraInfo: ''
+      });
 
-    setTimeout(() => setMessage(''), 3000);
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      console.error("Customer save error", err);
+      alert(err.response?.data?.msg || "Mijozni saqlashda xatolik yuz berdi");
+    }
   };
 
   return (

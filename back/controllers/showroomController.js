@@ -17,7 +17,7 @@ exports.getShowrooms = async (req, res) => {
 // @access  Private (Super Admin)
 exports.createShowroom = async (req, res) => {
     try {
-        const { name, address, adminName, adminSurname, login, password } = req.body;
+        const { name, address, adminName, adminSurname, login, password, phone } = req.body;
 
         // Check if login already exists in Users
         let userExists = await User.findOne({ login: login.toLowerCase() });
@@ -31,6 +31,7 @@ exports.createShowroom = async (req, res) => {
             address,
             adminName,
             adminSurname,
+            phone,
             login,
             password,
             status: 'Faol'
@@ -44,6 +45,7 @@ exports.createShowroom = async (req, res) => {
             login: login.toLowerCase(),
             password, // User model pre-save hook will hash this
             role: 'showroom',
+            phone: phone,
             showroom: name // Link by name or we could use ID
         });
         await newUser.save();
@@ -59,7 +61,7 @@ exports.createShowroom = async (req, res) => {
 // @access  Private (Super Admin)
 exports.updateShowroom = async (req, res) => {
     try {
-        const { name, address, adminName, adminSurname, login, password, status } = req.body;
+        const { name, address, adminName, adminSurname, login, password, status, phone } = req.body;
         
         let showroom = await Showroom.findById(req.params.id);
         if (!showroom) return res.status(404).json({ msg: 'Showroom topilmadi' });
@@ -70,6 +72,7 @@ exports.updateShowroom = async (req, res) => {
             user.name = adminName;
             user.surname = adminSurname;
             user.login = login.toLowerCase();
+            user.phone = phone || user.phone;
             if (password) user.password = password; // Will be hashed by pre-save
             user.status = status === 'Faol' ? 'active' : 'inactive';
             await user.save();
@@ -78,7 +81,7 @@ exports.updateShowroom = async (req, res) => {
         // Update Showroom
         showroom = await Showroom.findByIdAndUpdate(
             req.params.id,
-            { $set: { name, address, adminName, adminSurname, login, status } },
+            { $set: { name, address, adminName, adminSurname, login, status, phone } },
             { new: true }
         );
 

@@ -1,11 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { ClipboardList, Search, Store, LayoutGrid, CheckCircle, Clock } from 'lucide-react';
+import api from '../../utils/api';
 
 const SuperOrders = () => {
-  const [orders, setOrders] = useState(() => {
-    const saved = localStorage.getItem('erp_orders');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const res = await api.get('/orders');
+        setOrders(res.data);
+      } catch (err) {
+        console.error("Orders fetch error", err);
+      }
+      setLoading(false);
+    };
+    fetchOrders();
+  }, []);
 
   const getDeliveryStatus = (deliveryDate) => {
     if (!deliveryDate) return { color: 'var(--text-secondary)', text: 'Belgilanmagan', label: '—' };
@@ -57,7 +69,7 @@ const SuperOrders = () => {
             </thead>
             <tbody>
               {orders.map((o) => (
-                <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <tr key={o._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '20px 8px' }}>
                     <p style={{ fontWeight: '700', color: 'var(--accent-gold)' }}>{o.uniqueId}</p>
                   </td>
@@ -67,7 +79,7 @@ const SuperOrders = () => {
                   <td style={{ padding: '20px 8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
                       <Store size={14} color="var(--text-secondary)" />
-                      {o.selectedCustomer?.showroom || 'Toshkent Central'}
+                      {o.selectedCustomer?.showroom || o.showroom || 'Toshkent Central'}
                     </div>
                   </td>
                   <td style={{ padding: '20px 8px' }}>

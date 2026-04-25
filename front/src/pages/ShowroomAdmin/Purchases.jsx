@@ -13,6 +13,7 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const ShowroomPurchases = () => {
   const { user } = useAuth();
@@ -42,24 +43,29 @@ const ShowroomPurchases = () => {
     comment: ''
   });
 
-  useEffect(() => {
-    const savedPurchases = JSON.parse(localStorage.getItem('erp_showroom_purchases') || '[]');
-    const savedPartners = JSON.parse(localStorage.getItem('erp_showroom_partners') || '[]');
-    const savedOrders = JSON.parse(localStorage.getItem('erp_orders') || '[]');
-    
-    setPurchases(savedPurchases);
-    setPartners(savedPartners);
-    
-    // Confirmed orders filter
-    const ORDER_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
-    let filtered = savedOrders.filter(o => ORDER_STAGES.includes(o.status));
-
-    // IF PM, filter only their own orders
-    if (user?.role === 'proekt_manager') {
-      filtered = filtered.filter(o => o.assignedPmName === user.name);
+  const loadData = async () => {
+    try {
+      const [purRes, partRes, ordRes] = await Promise.all([
+        api.get('/purchases'),
+        api.get('/partners'),
+        api.get('/orders')
+      ]);
+      setPurchases(purRes.data);
+      setPartners(partRes.data);
+      
+      const ORDER_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
+      let filtered = ordRes.data.filter(o => ORDER_STAGES.includes(o.status));
+      if (user?.role === 'proekt_manager') {
+        filtered = filtered.filter(o => o.assignedPmName === user.name);
+      }
+      setOrders(filtered);
+    } catch (err) {
+      console.error("Data loading error", err);
     }
-    
-    setOrders(filtered);
+  };
+
+  useEffect(() => {
+    loadData();
   }, [user]);
 
   // Auto-calculate total
@@ -112,44 +118,48 @@ const ShowroomPurchases = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.itemName || !formData.partnerId || !formData.quantity || !formData.pricePerUnit) {
       alert('Iltimos, barcha asosiy maydonlarni to\'ldiring!');
       return;
     }
 
-    let updatedPurchases;
-    if (editingPurchase) {
-      updatedPurchases = purchases.map(p => p.id === editingPurchase.id ? { ...p, ...formData } : p);
-    } else {
-      // Generate Unique Xarid ID
-      const lastXR = purchases.length > 0 ? purchases[0].uniqueXaridId : null;
-      let nextNum = 1;
-      if (lastXR && lastXR.startsWith('XR-')) {
-        nextNum = parseInt(lastXR.split('-')[1]) + 1;
+    try {
+      if (editingPurchase) {
+        await api.put(`/purchases/${editingPurchase._id}`, formData);
+      } else {
+        // Generate Unique Xarid ID
+        const lastXR = purchases.length > 0 ? purchases[0].uniqueXaridId : null;
+        let nextNum = 1;
+        if (lastXR && lastXR.startsWith('XR-')) {
+          nextNum = parseInt(lastXR.split('-')[1]) + 1;
+        }
+        const uniqueXaridId = `XR-${String(nextNum).padStart(4, '0')}`;
+
+        await api.post('/purchases', {
+          ...formData,
+          uniqueXaridId,
+          createdBy: user.name,
+          creatorRole: user.role
+        });
       }
-      const uniqueXaridId = `XR-${String(nextNum).padStart(4, '0')}`;
-
-      const newPurchase = {
-        id: Date.now(),
-        uniqueXaridId,
-        createdBy: user.name,
-        creatorRole: user.role,
-        ...formData
-      };
-      updatedPurchases = [newPurchase, ...purchases];
+      loadData();
+      closeModal();
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Xatolik yuz berdi");
     }
-
-    setPurchases(updatedPurchases);
-    localStorage.setItem('erp_showroom_purchases', JSON.stringify(updatedPurchases));
-    closeModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Ushbu xaridni o\'chirmoqchimisiz?')) {
-      const updated = purchases.filter(p => p.id !== id);
-      setPurchases(updated);
-      localStorage.setItem('erp_showroom_purchases', JSON.stringify(updated));
+      try {
+        await api.delete(`/purchases/${id}`);
+        loadData();
+      } catch (err) {
+        console.error("Delete error", err);
+        alert("Xatolik yuz berdi");
+      }
     }
   };
 
@@ -306,15 +316,15 @@ const ShowroomPurchases = () => {
                     <tr><td colSpan="6" style={{ textAlign: 'center', padding: '80px', color: 'var(--text-secondary)' }}>Yangi so'rovlar yo'q.</td></tr>
                   ) : (
                     pendingPurchaseRequests.map(req => (
-                      <tr key={req.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                        <td style={{ padding: '20px 24px', fontSize: '13px', fontWeight: '800', color: 'var(--accent-gold)' }}>{req.id}</td>
+                      <tr key={req._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                        <td style={{ padding: '20px 24px', fontSize: '13px', fontWeight: '800', color: 'var(--accent-gold)' }}>{req._id?.slice(-6).toUpperCase()}</td>
                         <td style={{ padding: '20px 24px', fontSize: '14px', fontWeight: '600' }}>{req.managerName}</td>
                         <td style={{ padding: '20px 24px', fontSize: '14px', fontWeight: '800', color: '#10b981' }}>{req.purchaseId}</td>
                         <td style={{ padding: '20px 24px', fontSize: '15px', fontWeight: '900' }}>{req.amount?.toLocaleString()} UZS</td>
                         <td style={{ padding: '20px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>{req.comment || '—'}</td>
                         <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                           <button 
-                            onClick={() => handleAdminApprove(req.id)}
+                            onClick={() => handleAdminApprove(req._id)}
                             style={{ background: 'var(--accent-gold)', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}
                           >
                             Tasdiqlash
@@ -370,7 +380,7 @@ const ShowroomPurchases = () => {
                 <tr><td colSpan="9" style={{ textAlign: 'center', padding: '80px', color: 'var(--text-secondary)' }}>Xaridlar topilmadi.</td></tr>
               ) : (
                 filteredPurchases.map(p => (
-                  <tr key={p.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                  <tr key={p._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                     <td style={{ padding: '20px 24px', fontSize: '13px', fontWeight: '800', color: 'var(--accent-gold)' }}>{p.uniqueXaridId}</td>
                     <td style={{ padding: '20px 24px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -395,7 +405,7 @@ const ShowroomPurchases = () => {
                     <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button onClick={() => openModal(p)} style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={18} /></button>
-                          <button onClick={() => handleDelete(p.id)} style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                          <button onClick={() => handleDelete(p._id)} style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Trash2 size={18} /></button>
                        </div>
                     </td>
                   </tr>
@@ -437,7 +447,7 @@ const ShowroomPurchases = () => {
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '12px', marginTop: '8px', zIndex: 10, overflow: 'hidden', boxShadow: '0 10px 25px rgba(0,0,0,0.5)' }}>
                       {filteredOrderResults.map((order, idx) => (
                         <div 
-                          key={order.id} 
+                          key={order._id} 
                           onClick={() => selectOrder(order)}
                           style={{ 
                             padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
@@ -486,7 +496,7 @@ const ShowroomPurchases = () => {
                     <option disabled style={{ background: '#1e293b', color: 'rgba(255,255,255,0.5)' }}>Hamkorlar hali qo'shilmagan</option>
                   ) : (
                     partners.map(p => (
-                      <option key={p.id} value={p.id} style={{ background: '#1e293b', color: 'white' }}>{p.companyName}</option>
+                      <option key={p._id} value={p._id} style={{ background: '#1e293b', color: 'white' }}>{p.companyName}</option>
                     ))
                   )}
                 </select>

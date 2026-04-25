@@ -3,6 +3,7 @@ import {
   Trash2, Search, Info, User, Calendar, MessageSquare, 
   MapPin, Phone, RotateCcw, CreditCard, Banknote, Landmark, FileText, X
 } from 'lucide-react';
+import api from '../../utils/api';
 
 const Trash = () => {
   const [activeTab, setActiveTab] = useState('orders'); // 'orders' | 'transactions'
@@ -10,58 +11,45 @@ const Trash = () => {
   const [deletedTransactions, setDeletedTransactions] = useState([]);
   const [search, setSearch] = useState('');
 
+  const loadTrash = async () => {
+    try {
+      const [ordersRes, txsRes] = await Promise.all([
+        api.get('/orders/trash/all'),
+        api.get('/transactions/trash/all')
+      ]);
+      setDeletedOrders(ordersRes.data);
+      setDeletedTransactions(txsRes.data);
+    } catch (err) {
+      console.error("Trash loading error", err);
+    }
+  };
+
   useEffect(() => {
     loadTrash();
-    
-    // Storage listener to sync across tabs (e.g. if Kassa deletes in another tab)
-    const handleStorageChange = (e) => {
-      if (e.key === 'erp_deleted_orders' || e.key === 'erp_trash_transactions') {
-        loadTrash();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const loadTrash = () => {
-    const orders = JSON.parse(localStorage.getItem('erp_deleted_orders') || '[]');
-    const txs = JSON.parse(localStorage.getItem('erp_trash_transactions') || '[]');
-    setDeletedOrders(orders.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
-    setDeletedTransactions(txs.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
-  };
-
-  const handleRestoreOrder = (orderId) => {
+  const handleRestoreOrder = async (orderId) => {
     if (!window.confirm("Ushbu buyurtmani tiklashni xohlaysizmi?")) return;
     
-    // 1. Remove from trash
-    const orderToRestore = deletedOrders.find(o => o.id === orderId);
-    if (!orderToRestore) return;
-    const newTrash = deletedOrders.filter(o => o.id !== orderId);
-    localStorage.setItem('erp_deleted_orders', JSON.stringify(newTrash));
-    setDeletedOrders(newTrash);
-
-    // 2. Add back to active orders
-    const activeOrders = JSON.parse(localStorage.getItem('erp_orders') || '[]');
-    const { deletedAt, deleteReason, ...originalOrder } = orderToRestore;
-    const newActive = [originalOrder, ...activeOrders];
-    localStorage.setItem('erp_orders', JSON.stringify(newActive));
+    try {
+      await api.post(`/orders/${orderId}/restore`);
+      loadTrash();
+    } catch (err) {
+      console.error("Restore order error", err);
+      alert("Xatolik yuz berdi");
+    }
   };
 
-  const handleRestoreTransaction = (txId) => {
+  const handleRestoreTransaction = async (txId) => {
     if (!window.confirm("Ushbu tranzaksiyani tiklashni xohlaysizmi?")) return;
 
-    // 1. Remove from trash
-    const txToRestore = deletedTransactions.find(t => t.id === txId);
-    if (!txToRestore) return;
-    const newTrash = deletedTransactions.filter(t => t.id !== txId);
-    localStorage.setItem('erp_trash_transactions', JSON.stringify(newTrash));
-    setDeletedTransactions(newTrash);
-
-    // 2. Add back to active transactions
-    const activeTxs = JSON.parse(localStorage.getItem('erp_transactions') || '[]');
-    const { deletedAt: dAt, deleteReason: dRes, deletedBy: dBy, ...originalTx } = txToRestore;
-    const newActive = [originalTx, ...activeTxs].sort((a, b) => new Date(b.date) - new Date(a.date));
-    localStorage.setItem('erp_transactions', JSON.stringify(newActive));
+    try {
+      await api.post(`/transactions/${txId}/restore`);
+      loadTrash();
+    } catch (err) {
+      console.error("Restore tx error", err);
+      alert("Xatolik yuz berdi");
+    }
   };
 
   const filteredOrders = deletedOrders.filter(o => 
@@ -153,7 +141,7 @@ const Trash = () => {
                   <tr><td colSpan="4" style={{ padding: '80px', textAlign: 'center', color: 'var(--text-secondary)' }}>Karzina bo'sh.</td></tr>
                 ) : (
                   filteredOrders.map((o) => (
-                    <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={o._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '16px', fontSize: '13px' }}>
                         <div style={{ color: '#fff', fontWeight: '600' }}>{new Date(o.deletedAt).toLocaleDateString()}</div>
                         <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{new Date(o.deletedAt).toLocaleTimeString()}</div>
@@ -168,7 +156,7 @@ const Trash = () => {
                         </div>
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
-                        <button onClick={() => handleRestoreOrder(o.id)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', float: 'right' }}>
+                        <button onClick={() => handleRestoreOrder(o._id)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', float: 'right' }}>
                           <RotateCcw size={14} /> Tiklash
                         </button>
                       </td>
@@ -193,7 +181,7 @@ const Trash = () => {
                   <tr><td colSpan="5" style={{ padding: '80px', textAlign: 'center', color: 'var(--text-secondary)' }}>O'chirilgan tranzaksiyalar yo'q.</td></tr>
                 ) : (
                   filteredTxs.map((t) => (
-                    <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={t._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td style={{ padding: '16px', fontSize: '13px' }}>
                          <div style={{ color: '#fff', fontWeight: '600' }}>{new Date(t.deletedAt).toLocaleDateString()}</div>
                          <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{new Date(t.deletedAt).toLocaleTimeString()}</div>
@@ -212,7 +200,7 @@ const Trash = () => {
                         </div>
                       </td>
                       <td style={{ padding: '16px', textAlign: 'right' }}>
-                        <button onClick={() => handleRestoreTransaction(t.id)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', float: 'right' }}>
+                        <button onClick={() => handleRestoreTransaction(t._id)} style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(34,197,94,0.3)', background: 'rgba(34,197,94,0.1)', color: '#22c55e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', float: 'right' }}>
                           <RotateCcw size={14} /> Tiklash
                         </button>
                       </td>

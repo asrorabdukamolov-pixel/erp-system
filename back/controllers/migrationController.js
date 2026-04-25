@@ -50,6 +50,7 @@ exports.migrateData = async (req, res) => {
                             login: s.login.toLowerCase(),
                             password: s.password || '123',
                             role: 'showroom',
+                            phone: s.phone || '',
                             showroom: s.name
                         });
                         await newUser.save();

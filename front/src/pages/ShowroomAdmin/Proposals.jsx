@@ -4,6 +4,7 @@ import {
   Calendar, Clock, DollarSign, User, Briefcase, ArrowLeft
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const ShowroomProposals = ({ onBack }) => {
   const { user } = useAuth();
@@ -15,34 +16,27 @@ const ShowroomProposals = ({ onBack }) => {
     loadProposals();
   }, []);
 
-  const loadProposals = () => {
+  const loadProposals = async () => {
     try {
-      const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-      // Showroom admin sees everything
-      setProposals(all.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch { setProposals([]); }
+      const res = await api.get('/proposals');
+      setProposals(res.data);
+    } catch (err) { 
+      console.error("Proposals load error", err);
+      setProposals([]); 
+    }
   };
 
-  const confirmDelete = (reason) => {
+  const confirmDelete = async (reason) => {
     if (!reason) { alert("O'chirish sababini yozing."); return; }
-    const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-    const toDelete = all.find(p => p.id === deleteModal.proposalId);
-    if (!toDelete) return;
-
-    const updated = all.filter(x => x.id !== deleteModal.proposalId);
-    localStorage.setItem('erp_proposals', JSON.stringify(updated));
-
-    const trash = JSON.parse(localStorage.getItem('erp_trash') || '[]');
-    trash.push({
-      ...toDelete,
-      type: 'proposal',
-      deleteReason: reason,
-      deletedAt: new Date().toISOString()
-    });
-    localStorage.setItem('erp_trash', JSON.stringify(trash));
-    
-    setDeleteModal({ isOpen: false, proposalId: null });
-    loadProposals();
+    try {
+      await api.delete(`/proposals/${deleteModal.proposalId}`, { data: { reason } });
+      alert("Taklif savatga tashlandi.");
+      setDeleteModal({ isOpen: false, proposalId: null });
+      loadProposals();
+    } catch (err) {
+      console.error("Delete error", err);
+      alert("Xatolik yuz berdi");
+    }
   };
 
   const removeProposal = (id) => {
@@ -50,10 +44,14 @@ const ShowroomProposals = ({ onBack }) => {
   };
 
   // ── PDF chop etish ───────────────────────────
-  const handlePrint = (kp) => {
-    const activePartners = kp.selectedPartners || [];
-    const partnersDetails = JSON.parse(localStorage.getItem('erp_partners') || '[]')
-      .filter(p => activePartners.includes(p.id));
+  const handlePrint = async (kp) => {
+    let partnersDetails = [];
+    try {
+      const res = await api.get('/partners');
+      partnersDetails = res.data.filter(p => kp.selectedPartners?.includes(p._id) || kp.selectedPartners?.includes(p.id));
+    } catch (err) {
+      console.error("Partners load error for print", err);
+    }
 
     const managerPhoto = kp.managerPhoto || '';
     const managerName  = kp.managerName  || 'Menejer';
@@ -196,7 +194,7 @@ const ShowroomProposals = ({ onBack }) => {
               <tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center' }}>Ma'lumotlar yo'q.</td></tr>
             ) : (
               filteredProposals.map(p => (
-                <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                <tr key={p._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                   <td style={{ padding: '20px' }}>
                     <span style={{ fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '4px 10px', borderRadius: '8px' }}>{p.kpNumber}</span>
                   </td>
@@ -222,7 +220,7 @@ const ShowroomProposals = ({ onBack }) => {
                       <button onClick={() => handlePrint(p)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Chop etish">
                         <Printer size={18} />
                       </button>
-                      <button onClick={() => removeProposal(p.id)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
+                      <button onClick={() => removeProposal(p._id)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
                         <Trash2 size={18} />
                       </button>
                     </div>

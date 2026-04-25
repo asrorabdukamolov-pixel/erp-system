@@ -9,6 +9,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import KPModal from '../SalesManager/KPModal';
+import api from '../../utils/api';
 
 const STAGES = [
   { id: 'yangi_buyurtma', title: 'Yangi buyurtma', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
@@ -378,9 +379,29 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
 // в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const Orders = () => {
   const { user } = useAuth();
-  const [allOrders, setAllOrders] = useState(() => JSON.parse(localStorage.getItem('erp_orders') || '[]'));
-  const [customers, setCustomers] = useState(() => JSON.parse(localStorage.getItem('erp_customers') || '[]'));
+  const [allOrders, setAllOrders] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [ordersRes, customersRes] = await Promise.all([
+        api.get('/orders'),
+        api.get('/customers')
+      ]);
+      setAllOrders(ordersRes.data);
+      setCustomers(customersRes.data);
+    } catch (err) {
+      console.error("Data load error", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -544,48 +565,36 @@ const Orders = () => {
   const handleDragStart = (e, orderId) => { e.dataTransfer.setData('orderId', orderId); e.target.style.opacity = '0.5'; };
   const handleDragEnd = (e) => { e.target.style.opacity = '1'; };
   const handleDragOver = (e) => { e.preventDefault(); };
-
-  const handleDrop = (e, stageId) => {
+  const handleDrop = async (e, stageId) => {
     const orderId = e.dataTransfer.getData('orderId');
-    const order = allOrders.find(o => o.id === Number(orderId));
-    
-    // PM can move to any stage except backward global states
-    if (['shartnoma', 'tasdiqlandi', 'pm'].includes(stageId)) {
-      if (order.pmStatus !== stageId) {
-        // Just let them freely manage their own board, no strict global rollback blocks.
-      }
+    const order = allOrders.find(o => o._id === orderId || o.id === Number(orderId));
+    if (!order) return;
+
+    try {
+      const updates = { pmStatus: stageId };
+      if (stageId === 'topshirildi') updates.status = 'ishlab_chiqarishda';
+      else if (stageId === 'ustanovka') updates.status = 'ornatish';
+      else if (stageId === 'bajarildi') updates.status = 'bajarildi';
+      else if (stageId === 'yangi_buyurtma') updates.status = 'pm';
+      else updates.status = 'pm';
+
+      const log = { type: 'system', text: `Bosqich o'zgartirildi: ${STAGES.find(s => s.id === stageId)?.title}`, time: new Date().toISOString(), user: user.name };
+      
+      const res = await api.put(`/orders/${order._id || orderId}`, {
+        ...updates,
+        timeline: [...(order.timeline || []), log]
+      });
+      
+      setAllOrders(allOrders.map(o => o._id === (order._id || orderId) ? res.data : o));
+    } catch (err) {
+      console.error("Drop error", err);
     }
-
-    const updated = allOrders.map(o => {
-      if (o.id === Number(orderId)) {
-        let updates = { pmStatus: stageId };
-        // Map PM stages to global status
-        if (stageId === 'topshirildi') updates.status = 'ishlab_chiqarishda';
-        else if (stageId === 'ustanovka') updates.status = 'ornatish';
-        else if (stageId === 'bajarildi') updates.status = 'bajarildi';
-        else if (stageId === 'yangi_buyurtma') updates.status = 'pm'; // Back to PM root if needed
-        else updates.status = 'pm'; // Keep in PM status for intermediate stages
-
-        if (stageId !== 'bajarildi') {
-          updates.smCompletionApproved = false;
-          updates.adminCompletionApproved = false;
-        }
-        
-        const log = { type: 'system', text: `Bosqich o'zgartirildi: ${STAGES.find(s => s.id === stageId)?.title}`, time: new Date().toISOString(), user: user.name };
-        return { ...o, ...updates, timeline: [...(o.timeline || []), log] };
-      }
-      return o;
-    });
-
-    setAllOrders(updated);
-    localStorage.setItem('erp_orders', JSON.stringify(updated));
   };
 
-  const handleCreateOrder = (e) => {
+  const handleCreateOrder = async (e) => {
     e.preventDefault();
     if (!newOrder.selectedCustomer) return alert('Mijozni tanlang!');
     
-    // Clean amount (remove spaces)
     const cleanAmount = newOrder.amount.toString().replace(/\s/g, '');
     const cleanExchangeRate = newOrder.exchangeRate.toString().replace(/\s/g, '');
     if (!cleanAmount) return alert('Summani kiriting!');
@@ -601,15 +610,25 @@ const Orders = () => {
     }
 
     const orderPayload = { ...newOrder, amount: finalAmount, exchangeRate: Number(cleanExchangeRate || 0), currency: 'UZS', meta: originalData };
-    let updated;
-    if (editingId) {
-      updated = allOrders.map(o => o.id === editingId ? { ...o, ...orderPayload } : o);
-    } else {
-      updated = [...allOrders, { id: Date.now(), uniqueId: `EXP-${allOrders.length + 1001}`, ...orderPayload, managerId: user.id, managerName: user.name, showroom: user.showroom, createdAt: new Date().toISOString() }];
+    
+    try {
+      if (editingId) {
+        const res = await api.put(`/orders/${editingId}`, orderPayload);
+        setAllOrders(allOrders.map(o => o._id === editingId ? res.data : o));
+      } else {
+        const res = await api.post('/orders', {
+          ...orderPayload,
+          uniqueId: `EXP-${allOrders.length + 1001}`
+        });
+        setAllOrders([...allOrders, res.data]);
+      }
+      setIsOrderModalOpen(false); 
+      setEditingId(null); 
+      setNewOrder(emptyOrder);
+    } catch (err) {
+      console.error("Save error", err);
+      alert("Saqlashda xatolik!");
     }
-    setAllOrders(updated);
-    localStorage.setItem('erp_orders', JSON.stringify(updated));
-    setIsOrderModalOpen(false); setEditingId(null); setNewOrder(emptyOrder);
   };
 
   const confirmDelete = (reason) => {
@@ -719,7 +738,7 @@ const Orders = () => {
                       </td></tr>
                     ) : (
                       filteredOrders.map(o => (
-                        <tr key={o.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', transition: '0.2s' }}>
+                        <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', transition: '0.2s' }}>
                           <td style={{ padding: '20px 24px' }}><span style={{ color: 'var(--accent-gold)', fontWeight: '900' }}>{o.uniqueId}</span></td>
                           <td style={{ padding: '20px 24px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -741,7 +760,7 @@ const Orders = () => {
                             </span>
                           </td>
                           <td style={{ padding: '20px 24px' }}>
-                            <button onClick={() => { setEditingId(o.id); setNewOrder(o); setIsOrderModalOpen(true); }} className="secondary-btn" style={{ padding: '8px 16px', fontSize: '12px', gap: '8px' }}><Eye size={14} /> Ko'rish</button>
+                            <button onClick={() => { setEditingId(o._id); setNewOrder(o); setIsOrderModalOpen(true); }} className="secondary-btn" style={{ padding: '8px 16px', fontSize: '12px', gap: '8px' }}><Eye size={14} /> Ko'rish</button>
                           </td>
                         </tr>
                       ))
@@ -771,13 +790,13 @@ const Orders = () => {
                     const isLocked = LOCKED_STAGES.includes(order.status);
                     return (
                       <div 
-                        key={order.id} 
+                        key={order._id} 
                         draggable={!isLocked} 
-                        onDragStart={(e) => handleDragStart(e, order.id)} 
+                        onDragStart={(e) => handleDragStart(e, order._id)} 
                         onDragEnd={handleDragEnd} 
                         onContextMenu={(e) => {
                           e.preventDefault();
-                          setContextMenu({ isOpen: true, x: e.pageX, y: e.pageY, orderId: order.id, isLocked });
+                          setContextMenu({ isOpen: true, x: e.pageX, y: e.pageY, orderId: order._id, isLocked });
                         }}
                         style={{ 
                           background: 'var(--secondary-bg)', 
@@ -789,6 +808,7 @@ const Orders = () => {
                           cursor: isLocked ? 'default' : 'grab',
                           opacity: isLocked ? 0.8 : 1
                         }}
+                        onClick={() => { setEditingId(order._id); setNewOrder(order); setIsOrderModalOpen(true); }}
                       >
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '6px', height: '100%', background: stage.color, borderRadius: '6px 0 0 6px' }} />
                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>

@@ -1,21 +1,18 @@
 const mongoose = require('mongoose');
 
 const PurchaseSchema = new mongoose.Schema({
-    orderId: { type: String }, // Linked order
-    supplier: { type: String, required: true },
+    itemName: { type: String, required: true },
+    orderId: { type: String },
+    customerName: { type: String },
+    customerPhone: { type: String },
+    partnerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Partner' },
+    quantity: { type: Number },
+    pricePerUnit: { type: Number },
+    totalAmount: { type: Number },
     date: { type: Date, default: Date.now },
-    items: [
-        {
-            name: { type: String },
-            quantity: { type: Number },
-            price: { type: Number },
-            total: { type: Number }
-        }
-    ],
-    total_amount: { type: Number },
-    paid_amount: { type: Number, default: 0 },
-    status: { type: String, default: 'kutilmoqda' }, // kutilmoqda, keldi, qisman
-    paymentStatus: { type: String, default: 'to\'lanmagan' } // to'lanmagan, qisman, to'landi
+    comment: { type: String },
+    showroom: { type: String },
+    status: { type: String, default: 'kutilmoqda' }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Purchase', PurchaseSchema);

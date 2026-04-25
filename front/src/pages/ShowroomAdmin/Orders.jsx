@@ -318,7 +318,7 @@ const AdminOrders = () => {
                     <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Arxivda buyurtmalar yo'q.</td></tr>
                   ) : (
                     showroomOrders.map(o => (
-                      <tr key={o.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                      <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                         <td style={{ padding: '15px', color: 'var(--accent-gold)', fontWeight: '800' }}>{o.uniqueId}</td>
                         <td style={{ padding: '15px' }}>{o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}</td>
                         <td style={{ padding: '15px' }}>{o.managerName}</td>
@@ -364,7 +364,7 @@ const AdminOrders = () => {
                   </div>
                   <div className="no-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: 'calc(100vh - 350px)', overflowY: 'auto', paddingRight: '4px' }}>
                     {stageOrders.map(order => (
-                      <div key={order.id} onClick={() => { setSelectedOrder(order); setIsOrderModalOpen(true); }} onContextMenu={(e) => { e.preventDefault(); setContextMenu({ isOpen: true, x: e.pageX, y: e.pageY, orderId: order.id, status: order.status }); }} style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '20px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
+                      <div key={order._id} onClick={() => { setSelectedOrder(order); setIsOrderModalOpen(true); }} onContextMenu={(e) => { e.preventDefault(); setContextMenu({ isOpen: true, x: e.pageX, y: e.pageY, orderId: order._id, status: order.status }); }} style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '20px', position: 'relative', cursor: 'pointer', transition: '0.2s' }}>
                           <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: stage.color, borderRadius: '4px 0 0 4px' }} />
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                               <div><h4 style={{ fontSize: '16px', fontWeight: '900', letterSpacing: '-0.3px' }}>{order.selectedCustomer?.firstName} {order.selectedCustomer?.lastName}</h4><span style={{ fontSize: '10px', color: 'var(--accent-gold)', fontWeight: '900' }}>#{order.uniqueId}</span></div>
@@ -372,24 +372,21 @@ const AdminOrders = () => {
 
                           {stage.id === 'bajarildi' && !order.adminCompletionApproved && (
                             <button 
-                              onClick={(e) => {
+                              onClick={async (e) => {
                                 e.stopPropagation();
                                 const isFinal = order.smCompletionApproved;
-                                const updated = orders.map(o => {
-                                  if (o.id === order.id) {
-                                    const log = { type: 'system', text: isFinal ? "Buyurtma Admin va SM tomonidan tasdiqlandi. Arxivlandi." : "Buyurtma Admin tomonidan tasdiqlandi (yakunlash)", time: new Date().toISOString(), user: user.name };
-                                    return { 
-                                      ...o, 
-                                      adminCompletionApproved: true, 
-                                      status: isFinal ? 'yopildi' : o.status,
-                                      timeline: [...(o.timeline || []), log]
-                                    };
-                                  }
-                                  return o;
-                                });
-                                setOrders(updated);
-                                localStorage.setItem('erp_orders', JSON.stringify(updated));
-                                alert(isFinal ? "Buyurtma to'liq yopildi va arxivga o'tkazildi!" : "Sizning tasdig'ingiz qabul qilindi. Sotuv menejeri tasdig'i kutilmoqda.");
+                                try {
+                                  const log = { type: 'system', text: isFinal ? "Buyurtma Admin va SM tomonidan tasdiqlandi. Arxivlandi." : "Buyurtma Admin tomonidan tasdiqlandi (yakunlash)", time: new Date().toISOString(), user: user.name };
+                                  const res = await api.put(`/orders/${order._id}`, { 
+                                    adminCompletionApproved: true, 
+                                    status: isFinal ? 'yopildi' : order.status,
+                                    timeline: [...(order.timeline || []), log]
+                                  });
+                                  setOrders(orders.map(o => o._id === order._id ? res.data : o));
+                                  alert(isFinal ? "Buyurtma to'liq yopildi va arxivga o'tkazildi!" : "Sizning tasdig'ingiz qabul qilindi. Sotuv menejeri tasdig'i kutilmoqda.");
+                                } catch (err) {
+                                  alert("Xatolik yuz berdi");
+                                }
                               }}
                               style={{ width: '100%', marginBottom: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#10b981', padding: '10px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                             >
@@ -435,7 +432,7 @@ const AdminOrders = () => {
                                 )}
                             </div>
                             <div style={{ display: 'flex', gap: '6px' }}>
-                                {order.status === 'shartnoma' && <button onClick={(e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, orderId: order.id }); }} style={{ padding: '6px 12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid #10b981', borderRadius: '8px', fontSize: '10px', fontWeight: '800' }}>Tasdiqlash</button>}
+                                {order.status === 'shartnoma' && <button onClick={(e) => { e.stopPropagation(); setConfirmModal({ isOpen: true, orderId: order._id }); }} style={{ padding: '6px 12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid #10b981', borderRadius: '8px', fontSize: '10px', fontWeight: '800' }}>Tasdiqlash</button>}
                             </div>
                         </div>
                     </div>
