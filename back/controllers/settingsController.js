@@ -27,6 +27,7 @@ exports.updateSettings = async (req, res) => {
     await settings.save();
     res.json(settings);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("Update Settings Error:", error);
+    res.status(500).json({ message: "Saqlashda xatolik: " + error.message });
   }
 };
