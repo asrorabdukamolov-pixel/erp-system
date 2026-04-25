@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { UserPlus, Check, X, Phone, MapPin, Home, FileText, Smartphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 
 const NewCustomer = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -73,7 +75,8 @@ const NewCustomer = () => {
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       console.error("Customer save error", err);
-      alert(err.response?.data?.msg || "Mijozni saqlashda xatolik yuz berdi");
+      const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
+      alert("Mijozni saqlashda xatolik yuz berdi: " + errorMsg);
     }
   };
 

@@ -7,14 +7,11 @@ const testConnection = async () => {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected successfully');
         
-        const Partner = require('./models/Partner');
-        const partners = await Partner.find();
-        console.log('Partners found:', partners.length);
-        partners.forEach(p => {
-            console.log(`- ${p.name}: logo length = ${p.logo ? p.logo.length : 0}`);
-            if (p.logo && p.logo.length < 100) {
-                console.log(`  [WARNING] Logo for ${p.name} is too short: "${p.logo}"`);
-            }
+        const User = require('./models/User');
+        const users = await User.find({});
+        console.log('Total Users found:', users.length);
+        users.forEach(u => {
+            console.log(`- ${u.name} (${u.login}): role="${u.role}", showroom="${u.showroom}"`);
         });
         
         process.exit(0);
