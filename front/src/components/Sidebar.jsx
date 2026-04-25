@@ -139,6 +139,7 @@ const Sidebar = () => {
         <div style={{ overflow: 'hidden' }}>
           <p style={{ fontSize: '14px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{user?.name}</p>
           <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textTransform: 'capitalize' }}>{user?.role?.replace('_', ' ')}</p>
+          {user?.phone && <p style={{ fontSize: '10px', color: 'var(--accent-gold)', marginTop: '2px', fontWeight: '600' }}>{user.phone}</p>}
         </div>
       </div>
 

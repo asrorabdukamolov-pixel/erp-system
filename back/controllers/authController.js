@@ -39,7 +39,7 @@ exports.login = async (req, res) => {
             return res.status(400).json({ msg: 'Login yoki parol xato' });
         }
 
-        const payload = { user: { id: user.id, role: user.role, name: user.name, showroom: user.showroom } };
+        const payload = { user: { id: user.id, role: user.role, name: user.name, showroom: user.showroom, phone: user.phone } };
 
         jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
             if (err) throw err;

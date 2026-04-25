@@ -445,7 +445,7 @@ const KPModal = ({ onClose, editData = null }) => {
         <div class="person-details">
           <div class="person-name" style="font-size:16px; margin-bottom:2px;">${user?.name || 'Menejer'}</div>
           <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">Express mebel</div>
-          <div>Tel: <b>${user?.phone || '+998 90 000 00 00'}</b></div>
+          <div>Tel: <b>${user?.phone || '—'}</b></div>
         </div>
       </div>
     </div>
