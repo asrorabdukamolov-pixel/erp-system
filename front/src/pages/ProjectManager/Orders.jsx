@@ -234,6 +234,7 @@ const FileManagerModal = ({ type, files, onRemove, onClose, onAdd }) => {
 // в•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђв•ђ
 const AgentModal = ({ onClose, onSaved }) => {
   const [form, setForm] = useState({ firstName: '', lastName: '', phone: '+998 ', firm: '' });
+  const [loading, setLoading] = useState(false);
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'phone') {
@@ -242,13 +243,18 @@ const AgentModal = ({ onClose, onSaved }) => {
       setForm({ ...form, [name]: value });
     }
   };
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    const existing = JSON.parse(localStorage.getItem('erp_agents') || '[]');
-    const newAgent = { id: Date.now(), ...form, createdAt: new Date().toISOString() };
-    localStorage.setItem('erp_agents', JSON.stringify([...existing, newAgent]));
-    if (onSaved) onSaved();
-    onClose();
+    setLoading(true);
+    try {
+      await api.post('/customers', { ...form, type: 'agent' });
+      if (onSaved) onSaved();
+      onClose();
+    } catch (err) {
+      console.error("Agent save error", err);
+      alert("Agentni saqlashda xatolik: " + (err.response?.data?.message || err.message));
+    }
+    setLoading(false);
   };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
@@ -265,8 +271,10 @@ const AgentModal = ({ onClose, onSaved }) => {
             <div><Lbl>Firma (Agar bo'lsa)</Lbl><input name="firm" value={form.firm} onChange={handleChange} style={{ width: '100%' }} autoComplete="off" /></div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '32px' }}>
-            <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1 }}>Bekor Qilish</button>
-            <button type="submit" className="gold-btn" style={{ flex: 1, justifyContent: 'center' }}>Saqlash</button>
+            <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1 }} disabled={loading}>Bekor Qilish</button>
+            <button type="submit" className="gold-btn" style={{ flex: 1, justifyContent: 'center' }} disabled={loading}>
+              {loading ? 'Saqlanmoqda...' : 'Saqlash'}
+            </button>
           </div>
         </form>
       </div>
@@ -281,6 +289,7 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
     });
     const [agentSearch, setAgentSearch] = useState('');
     const [agentSuggestions, setAgentSuggestions] = useState([]);
+    const [loading, setLoading] = useState(false);
   
     const handleChange = (e) => {
       const { name, value } = e.target;
@@ -292,22 +301,31 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
     };
   
     useEffect(() => {
-      if (form.source === 'agent' && agentSearch.length > 1) {
-        const list = JSON.parse(localStorage.getItem('erp_agents') || '[]');
-        setAgentSuggestions(list.filter(a => `${a.firstName} ${a.lastName}`.toLowerCase().includes(agentSearch.toLowerCase())));
-      } else setAgentSuggestions([]);
+      const searchAgents = async () => {
+        if (form.source === 'agent' && agentSearch.length > 1) {
+          try {
+            const res = await api.get('/customers', { params: { type: 'agent', search: agentSearch } });
+            setAgentSuggestions(res.data);
+          } catch (err) {
+            console.error("Search agents error", err);
+          }
+        } else setAgentSuggestions([]);
+      };
+      searchAgents();
     }, [agentSearch, form.source]);
   
-    const handleSave = (e) => {
+    const handleSave = async (e) => {
       e.preventDefault();
-      const existing = JSON.parse(localStorage.getItem('erp_customers') || '[]');
-      const newCustomer = {
-        id: Date.now(), ...form,
-        managerId: user?.id, managerName: user?.name, showroom: user?.showroom, createdAt: new Date().toISOString()
-      };
-      localStorage.setItem('erp_customers', JSON.stringify([...existing, newCustomer]));
-      if (onSaved) onSaved();
-      onClose();
+      setLoading(true);
+      try {
+        await api.post('/customers', { ...form, type: 'customer' });
+        if (onSaved) onSaved();
+        onClose();
+      } catch (err) {
+        console.error("Customer save error", err);
+        alert("Mijozni saqlashda xatolik: " + (err.response?.data?.message || err.message));
+      }
+      setLoading(false);
     };
   
     return (
@@ -357,7 +375,7 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
                   <IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismini yozing..." style={{ height: '54px' }} />
                   {agentSuggestions.length > 0 && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', zIndex: 100, border: '1px solid var(--border-color)', marginTop: '8px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
-                      {agentSuggestions.map(a => <div key={a.id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px' }}>{a.firstName} {a.lastName} <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>({a.firm})</span></div>)}
+                      {agentSuggestions.map(a => <div key={a._id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px' }}>{a.firstName} {a.lastName} <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>({a.firm})</span></div>)}
                     </div>
                   )}
                 </div>
@@ -365,8 +383,10 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
             </div>
 
             <div style={{ display: 'flex', gap: '16px', marginTop: '54px' }}>
-              <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '60px', fontSize: '18px', fontWeight: '800' }}>Bekor Qilish</button>
-              <button type="submit" className="gold-btn" style={{ flex: 1, justifyContent: 'center', height: '60px', fontSize: '18px', fontWeight: '800' }}>Mijozni Saqlash</button>
+              <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '60px', fontSize: '18px', fontWeight: '800' }} disabled={loading}>Bekor Qilish</button>
+              <button type="submit" className="gold-btn" style={{ flex: 1, justifyContent: 'center', height: '60px', fontSize: '18px', fontWeight: '800' }} disabled={loading}>
+                {loading ? 'Saqlanmoqda...' : 'Mijozni Saqlash'}
+              </button>
             </div>
           </form>
         </div>

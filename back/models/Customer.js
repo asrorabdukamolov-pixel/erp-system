@@ -12,6 +12,10 @@ const CustomerSchema = new mongoose.Schema({
     showroom: { type: String },
     addedBy: { type: String },
     managerName: { type: String },
+    age: { type: String },
+    gender: { type: String },
+    propertyType: { type: String },
+    selectedAgent: { type: Object },
     status: { type: String, default: 'active' }
 }, { timestamps: true });
 
