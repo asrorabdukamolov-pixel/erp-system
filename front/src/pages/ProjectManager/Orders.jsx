@@ -33,11 +33,11 @@ const LOCKED_STAGES = ['yopildi']; // PM can move any stage except archived
 
 
 const SOURCE_OPTIONS = [
-  { value: 'instagram', label: 'Instagram', icon: 'рџ“ё' },
-  { value: 'facebook', label: 'Facebook', icon: 'рџ‘¤' },
-  { value: 'tanish', label: 'Tanish orqali', icon: 'рџ¤ќ' },
-  { value: 'tavsiya', label: 'Tavsiya orqali', icon: 'в­ђ' },
-  { value: 'agent', label: 'Agentlar orqali', icon: 'рџЏў' },
+  { value: 'instagram', label: 'Instagram', icon: '📸' },
+  { value: 'facebook', label: 'Facebook', icon: '👥' },
+  { value: 'tanish', label: 'Tanish orqali', icon: '🤝' },
+  { value: 'tavsiya', label: 'Tavsiya orqali', icon: '⭐️' },
+  { value: 'agent', label: 'Agentlar orqali', icon: '🏢' },
 ];
 
 const checklistLabels = {
