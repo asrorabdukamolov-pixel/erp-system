@@ -97,8 +97,8 @@ const ProposalsModal = ({ onClose }) => {
         <td>${item.image ? `<img src="${item.image}" style="width:56px;height:56px;object-fit:cover;border-radius:8px" alt=""/>` : '<span class="ni">&#128715;</span>'}</td>
         <td><strong>${item.name}</strong>${item.desc ? `<br/><small style="color:rgba(255,255,255,0.4)">${item.desc}</small>` : ''}</td>
         <td>${item.qty}</td><td>${item.unit}</td>
-        <td>${Number(item.price).toLocaleString()} so'm</td>
-        <td class="amt">${(Number(item.qty) * Number(item.price)).toLocaleString()} so'm</td>
+        <td>${(parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0).toLocaleString()} so'm</td>
+        <td class="amt">${((parseFloat(item.qty) || 0) * (parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0)).toLocaleString()} so'm</td>
       </tr>`).join('')}
   </tbody>
 </table>

@@ -51,10 +51,12 @@ const SuperCustomerBase = () => {
 
   const TabBtn = ({ id, label }) => (
     <button onClick={() => { setTab(id); setSearch(''); }}
-      style={{ padding: '10px 24px', borderRadius: '8px', fontWeight: '600', fontSize: '14px', cursor: 'pointer',
+      style={{
+        padding: '10px 24px', borderRadius: '8px', fontWeight: '600', fontSize: '14px', cursor: 'pointer',
         background: tab === id ? 'var(--accent-gold)' : 'transparent',
         color: tab === id ? 'black' : 'var(--text-secondary)',
-        border: tab === id ? 'none' : '1px solid var(--border-color)' }}>
+        border: tab === id ? 'none' : '1px solid var(--border-color)'
+      }}>
       {label}
     </button>
   );

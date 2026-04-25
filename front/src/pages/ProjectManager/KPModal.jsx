@@ -119,15 +119,16 @@ const KPModal = ({ onClose, editData = null }) => {
 
   const togglePartner = id => setSelectedPartners(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
 
-  // Totals
   const itemsTotal = items.reduce((s, i) => {
     const qty = parseFloat(i.qty) || 0;
-    const price = parseFloat(i.price?.toString().replace(/\D/g, '')) || 0;
+    const priceStr = String(i.price || '').replace(/[^0-9]/g, '');
+    const price = parseInt(priceStr, 10) || 0;
     return s + (qty * price);
   }, 0);
 
   const servicesTotal = Object.entries(services).reduce((s, [k, v]) => {
-    const price = parseFloat(servicePrices[k]?.toString().replace(/\D/g, '')) || 0;
+    const priceStr = String(servicePrices[k] || '').replace(/[^0-9]/g, '');
+    const price = parseInt(priceStr, 10) || 0;
     return s + (v ? price : 0);
   }, 0);
   
@@ -736,7 +737,7 @@ const KPModal = ({ onClose, editData = null }) => {
                       <div>
                         <p style={{ fontSize:'10px', color:'var(--text-secondary)', marginBottom:'4px', textTransform:'uppercase' }}>Jami</p>
                         <div style={{ height:'38px', background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)', borderRadius:'8px', padding:'0 10px', display:'flex', alignItems:'center', fontSize:'14px', fontWeight:'700', color:'var(--accent-gold)' }}>
-                          {((parseFloat(item.qty) || 0) * (parseFloat(item.price?.toString().replace(/\D/g, '')) || 0)).toLocaleString()}
+                          {((parseFloat(item.qty) || 0) * (parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0)).toLocaleString()}
                         </div>
                       </div>
                     </div>
