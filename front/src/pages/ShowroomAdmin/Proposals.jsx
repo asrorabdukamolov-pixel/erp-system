@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, Printer, Trash2, 
-  Calendar, Clock, DollarSign, User, Briefcase, ArrowLeft
+  Calendar, Clock, DollarSign, User, Briefcase, ArrowLeft, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
