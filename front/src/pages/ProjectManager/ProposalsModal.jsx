@@ -76,7 +76,7 @@ const ProposalsModal = ({ onClose }) => {
   .ft{margin-top:50px;text-align:center;font-size:11px;color:rgba(255,255,255,0.25);border-top:1px solid rgba(255,255,255,0.08);padding-top:20px}
 </style></head><body>
 <div class="hdr">
-  <div><div class="co">Express Mebel</div><div class="kpn">${p.kpNumber} &middot; ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('uz-UZ') : ''}</div></div>
+  <div><div class="kpn">${p.kpNumber} &middot; ${p.createdAt ? new Date(p.createdAt).toLocaleDateString('uz-UZ') : ''}</div></div>
   <div class="mb">
     <div class="minfo"><div class="mn">${p.managerName || 'Menejer'}</div>${p.deadline ? `<div>Muddat: <b>${p.deadline} ish kuni</b></div>` : ''}</div>
     ${user?.photo ? `<img src="${user.photo}" class="ma"/>` : `<div class="mi">${(p.managerName || 'M').charAt(0)}</div>`}
