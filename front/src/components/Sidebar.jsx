@@ -99,8 +99,14 @@ const Sidebar = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <div style={{ marginBottom: '32px', padding: '12px 16px', background: '#fff', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src={logo} alt="Express Mebel Logo" style={{ width: '100%', maxWidth: '160px', pointerEvents: 'none' }} />
+      <div style={{ marginBottom: '32px', padding: '10px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ width: '45px', height: '45px', background: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '6px' }}>
+          <img src={logo} alt="Express Mebel Logo" style={{ width: '100%', height: 'auto', pointerEvents: 'none' }} />
+        </div>
+        <div>
+          <h1 style={{ fontSize: '18px', fontWeight: '900', color: '#fff', margin: 0, letterSpacing: '-0.5px' }}>Express Mebel</h1>
+          <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--accent-gold)', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>ERP System</p>
+        </div>
       </div>
 
       <div style={{ 

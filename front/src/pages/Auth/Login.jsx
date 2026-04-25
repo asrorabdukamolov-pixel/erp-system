@@ -59,8 +59,8 @@ const Login = () => {
               marginBottom: '10px' 
             }} 
           />
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-            ERP Boshqaruv Tizimi
+          <p style={{ color: 'var(--accent-gold)', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Express Mebel ERP
           </p>
         </div>
 
