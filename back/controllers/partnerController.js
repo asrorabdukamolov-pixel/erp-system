@@ -16,6 +16,7 @@ exports.getPartners = async (req, res) => {
 
 exports.createPartner = async (req, res) => {
     try {
+        console.log("Creating partner:", req.body.name);
         const newPartner = new Partner({
             ...req.body,
             showroom: req.user.showroom,
@@ -24,13 +25,14 @@ exports.createPartner = async (req, res) => {
         const partner = await newPartner.save();
         res.json(partner);
     } catch (err) {
-        console.error(err.message);
+        console.error("Create Partner Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.updatePartner = async (req, res) => {
     try {
+        console.log("Updating partner ID:", req.params.id);
         let partner = await Partner.findById(req.params.id);
         if (!partner) return res.status(404).json({ message: 'Hamkor topilmadi' });
 
@@ -41,20 +43,25 @@ exports.updatePartner = async (req, res) => {
         );
         res.json(partner);
     } catch (err) {
-        console.error(err.message);
+        console.error("Update Partner Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.deletePartner = async (req, res) => {
     try {
+        console.log("Deleting partner ID:", req.params.id);
         const partner = await Partner.findById(req.params.id);
-        if (!partner) return res.status(404).json({ message: 'Hamkor topilmadi' });
+        if (!partner) {
+            console.log("Partner not found for deletion:", req.params.id);
+            return res.status(404).json({ message: 'Hamkor topilmadi' });
+        }
 
         await Partner.findByIdAndDelete(req.params.id);
+        console.log("Partner deleted successfully from DB");
         res.json({ message: 'Hamkor o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
+        console.error("Delete Partner Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
