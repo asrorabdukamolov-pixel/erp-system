@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Search, MapPin, Phone, Store, User, Calendar, Share2 } from 'lucide-react';
+import { Users, Search, MapPin, Phone, Store, User, Calendar, Share2, Trash2 } from 'lucide-react';
 import api from '../../utils/api';
+import { useAuth } from '../../context/AuthContext';
 
 const SOURCE_LABELS = {
   instagram: { label: 'Instagram', icon: '📸', color: '#e1306c' },
