@@ -461,8 +461,8 @@ const KPModal = ({ onClose, editData = null }) => {
             <small>${item.desc || 'Tavsif kiritilmagan'}</small>
           </td>
           <td style="text-align:center">${item.qty} ${item.unit}</td>
-          <td style="text-align:right">${Number(item.price).toLocaleString()} so'm</td>
-          <td style="text-align:right; font-weight:900;">${(Number(item.qty) * Number(item.price)).toLocaleString()} so'm</td>
+          <td style="text-align:right">${(parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0).toLocaleString()} so'm</td>
+          <td style="text-align:right; font-weight:900;">${((parseFloat(item.qty) || 0) * (parseInt(String(item.price || '').replace(/[^0-9]/g, ''), 10) || 0)).toLocaleString()} so'm</td>
         </tr>
       `).join('')}
     </tbody>
@@ -478,14 +478,14 @@ const KPModal = ({ onClose, editData = null }) => {
     <div class="grand-total-card">
       <div class="total-row">
         <span class="total-label">Mahsulotlar:</span>
-        <span class="total-val">${itemsTotal.toLocaleString()} so'm</span>
+        <span class="total-val">${(itemsTotal || 0).toLocaleString()} so'm</span>
       </div>
       <div class="total-row" style="display: ${servicesTotal > 0 ? 'flex' : 'none'}">
         <span class="total-label">Xizmatlar:</span>
         <span class="total-val">${servicesTotal.toLocaleString()} so'm</span>
       </div>
       <div class="grand-label">Jami summa</div>
-      <div class="grand-val">${grandTotal.toLocaleString()} so'm</div>
+      <div class="grand-val">${(grandTotal || 0).toLocaleString()} so'm</div>
       <div style="font-size: 11px; color: #555; text-align: right; margin-top: 15px; font-style: italic;">* narxlar 10 kungacha amal qiladi</div>
     </div>
   </div>
