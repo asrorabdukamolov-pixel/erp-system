@@ -1,19 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, Ban, X, Check, Search, ShieldCheck, CreditCard, Briefcase, BadgeInfo, User, ShieldAlert, Clock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const Staff = () => {
   const { user } = useAuth();
   // Load initial staff from localStorage to keep it persistent across the mock system
-  const [staffList, setStaffList] = useState(() => {
-    const saved = localStorage.getItem('erp_staff_list');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [staffList, setStaffList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Save to localStorage whenever staffList changes
+  const loadStaff = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/users');
+      setStaffList(res.data);
+    } catch (err) {
+      console.error("Staff loading error", err);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    localStorage.setItem('erp_staff_list', JSON.stringify(staffList));
-  }, [staffList]);
+    loadStaff();
+  }, []);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('add');
@@ -42,10 +51,15 @@ const Staff = () => {
         setCountdown((prev) => prev - 1);
       }, 1000);
     } else if (countdown === 0 && isActiveDelete) {
-      setStaffList(staffList.filter(s => s.id !== staffToDelete.id));
-      setIsActiveDelete(false);
-      setDeleteModalOpen(false);
-      setStaffToDelete(null);
+      api.delete(`/users/${staffToDelete._id}`).then(() => {
+          loadStaff();
+          setIsActiveDelete(false);
+          setDeleteModalOpen(false);
+          setStaffToDelete(null);
+      }).catch(err => {
+          alert("Xodimni o'chirishda xatolik");
+          setIsActiveDelete(false);
+      });
     }
     return () => clearInterval(timer);
   }, [isActiveDelete, countdown, staffList, staffToDelete]);
@@ -84,12 +98,12 @@ const Staff = () => {
     if (mode === 'edit' && staff) {
       setSelectedStaff(staff);
       setFormData({
-        firstName: staff.firstName,
-        lastName: staff.lastName,
+        firstName: staff.name,
+        lastName: staff.surname,
         login: staff.login,
-        phone: staff.phone || '', // Added phone
+        phone: staff.phone || '',
         role: staff.role,
-        password: staff.password || ''
+        password: ''
       });
     } else {
       setFormData({ firstName: '', lastName: '', login: '', phone: '', role: 'kassa', password: '' });
@@ -121,26 +135,40 @@ const Staff = () => {
     setFormData({...formData, phone: formatted});
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (modalMode === 'add') {
-      const newMember = {
-        id: Date.now(),
-        ...formData,
-        showroom: user?.showroom, // Filialni biriktirish
-        status: 'Active'
+    try {
+      const data = {
+        name: formData.firstName,
+        surname: formData.lastName,
+        login: formData.login,
+        password: formData.password,
+        role: formData.role,
+        phone: formData.phone,
+        showroom: user?.showroom
       };
-      setStaffList([...staffList, newMember]);
-    } else {
-      setStaffList(staffList.map(s => s.id === selectedStaff.id ? { ...s, ...formData } : s));
+
+      if (modalMode === 'add') {
+        await api.post('/users', data);
+      } else {
+        await api.put(`/users/${selectedStaff._id}`, data);
+      }
+      
+      loadStaff();
+      setIsModalOpen(false);
+    } catch (err) {
+      alert(err.response?.data?.msg || "Xatolik yuz berdi");
     }
-    setIsModalOpen(false);
   };
 
-  const toggleStatus = (id) => {
-    setStaffList(staffList.map(s => 
-      s.id === id ? { ...s, status: s.status === 'Active' ? 'Blocked' : 'Active' } : s
-    ));
+  const toggleStatus = async (staff) => {
+    try {
+        const newStatus = staff.status === 'active' ? 'inactive' : 'active';
+        await api.put(`/users/${staff._id}`, { status: newStatus });
+        loadStaff();
+    } catch (err) {
+        alert("Statusni o'zgartirishda xatolik");
+    }
   };
 
   const startDeleteProcess = (staff) => {
@@ -186,7 +214,7 @@ const Staff = () => {
               </thead>
               <tbody>
                 {staffList.map((staff) => (
-                  <tr key={staff.id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
+                  <tr key={staff._id} style={{ borderBottom: '1px solid var(--border-color)', transition: 'background 0.2s' }}>
                     <td style={{ padding: '20px 8px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ 
@@ -199,8 +227,8 @@ const Staff = () => {
                           <User size={20} />
                         </div>
                         <div>
-                          <p style={{ fontWeight: '600' }}>{staff.firstName} {staff.lastName}</p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: #{staff.id.toString().slice(-4)}</p>
+                          <p style={{ fontWeight: '600' }}>{staff.name} {staff.surname}</p>
+                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: #{staff._id.slice(-4)}</p>
                         </div>
                       </div>
                     </td>
@@ -219,18 +247,18 @@ const Staff = () => {
                     <td style={{ padding: '20px 8px' }}>
                       <span style={{ 
                         fontSize: '11px', 
-                        background: staff.status === 'Active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                        color: staff.status === 'Active' ? '#10b981' : '#ef4444',
+                        background: staff.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: staff.status === 'active' ? '#10b981' : '#ef4444',
                         padding: '4px 10px',
                         borderRadius: '20px',
                         fontWeight: '600'
                       }}>
-                        {staff.status === 'Active' ? 'FAOL' : 'BLOKLANGAN'}
+                        {staff.status === 'active' ? 'FAOL' : 'BLOKLANGAN'}
                       </span>
                     </td>
                     <td style={{ padding: '20px 8px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                        <button onClick={() => toggleStatus(staff.id)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title={staff.status === 'Active' ? 'Bloklash' : 'Aktivlashtirish'}>
+                        <button onClick={() => toggleStatus(staff)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title={staff.status === 'active' ? 'Bloklash' : 'Aktivlashtirish'}>
                           <Ban size={18} />
                         </button>
                         <button onClick={() => handleOpenModal('edit', staff)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title="Tahrirlash">
