@@ -14,24 +14,36 @@ exports.getSettings = async (req, res) => {
 
 exports.updateSettings = async (req, res) => {
   try {
-    if (req.user.role !== 'super') {
+    if (!req.user || req.user.role !== 'super') {
       return res.status(403).json({ message: 'Faqat Super Admin o\'zgartirishi mumkin' });
     }
 
+    const { companyName, companyPhone, companyLogo, companyAddress, instagram, telegram } = req.body;
+
     let settings = await Settings.findOne();
     
-    // Exclude internal fields from request body to prevent Mongoose errors
-    const { _id, __v, ...updateData } = req.body;
-
     if (!settings) {
-      settings = new Settings(updateData);
+      settings = new Settings({
+        companyName,
+        companyPhone,
+        companyLogo,
+        companyAddress,
+        instagram,
+        telegram
+      });
     } else {
-      Object.assign(settings, updateData);
+      settings.companyName = companyName || settings.companyName;
+      settings.companyPhone = companyPhone || settings.companyPhone;
+      settings.companyLogo = companyLogo !== undefined ? companyLogo : settings.companyLogo;
+      settings.companyAddress = companyAddress || settings.companyAddress;
+      settings.instagram = instagram || settings.instagram;
+      settings.telegram = telegram || settings.telegram;
     }
+
     await settings.save();
     res.json(settings);
   } catch (error) {
     console.error("Update Settings Error:", error);
-    res.status(500).json({ message: "Serverda saqlashda xatolik: " + error.message });
+    res.status(500).json({ message: "Serverda saqlashda xatolik yuz berdi: " + error.message });
   }
 };

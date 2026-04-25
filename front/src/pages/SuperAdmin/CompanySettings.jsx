@@ -40,8 +40,8 @@ const CompanySettings = () => {
       setMessage({ type: 'success', text: 'Ma\'lumotlar muvaffaqiyatli saqlandi!' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (err) {
-      console.error("Save error details:", err);
-      const errorMsg = err.response?.data?.message || 'Saqlashda xatolik yuz berdi.';
+      console.error("Saqlashda xatolik yuz berdi:", err);
+      const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : 'Saqlashda xatolik yuz berdi.');
       setMessage({ type: 'error', text: errorMsg });
     } finally {
       setSaving(false);
@@ -51,6 +51,10 @@ const CompanySettings = () => {
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        setMessage({ type: 'error', text: 'Rasm hajmi juda katta! Maksimal 1MB.' });
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData({ ...formData, companyLogo: reader.result });

@@ -9,8 +9,8 @@ exports.getPartners = async (req, res) => {
         const partners = await Partner.find(query).sort({ name: 1 });
         res.json(partners);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server xatosi');
+        console.error("Get Partners Error:", err.message);
+        res.status(500).json({ message: 'Serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -26,7 +26,7 @@ exports.createPartner = async (req, res) => {
         res.json(partner);
     } catch (err) {
         console.error("Create Partner Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ message: 'Hamkorni saqlashda serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -44,7 +44,7 @@ exports.updatePartner = async (req, res) => {
         res.json(partner);
     } catch (err) {
         console.error("Update Partner Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ message: 'Hamkorni yangilashda serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -62,6 +62,6 @@ exports.deletePartner = async (req, res) => {
         res.json({ message: 'Hamkor o\'chirildi' });
     } catch (err) {
         console.error("Delete Partner Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ message: 'Hamkorni o\'chirishda serverda xatolik yuz berdi: ' + err.message });
     }
 };

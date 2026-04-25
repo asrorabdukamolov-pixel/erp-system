@@ -46,6 +46,10 @@ const Partners = () => {
   const handleCompanyLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        alert('Rasm hajmi juda katta! Maksimal 1MB.');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = async () => {
         setLogoSaving(true);
@@ -55,7 +59,8 @@ const Partners = () => {
           setCompanySettings(updated);
           alert('Kompaniya logotipi muvaffaqiyatli yangilandi!');
         } catch (err) {
-          alert('Xatolik: ' + (err.response?.data?.message || err.message));
+          const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
+          alert('Xatolik: ' + errorMsg);
         } finally {
           setLogoSaving(false);
         }
@@ -67,6 +72,10 @@ const Partners = () => {
   const handleLogoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        alert('Rasm hajmi juda katta! Maksimal 1MB.');
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, logo: reader.result }));
@@ -91,7 +100,8 @@ const Partners = () => {
       }
       closeModal();
     } catch (err) {
-      alert('Saqlashda xatolik: ' + (err.response?.data?.message || err.message));
+      const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
+      alert('Saqlashda xatolik: ' + errorMsg);
     }
   };
 
@@ -106,20 +116,6 @@ const Partners = () => {
     }
   };
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 1024 * 500) { // 500KB limit
-        alert('Rasm hajmi juda katta! Maksimal 500KB.');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, logo: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const openModal = (partner = null) => {
     if (partner) {
