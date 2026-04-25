@@ -67,6 +67,17 @@ const Partners = () => {
     }
   };
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, logo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSave = async () => {
     if (!formData.name || !formData.logo) {
       alert('Iltimos, barcha maydonlarni to\'ldiring!');
