@@ -108,7 +108,7 @@ const ProposalsModal = ({ onClose }) => {
 <body>
   <div class="hdr">
     <div class="logo-container">
-      ${companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>'}
+      ${companySettings.kpLogo ? `<img src="${companySettings.kpLogo}" class="official-logo" />` : (companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>')}
     </div>
     <div class="tt-badge-side">
       <div class="tt-badge">Tijorat Taklifi</div>
@@ -135,13 +135,66 @@ const ProposalsModal = ({ onClose }) => {
     </div>
   </div>
 
-  ${activePartners.length > 0 ? `
-    <div style="width:100%;max-height:36px;display:flex;justify-content:center;align-items:center;">
-      ${pt.logo.startsWith('<svg') ? pt.logo : `<img src="${pt.logo}" style="max-width:100%;max-height:100%;object-fit:contain;" />`}
+  <table>
+    <thead>
+      <tr>
+        <th style="width:40px">#</th>
+        <th style="width:110px">Surat</th>
+        <th>Mahsulot Nomi / Tavsif</th>
+        <th style="text-align:center">Soni</th>
+        <th style="text-align:right">Narxi</th>
+        <th style="text-align:right">Umumiy</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${(p.items || []).filter(i => i.name).map((item, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td>
+            ${item.image ? `<img src="${item.image}" class="item-img" />` : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;">🛋️</div>'}
+          </td>
+          <td class="item-info">
+            <strong>${item.name}</strong>
+            <small>${item.desc || 'Tavsif kiritilmagan'}</small>
+          </td>
+          <td style="text-align:center">${item.qty} ${item.unit}</td>
+          <td style="text-align:right">${(item.price || 0).toLocaleString()} so'm</td>
+          <td style="text-align:right; font-weight:900;">${((item.qty || 0) * (item.price || 0)).toLocaleString()} so'm</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="summary-grid">
+    <div class="deadline-card">
+      <div class="card-title">Topshirish muddati</div>
+      <div class="deadline-val">${p.deadline || '—'} ish kuni</div>
+      <div class="deadline-sub">* ${basisText || "Muddat o'lcham olishdan boshlanadi"}</div>
     </div>
-    <div class="pn">${pt.name}</div>
-  </div>`).join('')}</div>` : ''}
-<div class="ft">Express Mebel &mdash; Sifat va ishonchlilik garantiyasi &middot; ${new Date().toLocaleDateString('uz-UZ')}</div>
+    <div class="grand-total-card">
+      <div class="grand-label">Jami summa</div>
+      <div class="grand-val">${(p.grandTotal || 0).toLocaleString()} so'm</div>
+    </div>
+  </div>
+
+  <div class="partners-section" style="margin-top: 40px;">
+    ${activePartners.length > 0 ? `
+    <div class="partners-label">Loyihadagi Hamkorlarimiz</div>
+    <div class="partners-row">
+      ${activePartners.map(pt => `
+        <div class="partner-logo-item">
+          ${pt.logo.startsWith('<svg') ? pt.logo : `<img src="${pt.logo}" style="height:22px;object-fit:contain;" />`}
+        </div>
+      `).join('')}
+    </div>` : ''}
+  </div>
+
+  <div class="footer">
+    <div class="footer-logo">${companySettings.companyName}</div>
+    <div class="footer-details">
+      ${companySettings.companyAddress} &middot; ${companySettings.telegram} &middot; ${companySettings.instagram}
+    </div>
+  </div>
 </body></html>`;
 
     const w = window.open('', '_blank');

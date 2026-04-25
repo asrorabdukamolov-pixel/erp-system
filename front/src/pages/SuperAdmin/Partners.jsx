@@ -56,10 +56,10 @@ const Partners = () => {
       reader.onloadend = async () => {
         setLogoSaving(true);
         try {
-          const updated = { ...companySettings, companyLogo: reader.result };
-          await api.put('/settings', updated);
-          setCompanySettings(updated);
-          alert('Kompaniya logotipi muvaffaqiyatli yangilandi!');
+        const updated = { ...companySettings, kpLogo: reader.result };
+        await api.put('/settings', updated);
+        setCompanySettings(updated);
+        alert('Tijorat taklifi (KP) logotipi muvaffaqiyatli yangilandi!');
         } catch (err) {
           const errorMsg = err.response?.data?.message || err.response?.data?.msg || (err.message === 'Network Error' ? 'Tarmoq xatosi: Server bilan aloqa o\'rnatib bo\'lmadi' : err.message);
           alert('Xatolik: ' + errorMsg);
@@ -178,8 +178,8 @@ const Partners = () => {
             position: 'relative',
             overflow: 'hidden'
           }}>
-            {companySettings?.companyLogo ? (
-              <img src={companySettings.companyLogo} alt="Company Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+          {companySettings?.kpLogo ? (
+            <img src={companySettings.kpLogo} alt="KP Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
             ) : (
               <Building2 size={40} color="#ccc" />
             )}
@@ -190,7 +190,7 @@ const Partners = () => {
           <div>
             <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'white', marginBottom: '6px' }}>Kompaniya Logotipi</h2>
             <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '400px' }}>
-              Ushbu logotip barcha Tijorat Takliflari (KP) va tizimning boshqa qismlarida asosiy brend belgisi sifatida ishlatiladi.
+            Ushbu logotip faqat barcha Tijorat Takliflari (KP) va hisobotlarda brend belgisi sifatida ishlatiladi.
             </p>
           </div>
         </div>
@@ -212,7 +212,7 @@ const Partners = () => {
         onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
         >
           <Upload size={20} />
-          {companySettings?.companyLogo ? 'Logotipni almashtirish' : 'Logotip yuklash'}
+          {companySettings?.kpLogo ? 'Logotipni almashtirish' : 'Logotip yuklash'}
           <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleCompanyLogoUpload} disabled={logoSaving} />
         </label>
       </div>

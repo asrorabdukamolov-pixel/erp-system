@@ -106,9 +106,9 @@ const CompanySettings = () => {
               )}
             </div>
             <div>
-              <h4 style={{ fontSize: '16px', marginBottom: '8px' }}>Kompaniya Logotipi</h4>
+              <h4 style={{ fontSize: '16px', marginBottom: '8px' }}>Tizim Logotipi</h4>
               <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                KP PDF fayllari uchun yuqori sifatli (SVG yoki PNG) logotip yuklang.
+                Ushbu logotip ERP tizimi ichida, xodimlar akkauntida chap yuqori burchakda ko'rinadi.
               </p>
               <label className="secondary-btn" style={{ cursor: 'pointer', display: 'inline-flex', gap: '8px' }}>
                 <Upload size={16} /> Logotipni tanlash

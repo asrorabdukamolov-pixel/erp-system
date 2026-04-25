@@ -407,7 +407,7 @@ const KPModal = ({ onClose, editData = null }) => {
 <body>
   <div class="hdr">
     <div class="logo-container">
-      ${companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>'}
+      ${companySettings.kpLogo ? `<img src="${companySettings.kpLogo}" class="official-logo" />` : (companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>')}
     </div>
     <div class="tt-badge-side">
       <div class="tt-badge">Tijorat Taklifi</div>
