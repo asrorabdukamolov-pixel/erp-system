@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, Printer, Edit, Trash2, 
-  Calendar, Clock, DollarSign, Plus
+  Calendar, Clock, DollarSign, Plus, X
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
@@ -11,6 +11,7 @@ const Proposals = () => {
   const { user } = useAuth();
   const [proposals, setProposals] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all'); // all, active, sold, rejected
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, proposalId: null });
@@ -48,6 +49,16 @@ const Proposals = () => {
   const handleEdit = (p) => {
     setSelectedProposal(p);
     setIsEditModalOpen(true);
+  };
+
+  const handleStatusUpdate = async (id, newStatus) => {
+    try {
+      await api.put(`/proposals/${id}`, { status: newStatus });
+      loadProposals();
+    } catch (err) {
+      console.error("Status update error", err);
+      alert("Holatni yangilashda xatolik yuz berdi");
+    }
   };
 
   // ── PDF chop etish (Professional Design V3.2) ───────────────────────────
@@ -404,8 +415,38 @@ const Proposals = () => {
     setTimeout(() => w.print(), 700);
   };
 
-  const filteredProposals = proposals.filter(p => 
-    `${p.kpNumber} ${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProposals = proposals.filter(p => {
+    const matchesSearch = `${p.kpNumber} ${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = activeTab === 'all' || p.status === activeTab;
+    return matchesSearch && matchesTab;
+  });
+
+  const stats = {
+    total: proposals.filter(p => p.status !== 'trash').length,
+    totalSum: proposals.filter(p => p.status !== 'trash').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    soldCount: proposals.filter(p => p.status === 'sold').length,
+    soldSum: proposals.filter(p => p.status === 'sold').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    rejectedCount: proposals.filter(p => p.status === 'rejected').length,
+    rejectedSum: proposals.filter(p => p.status === 'rejected').reduce((s, p) => s + (p.grandTotal || 0), 0),
+    activeCount: proposals.filter(p => p.status === 'active').length,
+    activeSum: proposals.filter(p => p.status === 'active').reduce((s, p) => s + (p.grandTotal || 0), 0),
+  };
+
+  const StatCard = ({ label, count, sum, color, icon: Icon }) => (
+    <div className="premium-card" style={{ padding: '20px', flex: 1, border: `1px solid ${color}33` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: `${color}15`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon size={20} />
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</p>
+          <p style={{ fontSize: '18px', fontWeight: '900', color: color }}>{count}</p>
+        </div>
+      </div>
+      <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>
+        <p style={{ fontSize: '14px', fontWeight: '800' }}>{sum.toLocaleString()} <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>so'm</span></p>
+      </div>
+    </div>
   );
 
   return (
@@ -432,6 +473,40 @@ const Proposals = () => {
         </div>
       </div>
 
+      <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
+        <StatCard label="Jami Takliflar" count={stats.total} sum={stats.totalSum} color="var(--accent-gold)" icon={FileText} />
+        <StatCard label="Sotilgan" count={stats.soldCount} sum={stats.soldSum} color="#10b981" icon={DollarSign} />
+        <StatCard label="Jarayonda" count={stats.activeCount} sum={stats.activeSum} color="#3b82f6" icon={Clock} />
+        <StatCard label="O'tkaz (Rejected)" count={stats.rejectedCount} sum={stats.rejectedSum} color="#ef4444" icon={X} />
+      </div>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.02)', padding: '4px', borderRadius: '12px', width: 'fit-content', border: '1px solid var(--border-color)' }}>
+        {[
+          { id: 'all', label: `Barchasi (${stats.total})` },
+          { id: 'active', label: `Jarayonda (${stats.activeCount})` },
+          { id: 'sold', label: `Sotilgan (${stats.soldCount})` },
+          { id: 'rejected', label: `O'tkaz (${stats.rejectedCount})` }
+        ].map(t => (
+          <button
+            key={t.id}
+            onClick={() => setActiveTab(t.id)}
+            style={{
+              padding: '8px 20px',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: '700',
+              border: 'none',
+              cursor: 'pointer',
+              background: activeTab === t.id ? 'var(--accent-gold)' : 'transparent',
+              color: activeTab === t.id ? 'black' : 'var(--text-secondary)',
+              transition: '0.2s'
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
         {filteredProposals.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed var(--border-color)' }}>
@@ -449,6 +524,18 @@ const Proposals = () => {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '2px 8px', borderRadius: '6px' }}>{p.kpNumber}</span>
                     <h3 style={{ fontSize: '18px', fontWeight: '800' }}>{p.customer?.firstName} {p.customer?.lastName}</h3>
+                    <span style={{ 
+                      fontSize: '10px', 
+                      fontWeight: '800', 
+                      padding: '2px 8px', 
+                      borderRadius: '4px',
+                      textTransform: 'uppercase',
+                      background: p.status === 'sold' ? 'rgba(16,185,129,0.1)' : p.status === 'rejected' ? 'rgba(239,68,68,0.1)' : 'rgba(59,130,246,0.1)',
+                      color: p.status === 'sold' ? '#10b981' : p.status === 'rejected' ? '#ef4444' : '#3b82f6',
+                      border: `1px solid ${p.status === 'sold' ? '#10b98133' : p.status === 'rejected' ? '#ef444433' : '#3b82f633'}`
+                    }}>
+                      {p.status === 'sold' ? 'Sotilgan' : p.status === 'rejected' ? 'O\'tkaz' : 'Jarayonda'}
+                    </span>
                   </div>
                   <div style={{ display: 'flex', gap: '16px', color: 'var(--text-secondary)', fontSize: '13px' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Calendar size={14} /> {new Date(p.createdAt).toLocaleDateString()}</span>
@@ -464,7 +551,12 @@ const Proposals = () => {
                 <button onClick={() => handleEdit(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Tahrirlash">
                   <Edit size={20} />
                 </button>
-                <button onClick={() => removeProposal(p._id)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
+                {p.status === 'active' && (
+                  <button onClick={() => handleStatusUpdate(p._id, 'rejected')} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'tkaz qilish">
+                    <X size={20} />
+                  </button>
+                )}
+                <button onClick={() => removeProposal(p._id)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
                   <Trash2 size={20} />
                 </button>
               </div>
