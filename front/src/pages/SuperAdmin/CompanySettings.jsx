@@ -48,16 +48,16 @@ const CompanySettings = () => {
     }
   };
 
-  const handleLogoUpload = (e) => {
+  const handleLogoUpload = (e, field) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        setMessage({ type: 'error', text: 'Rasm hajmi juda katta! Maksimal 1MB.' });
+      if (file.size > 2 * 1024 * 1024) { // Increased to 2MB as some logos can be slightly larger
+        setMessage({ type: 'error', text: 'Rasm hajmi juda katta! Maksimal 2MB.' });
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, companyLogo: reader.result });
+        setFormData({ ...formData, [field]: reader.result });
       };
       reader.readAsDataURL(file);
     }
@@ -97,23 +97,41 @@ const CompanySettings = () => {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           
           {/* Logo Section */}
-          <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: '32px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--border-color)', marginBottom: '16px' }}>
-            <div style={{ width: '120px', height: '120px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-              {formData.companyLogo ? (
-                <img src={formData.companyLogo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-              ) : (
-                <Building2 size={48} color="var(--text-secondary)" style={{ opacity: 0.3 }} />
-              )}
+          <div style={{ gridColumn: 'span 2', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+              <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                {formData.companyLogo ? (
+                  <img src={formData.companyLogo} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <Building2 size={40} color="var(--text-secondary)" style={{ opacity: 0.3 }} />
+                )}
+              </div>
+              <div>
+                <h4 style={{ fontSize: '15px', marginBottom: '4px', fontWeight: '700' }}>Tizim Logotipi</h4>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Chap yuqori burchakda ko'rinadi.</p>
+                <label className="secondary-btn" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '12px' }}>
+                  <Upload size={14} /> Yuklash
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleLogoUpload(e, 'companyLogo')} />
+                </label>
+              </div>
             </div>
-            <div>
-              <h4 style={{ fontSize: '16px', marginBottom: '8px' }}>Tizim Logotipi</h4>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-                Ushbu logotip ERP tizimi ichida, xodimlar akkauntida chap yuqori burchakda ko'rinadi.
-              </p>
-              <label className="secondary-btn" style={{ cursor: 'pointer', display: 'inline-flex', gap: '8px' }}>
-                <Upload size={16} /> Logotipni tanlash
-                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
-              </label>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '24px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed var(--border-color)' }}>
+              <div style={{ width: '100px', height: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid var(--border-color)', flexShrink: 0 }}>
+                {formData.kpLogo ? (
+                  <img src={formData.kpLogo} alt="KP Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                ) : (
+                  <FileText size={40} color="var(--text-secondary)" style={{ opacity: 0.3 }} />
+                )}
+              </div>
+              <div>
+                <h4 style={{ fontSize: '15px', marginBottom: '4px', fontWeight: '700' }}>KP Logotipi</h4>
+                <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '12px' }}>Tijorat Takliflarida (PDF) ko'rinadi.</p>
+                <label className="secondary-btn" style={{ cursor: 'pointer', padding: '8px 16px', fontSize: '12px' }}>
+                  <Upload size={14} /> Yuklash
+                  <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleLogoUpload(e, 'kpLogo')} />
+                </label>
+              </div>
             </div>
           </div>
 

@@ -1,9 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, Printer, Edit, Trash2, 
   Calendar, Clock, DollarSign, Plus
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 import KPModal from './KPModal';
 
 const Proposals = () => {
@@ -18,34 +19,26 @@ const Proposals = () => {
     loadProposals();
   }, [user?.id]);
 
-  const loadProposals = () => {
+  const loadProposals = async () => {
     try {
-      const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-      const myProposals = all.filter(p => p.managerId === user?.id);
-      setProposals(myProposals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)));
-    } catch { setProposals([]); }
+      const res = await api.get('/proposals');
+      setProposals(res.data);
+    } catch (err) { 
+      console.error("Load proposals error", err);
+      setProposals([]); 
+    }
   };
 
-  const confirmDelete = (reason) => {
-    if (!reason) return;
-    const all = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-    const toDelete = all.find(p => p.id === deleteModal.proposalId);
-    if (!toDelete) return;
-
-    const updated = all.filter(x => x.id !== deleteModal.proposalId);
-    localStorage.setItem('erp_proposals', JSON.stringify(updated));
-
-    const trash = JSON.parse(localStorage.getItem('erp_trash') || '[]');
-    trash.push({
-      ...toDelete,
-      type: 'proposal',
-      deleteReason: reason,
-      deletedAt: new Date().toISOString()
-    });
-    localStorage.setItem('erp_trash', JSON.stringify(trash));
-    
-    setDeleteModal({ isOpen: false, proposalId: null });
-    loadProposals();
+  const confirmDelete = async (reason) => {
+    if (!reason) { alert("O'chirish sababini yozing."); return; }
+    try {
+      await api.delete(`/proposals/${deleteModal.proposalId}`, { data: { reason } });
+      setDeleteModal({ isOpen: false, proposalId: null });
+      loadProposals();
+    } catch (err) {
+      console.error("Delete error", err);
+      alert("Taklifni o'chirishda xatolik yuz berdi");
+    }
   };
 
   const removeProposal = (id) => {
@@ -58,10 +51,14 @@ const Proposals = () => {
   };
 
   // в”Ђв”Ђ PDF chop etish (Professional Design V3.2) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-  const handlePrint = (kp) => {
-    const activePartners = kp.selectedPartners || [];
-    const partnersDetails = JSON.parse(localStorage.getItem('erp_partners') || '[]')
-      .filter(p => activePartners.includes(p.id));
+  const handlePrint = async (kp) => {
+    let partnersDetails = [];
+    try {
+      const res = await api.get('/partners');
+      partnersDetails = res.data.filter(p => kp.selectedPartners?.includes(p._id) || kp.selectedPartners?.includes(p.id));
+    } catch (err) {
+      console.error("Partners load error for print", err);
+    }
 
     // Manager photo: saved in kp or current user
     const managerPhoto = kp.managerPhoto || user?.photo || '';
@@ -97,7 +94,7 @@ const Proposals = () => {
       align-items: center;
       padding-bottom: 22px;
       margin-bottom: 32px;
-      border-bottom: 1.5px solid #ece8e0;
+      border-bottom: 1.5px solid #d1d1d1;
     }
     .official-logo { height: 52px; width: auto; }
     .tt-badge {
@@ -123,7 +120,7 @@ const Proposals = () => {
       margin-bottom: 24px;
     }
     .info-card {
-      border: 1.5px solid #ede9e0;
+      border: 1.5px solid #d1d1d1;
       border-radius: 16px;
       padding: 20px 24px;
     }
@@ -174,7 +171,7 @@ const Proposals = () => {
       text-transform: uppercase; letter-spacing: 2px;
       margin-bottom: 14px;
     }
-    .partners-row { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 2px dashed #ede9e0; }
+    .partners-row { display: flex; align-items: center; gap: 25px; flex-wrap: wrap; padding-bottom: 20px; border-bottom: 2px dashed #d1d1d1; }
     .partner-item {
       height: 22px; display: flex; align-items: center;
       justify-content: center; opacity: 0.85;
@@ -190,10 +187,10 @@ const Proposals = () => {
     th {
       padding: 16px 14px; text-align: left; font-size: 10px;
       font-weight: 900; color: #c2a87a; text-transform: uppercase;
-      letter-spacing: 1.5px; border-bottom: 1.5px solid #ede9e0;
+      letter-spacing: 1.5px; border-bottom: 1.5px solid #d1d1d1;
     }
     td {
-      padding: 20px 14px; border-bottom: 1px solid #f5f2ed;
+      padding: 20px 14px; border-bottom: 1px solid #e0e0e0;
       font-size: 14px; vertical-align: middle;
     }
     tr:last-child td { border-bottom: none; }
@@ -250,7 +247,7 @@ const Proposals = () => {
 
     /* в”Ђв”Ђ FOOTER в”Ђв”Ђ */
     .footer {
-      border-top: 1.5px solid #ece8e0; padding-top: 28px; margin-top: 60px;
+      border-top: 1.5px solid #d1d1d1; padding-top: 28px; margin-top: 60px;
       display: flex; justify-content: space-between; align-items: center;
     }
     .footer-brand { font-size: 15px; font-weight: 950; color: #111; text-transform: uppercase; letter-spacing: 1px; }
@@ -443,7 +440,7 @@ const Proposals = () => {
           </div>
         ) : (
           filteredProposals.map(p => (
-            <div key={p.id} style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }} className="proposal-card">
+            <div key={p._id} style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s' }} className="proposal-card">
               <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
                 <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}>
                   <FileText size={28} />
@@ -467,7 +464,7 @@ const Proposals = () => {
                 <button onClick={() => handleEdit(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Tahrirlash">
                   <Edit size={20} />
                 </button>
-                <button onClick={() => removeProposal(p.id)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
+                <button onClick={() => removeProposal(p._id)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish">
                   <Trash2 size={20} />
                 </button>
               </div>

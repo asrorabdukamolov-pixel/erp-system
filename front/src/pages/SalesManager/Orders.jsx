@@ -52,11 +52,11 @@ const CHECKLIST_LABELS = {
 };
 
 const SOURCE_OPTIONS = [
-  { value: 'instagram', label: 'Instagram', icon: '📸' },
-  { value: 'facebook', label: 'Facebook', icon: '👥' },
-  { value: 'tanish', label: 'Tanish orqali', icon: '🤝' },
-  { value: 'tavsiya', label: 'Tavsiya orqali', icon: '⭐️' },
-  { value: 'agent', label: 'Agentlar orqali', icon: '🏢' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'tanish', label: 'Tanish orqali' },
+  { value: 'tavsiya', label: 'Tavsiya orqali' },
+  { value: 'agent', label: 'Agentlar orqali' },
 ];
 
 // --- Formatters ---
@@ -771,7 +771,7 @@ const Orders = () => {
                           icon={Search} 
                           value={newOrder.customerSearch} 
                           onChange={e => !isOrderLocked && setNewOrder({...newOrder, customerSearch: e.target.value})} 
-                          onFocus={() => !isOrderLocked && setCustomerSuggestions(customers.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(newOrder.customerSearch.toLowerCase()) || c.phone.includes(newOrder.customerSearch)))}
+                          onFocus={() => !isOrderLocked && newOrder.customerSearch.length > 2 && setCustomerSuggestions(customers.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(newOrder.customerSearch.toLowerCase()) || c.phone.includes(newOrder.customerSearch)))}
                           onKeyDown={handleKeyDown} 
                           placeholder="Ism yoki telefon..." 
                           autoComplete="off"

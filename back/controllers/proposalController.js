@@ -1,10 +1,10 @@
 const Proposal = require('../models/Proposal');
 
-// @desc    Get all proposals
+// @desc    Get all active proposals
 // @access  Private
 exports.getProposals = async (req, res) => {
     try {
-        let query = {};
+        let query = { status: { $ne: 'trash' } };
         if (req.user.role !== 'super') {
             query.showroom = req.user.showroom;
         }
@@ -24,7 +24,8 @@ exports.createProposal = async (req, res) => {
             ...req.body,
             managerId: req.user.id,
             managerName: req.user.name,
-            showroom: req.user.showroom
+            showroom: req.user.showroom,
+            status: 'active'
         });
         const proposal = await newProposal.save();
         res.json(proposal);
@@ -53,17 +54,55 @@ exports.updateProposal = async (req, res) => {
     }
 };
 
-// @desc    Delete proposal
+// @desc    Delete proposal (soft delete)
 // @access  Private
 exports.deleteProposal = async (req, res) => {
     try {
+        const { reason } = req.body;
         const proposal = await Proposal.findById(req.params.id);
         if (!proposal) return res.status(404).json({ message: 'Taklif topilmadi' });
         
-        await Proposal.findByIdAndDelete(req.params.id);
-        res.json({ message: 'Taklif o\'chirildi' });
+        proposal.status = 'trash';
+        proposal.deleteReason = reason || 'Sabab ko\'rsatilmadi';
+        proposal.deletedBy = req.user.name;
+        proposal.deletedAt = new Date();
+        
+        await proposal.save();
+        res.json({ message: 'Taklif savatga tashlandi' });
     } catch (err) {
         console.error("Delete Proposal Error:", err.message);
         res.status(500).json({ message: 'Taklifni o\'chirishda serverda xatolik yuz berdi: ' + err.message });
+    }
+};
+
+// @desc    Get trashed proposals
+// @access  Private
+exports.getTrashedProposals = async (req, res) => {
+    try {
+        const query = { status: 'trash' };
+        if (req.user.role !== 'super') {
+            query.showroom = req.user.showroom;
+        }
+        const proposals = await Proposal.find(query).sort({ deletedAt: -1 });
+        res.json(proposals);
+    } catch (err) {
+        console.error("Get Trashed Proposals Error:", err.message);
+        res.status(500).json({ message: 'O\'chirilgan takliflarni yuklashda xatolik: ' + err.message });
+    }
+};
+
+// @desc    Restore proposal
+// @access  Private
+exports.restoreProposal = async (req, res) => {
+    try {
+        const proposal = await Proposal.findById(req.params.id);
+        if (!proposal) return res.status(404).json({ message: 'Taklif topilmadi' });
+
+        proposal.status = 'active';
+        await proposal.save();
+        res.json(proposal);
+    } catch (err) {
+        console.error("Restore Proposal Error:", err.message);
+        res.status(500).json({ message: 'Taklifni tiklashda xatolik: ' + err.message });
     }
 };

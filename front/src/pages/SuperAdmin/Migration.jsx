@@ -59,7 +59,7 @@ const Migration = () => {
             }
 
             addLog("Serverga yuborilmoqda...");
-            const res = await api.post('/migrate', data);
+            const res = await api.post('/migration', data);
             
             addLog("Server javobi: " + (res.data.msg || "Muvaffaqiyatli yakunlandi"));
             addLog(`Natija: Foydalanuvchilar: ${res.data.results?.users || 0}, Buyurtmalar: ${res.data.results?.orders || 0}, Tranzaksiyalar: ${res.data.results?.transactions || 0}`);

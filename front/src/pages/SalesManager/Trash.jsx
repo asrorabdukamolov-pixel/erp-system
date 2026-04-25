@@ -4,6 +4,7 @@ import {
   MessageSquare, ShoppingCart, FileText, Filter
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
 
 const Trash = () => {
   const { user } = useAuth();
@@ -15,47 +16,39 @@ const Trash = () => {
 
   useEffect(() => {
     loadTrash();
-  }, []);
+  }, [activeTab]);
 
-  const loadTrash = () => {
-    const all = JSON.parse(localStorage.getItem('erp_trash') || '[]');
-    // Filter by manager 
-    const myTrash = all.filter(item => item.managerId === user?.id);
-    setTrashItems(myTrash.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
+  const loadTrash = async () => {
+    try {
+      const endpoint = activeTab === 'order' ? '/orders/trash/all' : '/proposals/trash';
+      const res = await api.get(endpoint);
+      const items = res.data.map(item => ({
+        ...item,
+        type: activeTab
+      }));
+      setTrashItems(items);
+    } catch (err) {
+      console.error("Trash load error", err);
+      setTrashItems([]);
+    }
   };
 
   const handleRestoreClick = (item) => {
     setConfirmModal({ isOpen: true, item });
   };
 
-  const executeRestore = () => {
+  const executeRestore = async () => {
     const item = confirmModal.item;
     if (!item) return;
 
     try {
-      const allTrash = JSON.parse(localStorage.getItem('erp_trash') || '[]');
-      // Remove from trash in localStorage
-      const updatedTrash = allTrash.filter(x => String(x.id) !== String(item.id));
-      localStorage.setItem('erp_trash', JSON.stringify(updatedTrash));
-
-      // Remove from UI state immediately
-      setTrashItems(prev => prev.filter(x => String(x.id) !== String(item.id)));
-
-      if (item.type === 'order') {
-        const orders = JSON.parse(localStorage.getItem('erp_orders') || '[]');
-        const { type, deleteReason, deletedAt, ...originalOrder } = item;
-        localStorage.setItem('erp_orders', JSON.stringify([...orders, originalOrder]));
-        showToast("Buyurtma qayta tiklandi!");
-      } else {
-        const proposals = JSON.parse(localStorage.getItem('erp_proposals') || '[]');
-        const { type, deleteReason, deletedAt, ...originalProposal } = item;
-        localStorage.setItem('erp_proposals', JSON.stringify([...proposals, originalProposal]));
-        showToast("Taklif qayta tiklandi!");
-      }
+      const endpoint = item.type === 'order' ? `/orders/${item._id}/restore` : `/proposals/${item._id}/restore`;
+      await api.post(endpoint);
+      showToast(item.type === 'order' ? "Buyurtma qayta tiklandi!" : "Taklif qayta tiklandi!");
+      loadTrash();
     } catch (err) {
       console.error("Restore error:", err);
       showToast("Xatolik yuz berdi!", true);
-      loadTrash();
     } finally {
       setConfirmModal({ isOpen: false, item: null });
     }
@@ -67,30 +60,18 @@ const Trash = () => {
   };
 
   const filtered = trashItems.filter(item => {
-    const matchesTab = item.type === activeTab;
     const matchesSearch = (
       (item.kpNumber || item.uniqueId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.selectedCustomer?.firstName || item.customer?.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.selectedCustomer?.lastName || item.customer?.lastName || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
-    return matchesTab && matchesSearch;
+    return matchesSearch;
   });
 
   const getCustomerName = (item) => {
     const c = item.selectedCustomer || item.customer;
     return c ? `${c.firstName} ${c.lastName}` : '—';
   };
-
-  const badgeStyle = (type) => ({
-    padding: '4px 10px',
-    borderRadius: '6px',
-    fontSize: '11px',
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    background: type === 'order' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-    color: type === 'order' ? '#3b82f6' : '#10b981',
-    border: `1px solid ${type === 'order' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`
-  });
 
   return (
     <div style={{ padding: '40px', flex: 1, overflowY: 'auto' }}>
@@ -161,7 +142,7 @@ const Trash = () => {
               </tr>
             ) : (
               filtered.map(item => (
-                <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)', transition: '0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.01)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                <tr key={item._id} style={{ borderBottom: '1px solid var(--border-color)', transition: '0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.01)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                   <td style={{ padding: '20px 24px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px' }}>
                       <Calendar size={14} color="var(--text-secondary)" />

@@ -249,7 +249,7 @@ const KPModal = ({ onClose, editData = null }) => {
       display: flex; 
       justify-content: space-between; 
       align-items: center; 
-      border-bottom: 2px solid #ccc;
+      border-bottom: 2.5px solid #999;
       padding-bottom: 20px;
       margin-bottom: 30px;
     }
@@ -284,7 +284,7 @@ const KPModal = ({ onClose, editData = null }) => {
     
     .info-card {
       background: #fff;
-      border: 1px solid #d1d1d1;
+      border: 1.5px solid #999;
       border-radius: 14px;
       padding: 20px 24px;
     }
@@ -340,26 +340,26 @@ const KPModal = ({ onClose, editData = null }) => {
       gap: 25px; 
       flex-wrap: wrap; 
       padding-bottom: 20px;
-      border-bottom: 2px dashed #ccc;
+      border-bottom: 2.5px dashed #999;
     }
     .partner-logo-item { height: 22px; display: flex; align-items: center; justify-content: center; opacity: 0.85; }
 
     /* Table Design */
-    table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 40px; border: 1px solid #d1d1d1; border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; margin-bottom: 40px; border: 1.5px solid #999; border-radius: 16px; overflow: hidden; }
     th { 
-      background: #f5f5f5;
+      background: #e0e0e0;
       padding: 16px 14px; 
       text-align: left; 
       font-size: 11px; 
       font-weight: 900; 
-      color: #777; 
+      color: #666; 
       text-transform: uppercase;
-      border-bottom: 1px solid #d1d1d1;
+      border-bottom: 1.5px solid #999;
     }
-    td { padding: 20px 14px; border-bottom: 1px solid #e5e5e5; font-size: 14px; vertical-align: middle; }
+    td { padding: 20px 14px; border-bottom: 1px solid #d0d0d0; font-size: 14px; vertical-align: middle; }
     tr:last-child td { border-bottom: none; }
     
-    .item-img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 1px solid #d1d1d1; }
+    .item-img { width: 80px; height: 80px; object-fit: cover; border-radius: 12px; border: 1.5px solid #999; }
     .item-info strong { display: block; font-size: 16px; font-weight: 900; margin-bottom: 6px; }
     .item-info small { color: #888; font-size: 12px; line-height: 1.5; display: block; white-space: pre-line; }
 
@@ -368,7 +368,7 @@ const KPModal = ({ onClose, editData = null }) => {
     
     .deadline-card { 
       background: #fff; 
-      border: 1px solid #d1d1d1; 
+      border: 1.5px solid #999; 
       border-radius: 14px; 
       padding: 22px 26px;
     }
@@ -410,7 +410,7 @@ const KPModal = ({ onClose, editData = null }) => {
     .footer { 
       margin-top: 100px; 
       padding-top: 35px; 
-      border-top: 1px solid #ccc; 
+      border-top: 2.5px solid #999; 
       display: flex; 
       justify-content: space-between; 
       align-items: baseline;

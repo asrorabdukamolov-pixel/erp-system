@@ -33,11 +33,11 @@ const LOCKED_STAGES = ['yopildi']; // PM can move any stage except archived
 
 
 const SOURCE_OPTIONS = [
-  { value: 'instagram', label: 'Instagram', icon: '📸' },
-  { value: 'facebook', label: 'Facebook', icon: '👥' },
-  { value: 'tanish', label: 'Tanish orqali', icon: '🤝' },
-  { value: 'tavsiya', label: 'Tavsiya orqali', icon: '⭐️' },
-  { value: 'agent', label: 'Agentlar orqali', icon: '🏢' },
+  { value: 'instagram', label: 'Instagram' },
+  { value: 'facebook', label: 'Facebook' },
+  { value: 'tanish', label: 'Tanish orqali' },
+  { value: 'tavsiya', label: 'Tavsiya orqali' },
+  { value: 'agent', label: 'Agentlar orqali' },
 ];
 
 const checklistLabels = {
@@ -365,7 +365,7 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
               <div>
                 <Lbl>Platforma (Mijoz qaerdan kelgan?)</Lbl>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>{SOURCE_OPTIONS.map(opt => (
-                  <button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: '700', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><span>{opt.icon}</span> {opt.label}</button>
+                  <button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'var(--text-secondary)', fontSize: '13px', fontWeight: '700', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>{opt.label}</button>
                 ))}</div>
               </div>
 
