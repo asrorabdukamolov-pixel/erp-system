@@ -115,17 +115,17 @@ const Sidebar = () => {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <div style={{ marginBottom: '32px', padding: '10px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <div style={{ marginBottom: '32px', padding: '0 5px' }}>
         <div style={{ 
-          width: '65px', 
-          height: '65px', 
+          width: '100%', 
+          height: '110px', 
           background: '#fff', 
           borderRadius: '16px', 
           display: 'flex', 
           alignItems: 'center', 
           justifyContent: 'center', 
-          padding: '8px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+          padding: '15px',
+          boxShadow: '0 8px 25px rgba(0,0,0,0.2)',
           flexShrink: 0
         }}>
           <img 
@@ -133,33 +133,6 @@ const Sidebar = () => {
             alt="Logo" 
             style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
           />
-        </div>
-        <div style={{ overflow: 'hidden' }}>
-          <h1 style={{ 
-            fontSize: '20px', 
-            fontWeight: '950', 
-            color: '#fff', 
-            margin: 0, 
-            letterSpacing: '-0.5px',
-            lineHeight: '1.1',
-            textTransform: 'uppercase',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
-          }}>
-            {settings?.companyName || 'Express Mebel'}
-          </h1>
-          <p style={{ 
-            fontSize: '11px', 
-            fontWeight: '800', 
-            color: 'var(--accent-gold)', 
-            margin: '4px 0 0 0', 
-            textTransform: 'uppercase', 
-            letterSpacing: '1.5px',
-            opacity: 0.8
-          }}>
-            ERP TIZIMI
-          </p>
         </div>
       </div>
 
