@@ -172,10 +172,10 @@ const AgentModal = ({ onClose, onSaved }) => {
         <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '24px' }}>Yangi Agent Qo'shish</h3>
         <form onSubmit={handleSave}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
-            <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
-            <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
-            <div><Lbl>Firma (Agar bo'lsa)</Lbl><input name="firm" value={form.firm} onChange={handleChange} style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
+            <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
+            <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
+            <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
+            <div><Lbl>Firma (Agar bo'lsa)</Lbl><input name="firm" value={form.firm} onChange={handleChange} autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div>
           </div>
           <div style={{ display: 'flex', gap: '10px', marginTop: '32px' }}>
             <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '48px' }} disabled={loading}>Bekor qilish</button>
@@ -230,19 +230,19 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
         <form onSubmit={handleSave}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-              <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+              <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+              <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '24px' }}>
-              <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-              <div><Lbl>Yoshi</Lbl><input name="age" type="number" value={form.age} onChange={handleChange} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+              <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+              <div><Lbl>Yoshi</Lbl><input name="age" type="number" value={form.age} onChange={handleChange} autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
               <div><Lbl>Jinsi</Lbl><div style={{ display: 'flex', gap: '8px' }}>{['erkak', 'ayol'].map(g => (<button key={g} type="button" onClick={() => setForm({...form, gender: g})} style={{ flex: 1, height: '54px', borderRadius: '12px', background: form.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: g === form.gender ? 'black' : 'white', border: '1px solid var(--border-color)', fontWeight: '700' }}>{g}</button>))}</div></div>
             </div>
-            <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+            <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
             <div><Lbl>Platforma</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>{SOURCE_OPTIONS.map(opt => (<button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'white', fontSize: '12px', fontWeight: '800' }}>{opt.label}</button>))}</div></div>
             {form.source === 'agent' && (
               <div style={{ position: 'relative' }}>
-                <Lbl>Agent Qidirish</Lbl><IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismi..." style={{ height: '54px' }} />
+                <Lbl>Agent Qidirish</Lbl><IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismi..." autoComplete="off" style={{ height: '54px' }} />
                 {agentSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', zIndex: 100, border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>{agentSuggestions.map(a => <div key={a._id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{a.firstName} {a.lastName}</div>)}</div>)}
               </div>
             )}
@@ -751,16 +751,17 @@ const Orders = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}><User size={18} color="var(--accent-gold)" /><h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Mijoz Ma'lumotlari</h4></div>
                     <div style={{ position: 'relative', marginBottom: '24px' }}>
                        <Lbl>Mijozni Tanlang</Lbl>
-                       <IconInput 
-                         icon={Search} 
-                         value={newOrder.customerSearch} 
-                         onChange={e => !isOrderLocked && setNewOrder({...newOrder, customerSearch: e.target.value})} 
-                         onFocus={() => !isOrderLocked && setCustomerSuggestions(customers.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(newOrder.customerSearch.toLowerCase()) || c.phone.includes(newOrder.customerSearch)))}
-                         onKeyDown={handleKeyDown} 
-                         placeholder="Ism yoki telefon..." 
-                         style={{ height: '54px' }} 
-                         readOnly={isOrderLocked} 
-                       />
+                         <IconInput 
+                          icon={Search} 
+                          value={newOrder.customerSearch} 
+                          onChange={e => !isOrderLocked && setNewOrder({...newOrder, customerSearch: e.target.value})} 
+                          onFocus={() => !isOrderLocked && setCustomerSuggestions(customers.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(newOrder.customerSearch.toLowerCase()) || c.phone.includes(newOrder.customerSearch)))}
+                          onKeyDown={handleKeyDown} 
+                          placeholder="Ism yoki telefon..." 
+                          autoComplete="off"
+                          style={{ height: '54px' }} 
+                          readOnly={isOrderLocked} 
+                        />
                        {customerSuggestions.length > 0 && !isOrderLocked && (
                          <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
                            {customerSuggestions.map((c, idx) => (

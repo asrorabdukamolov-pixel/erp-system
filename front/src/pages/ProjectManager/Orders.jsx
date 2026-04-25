@@ -372,7 +372,7 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
               {form.source === 'agent' && (
                 <div style={{ position: 'relative' }}>
                   <Lbl>Agent Qidirish</Lbl>
-                  <IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismini yozing..." style={{ height: '54px' }} />
+                  <IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismini yozing..." autoComplete="off" style={{ height: '54px' }} />
                   {agentSuggestions.length > 0 && (
                     <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', zIndex: 100, border: '1px solid var(--border-color)', marginTop: '8px', borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
                       {agentSuggestions.map(a => <div key={a._id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px' }}>{a.firstName} {a.lastName} <span style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>({a.firm})</span></div>)}

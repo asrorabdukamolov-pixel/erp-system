@@ -270,7 +270,7 @@ const Showrooms = () => {
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', color: 'var(--text-secondary)' }}><X size={20} /></button>
             </div>
             
-            <form onSubmit={handleSave}>
+            <form onSubmit={handleSave} autoComplete="off">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
                 <div style={{ gridColumn: 'span 2' }}>
                   <label style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Showroom Nomi</label>
