@@ -45,7 +45,7 @@ const Sidebar = () => {
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
-    { name: 'Hamkorlar', path: '/super-admin/partners', icon: <Handshake size={20} /> },
+    { name: 'Tijorat taklifi identikasi', path: '/super-admin/partners', icon: <Handshake size={20} /> },
     { name: 'Ma\'lumotlar Migratsiyasi', path: '/super-admin/migration', icon: <History size={20} /> },
     { name: 'Kompaniya Ma\'lumotlari', path: '/super-admin/company-settings', icon: <Building2 size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },

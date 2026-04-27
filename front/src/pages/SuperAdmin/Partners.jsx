@@ -219,8 +219,8 @@ const Partners = () => {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Loyiha Hamkorlari</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Tijorat taklifida ishlatiladigan hamkorlar ro'yxatini boshqarish</p>
+          <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Tijorat taklifi identikasi</h1>
+          <p style={{ color: 'var(--text-secondary)' }}>Tijorat taklifida ishlatiladigan brend va hamkorlar ro'yxatini boshqarish</p>
         </div>
         <button 
           onClick={() => openModal()}
@@ -251,7 +251,7 @@ const Partners = () => {
             <Search size={20} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input 
               type="text" 
-              placeholder="Hamkor nomi bo'yicha qidirish..." 
+              placeholder="Nomi bo'yicha qidirish..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ 
@@ -271,7 +271,7 @@ const Partners = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
             {filteredPartners.length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '60px', color: 'var(--text-secondary)' }}>
-                {searchTerm ? 'Qidiruv bo\'yicha hamkor topilmadi.' : 'Hamkorlar hali qo\'shilmagan.'}
+                {searchTerm ? 'Qidiruv bo\'yicha ma\'lumot topilmadi.' : 'Ma\'lumotlar hali qo\'shilmagan.'}
               </div>
             ) : (
               filteredPartners.map((partner) => (
@@ -329,7 +329,7 @@ const Partners = () => {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ background: 'var(--secondary-bg)', width: '100%', maxWidth: '500px', borderRadius: '28px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
             <div style={{ padding: '30px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'white' }}>{editingPartner ? 'Hamkorni tahrirlash' : 'Yangi hamkor qo\'shish'}</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: '900', color: 'white' }}>{editingPartner ? 'Ma\'lumotni tahrirlash' : 'Yangi ma\'lumot qo\'shish'}</h2>
               <button onClick={closeModal} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer' }}>
                 <X size={20} />
               </button>
