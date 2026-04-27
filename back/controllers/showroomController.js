@@ -1,111 +1,123 @@
-const Showroom = require('../models/Showroom');
-const User = require('../models/User');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
+const bcrypt = require('bcryptjs');
 
-// @desc    Get all showrooms
-// @access  Private (Super Admin)
 exports.getShowrooms = async (req, res) => {
     try {
-        const showrooms = await Showroom.find().sort({ createdAt: -1 });
-        res.json(showrooms);
+        const snapshot = await db.collection('showrooms').orderBy('createdAt', 'desc').get();
+        res.json(formatQuery(snapshot));
     } catch (err) {
-        console.error(err.message);
+        console.error("GetShowrooms Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Create a showroom and its admin user
-// @access  Private (Super Admin)
 exports.createShowroom = async (req, res) => {
     try {
         const { name, address, adminName, adminSurname, login, password, phone } = req.body;
 
-        // Check if login already exists in Users
-        let userExists = await User.findOne({ login: login.toLowerCase() });
-        if (userExists) {
+        const usersRef = db.collection('users');
+        const userSnapshot = await usersRef.where('login', '==', login.toLowerCase()).get();
+        if (!userSnapshot.empty) {
             return res.status(400).json({ msg: 'Bu login allaqachon band' });
         }
 
-        // 1. Create Showroom
-        const newShowroom = new Showroom({
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newShowroom = {
             name,
             address,
             adminName,
             adminSurname,
             phone,
-            login,
-            password,
-            status: 'Faol'
-        });
-        const showroom = await newShowroom.save();
+            login: login.toLowerCase(),
+            status: 'Faol',
+            createdAt: new Date().toISOString()
+        };
 
-        // 2. Create Admin User for this showroom
-        const newUser = new User({
+        const showroomDoc = await db.collection('showrooms').add(newShowroom);
+
+        const newUser = {
             name: adminName,
             surname: adminSurname,
             login: login.toLowerCase(),
-            password, // User model pre-save hook will hash this
+            password: hashedPassword,
             role: 'showroom',
             phone: phone,
-            showroom: name // Link by name or we could use ID
-        });
-        await newUser.save();
+            showroom: name,
+            status: 'active',
+            createdAt: new Date().toISOString()
+        };
 
-        res.json(showroom);
+        await db.collection('users').add(newUser);
+
+        res.json({ _id: showroomDoc.id, ...newShowroom });
     } catch (err) {
-        console.error(err.message);
+        console.error("CreateShowroom Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Update showroom
-// @access  Private (Super Admin)
 exports.updateShowroom = async (req, res) => {
     try {
         const { name, address, adminName, adminSurname, login, password, status, phone } = req.body;
         
-        let showroom = await Showroom.findById(req.params.id);
-        if (!showroom) return res.status(404).json({ msg: 'Showroom topilmadi' });
+        const showroomRef = db.collection('showrooms').doc(req.params.id);
+        const doc = await showroomRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Showroom topilmadi' });
+        const oldData = doc.data();
 
-        // Update User account if login or password changed
-        let user = await User.findOne({ login: showroom.login });
-        if (user) {
-            user.name = adminName;
-            user.surname = adminSurname;
-            user.login = login.toLowerCase();
-            user.phone = phone || user.phone;
-            if (password) user.password = password; // Will be hashed by pre-save
-            user.status = status === 'Faol' ? 'active' : 'inactive';
-            await user.save();
+        const userSnapshot = await db.collection('users').where('login', '==', oldData.login).get();
+        if (!userSnapshot.empty) {
+            const userDoc = userSnapshot.docs[0];
+            const userData = {};
+            if (adminName) userData.name = adminName;
+            if (adminSurname) userData.surname = adminSurname;
+            if (login) userData.login = login.toLowerCase();
+            if (phone) userData.phone = phone;
+            if (status) userData.status = status === 'Faol' ? 'active' : 'inactive';
+            
+            if (password) {
+                const salt = await bcrypt.genSalt(10);
+                userData.password = await bcrypt.hash(password, salt);
+            }
+            await userDoc.ref.update(userData);
         }
 
-        // Update Showroom
-        showroom = await Showroom.findByIdAndUpdate(
-            req.params.id,
-            { $set: { name, address, adminName, adminSurname, login, status, phone } },
-            { new: true }
-        );
+        const showroomData = {
+            name: name || oldData.name,
+            address: address || oldData.address,
+            adminName: adminName || oldData.adminName,
+            adminSurname: adminSurname || oldData.adminSurname,
+            login: login ? login.toLowerCase() : oldData.login,
+            status: status || oldData.status,
+            phone: phone || oldData.phone
+        };
 
-        res.json(showroom);
+        await showroomRef.update(showroomData);
+        res.json({ _id: req.params.id, ...showroomData });
     } catch (err) {
-        console.error(err.message);
+        console.error("UpdateShowroom Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Delete showroom
-// @access  Private (Super Admin)
 exports.deleteShowroom = async (req, res) => {
     try {
-        const showroom = await Showroom.findById(req.params.id);
-        if (!showroom) return res.status(404).json({ msg: 'Showroom topilmadi' });
+        const showroomRef = db.collection('showrooms').doc(req.params.id);
+        const doc = await showroomRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Showroom topilmadi' });
+        const data = doc.data();
 
-        // Delete associated user
-        await User.findOneAndDelete({ login: showroom.login });
+        const userSnapshot = await db.collection('users').where('login', '==', data.login).get();
+        if (!userSnapshot.empty) {
+            await userSnapshot.docs[0].ref.delete();
+        }
         
-        await Showroom.findByIdAndDelete(req.params.id);
+        await showroomRef.delete();
         res.json({ msg: 'Showroom o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
+        console.error("DeleteShowroom Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

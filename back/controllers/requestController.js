@@ -1,32 +1,38 @@
-const MoneyRequest = require('../models/MoneyRequest');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getRequests = async (req, res) => {
     try {
-        let query = {};
+        let queryRef = db.collection('money_requests');
         if (req.user.role === 'proekt_manager') {
-            query.userId = req.user.id;
+            queryRef = queryRef.where('userId', '==', req.user.id);
         } else if (req.user.role === 'showroom') {
-            query.showroom = req.user.showroom;
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
 
-        const requests = await MoneyRequest.find(query).sort({ createdAt: -1 });
+        const snapshot = await queryRef.get();
+        const requests = formatQuery(snapshot);
+        requests.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(requests);
     } catch (err) {
+        console.error("GetRequests Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.createRequest = async (req, res) => {
     try {
-        const newRequest = new MoneyRequest({
+        const newRequest = {
             ...req.body,
             userId: req.user.id,
             userName: req.user.name,
-            showroom: req.user.showroom
-        });
-        const request = await newRequest.save();
-        res.json(request);
+            showroom: req.user.showroom || '',
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
+        const docRef = await db.collection('money_requests').add(newRequest);
+        res.json({ _id: docRef.id, ...newRequest });
     } catch (err) {
+        console.error("CreateRequest Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
@@ -34,32 +40,37 @@ exports.createRequest = async (req, res) => {
 exports.updateRequestStatus = async (req, res) => {
     try {
         const { status } = req.body;
-        let request = await MoneyRequest.findById(req.params.id);
-        if (!request) return res.status(404).json({ msg: 'So\'rov topilmadi' });
+        const requestRef = db.collection('money_requests').doc(req.params.id);
+        const doc = await requestRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'So\'rov topilmadi' });
 
-        request.status = status;
+        const updateData = { status };
         if (status === 'approved') {
-            request.approvedBy = req.user.name;
-            request.approvedAt = new Date();
+            updateData.approvedBy = req.user.name;
+            updateData.approvedAt = new Date().toISOString();
         } else if (status === 'paid') {
-            request.paidAt = new Date();
+            updateData.paidAt = new Date().toISOString();
         }
 
-        await request.save();
-        res.json(request);
+        await requestRef.update(updateData);
+        const updated = await requestRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
+        console.error("UpdateRequestStatus Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.deleteRequest = async (req, res) => {
     try {
-        const request = await MoneyRequest.findById(req.params.id);
-        if (!request) return res.status(404).json({ msg: 'So\'rov topilmadi' });
+        const requestRef = db.collection('money_requests').doc(req.params.id);
+        const doc = await requestRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'So\'rov topilmadi' });
         
-        await MoneyRequest.findByIdAndDelete(req.params.id);
+        await requestRef.delete();
         res.json({ msg: 'So\'rov o\'chirildi' });
     } catch (err) {
+        console.error("DeleteRequest Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

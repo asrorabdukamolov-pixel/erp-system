@@ -1,34 +1,41 @@
-const Supplier = require('../models/Supplier');
+const { db, formatQuery, formatDoc, admin } = require('../config/firebase');
 
 exports.getSuppliers = async (req, res) => {
     try {
-        let query = {};
+        const suppliersRef = db.collection('suppliers');
+        let snapshot;
+
         if (req.user.role !== 'super') {
-            // Showroom Admin sees their own + Global (Super Admin added)
-            query = {
-                $or: [
-                    { showroom: req.user.showroom },
-                    { isGlobal: true }
-                ]
-            };
+            snapshot = await suppliersRef.where(
+                admin.firestore.Filter.or(
+                    admin.firestore.Filter.where('showroom', '==', req.user.showroom),
+                    admin.firestore.Filter.where('isGlobal', '==', true)
+                )
+            ).get();
+        } else {
+            snapshot = await suppliersRef.get();
         }
-        const suppliers = await Supplier.find(query).sort({ firm: 1 });
+
+        const suppliers = formatQuery(snapshot);
+        suppliers.sort((a, b) => (a.firm || '').localeCompare(b.firm || ''));
         res.json(suppliers);
     } catch (err) {
+        console.error("GetSuppliers Error:", err.message);
         res.status(500).json({ message: 'Yetkazib beruvchilarni olishda xatolik: ' + err.message });
     }
 };
 
 exports.createSupplier = async (req, res) => {
     try {
-        const newSupplier = new Supplier({
+        const newSupplier = {
             ...req.body,
-            showroom: req.user.role === 'super' ? 'Global' : req.user.showroom,
+            showroom: req.user.role === 'super' ? 'Global' : req.user.showroom || '',
             addedBy: req.user.name,
-            isGlobal: req.user.role === 'super'
-        });
-        const supplier = await newSupplier.save();
-        res.json(supplier);
+            isGlobal: req.user.role === 'super',
+            createdAt: new Date().toISOString()
+        };
+        const docRef = await db.collection('suppliers').add(newSupplier);
+        res.json({ _id: docRef.id, ...newSupplier });
     } catch (err) {
         res.status(500).json({ message: 'Saqlashda xatolik: ' + err.message });
     }
@@ -36,16 +43,18 @@ exports.createSupplier = async (req, res) => {
 
 exports.updateSupplier = async (req, res) => {
     try {
-        const supplier = await Supplier.findById(req.params.id);
-        if (!supplier) return res.status(404).json({ message: 'Topilmadi' });
+        const supplierRef = db.collection('suppliers').doc(req.params.id);
+        const doc = await supplierRef.get();
+        if (!doc.exists) return res.status(404).json({ message: 'Topilmadi' });
+        const supplier = doc.data();
 
-        // If not super admin, check ownership
         if (req.user.role !== 'super' && (supplier.isGlobal || supplier.showroom === 'Global')) {
             return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'zgartira olmaysiz' });
         }
 
-        const updated = await Supplier.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
-        res.json(updated);
+        await supplierRef.update(req.body);
+        const updated = await supplierRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
         res.status(500).json({ message: 'Yangilashda xatolik: ' + err.message });
     }
@@ -53,20 +62,16 @@ exports.updateSupplier = async (req, res) => {
 
 exports.deleteSupplier = async (req, res) => {
     try {
-        console.log("Attempting to delete supplier:", req.params.id);
-        const supplier = await Supplier.findById(req.params.id);
-        if (!supplier) {
-            console.log("Supplier not found:", req.params.id);
-            return res.status(404).json({ message: 'Topilmadi' });
-        }
+        const supplierRef = db.collection('suppliers').doc(req.params.id);
+        const doc = await supplierRef.get();
+        if (!doc.exists) return res.status(404).json({ message: 'Topilmadi' });
+        const supplier = doc.data();
 
-        // If not super admin, check ownership
         if (req.user.role !== 'super' && (supplier.isGlobal || supplier.showroom === 'Global')) {
             return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'chira olmaysiz' });
         }
 
-        await Supplier.findByIdAndDelete(req.params.id);
-        console.log("Supplier deleted successfully");
+        await supplierRef.delete();
         res.json({ message: 'Muvaffaqiyatli o\'chirildi' });
     } catch (err) {
         console.error("Delete Supplier Error:", err);

@@ -1,7 +1,7 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+const { db } = require('./config/firebase');
 
 const app = express();
 
@@ -39,14 +39,8 @@ app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../front/dist/index.html'));
 });
 
-// Database Connection
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/erp_db';
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
-
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT} with Firestore`);
 });

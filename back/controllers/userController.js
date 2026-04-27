@@ -1,96 +1,115 @@
-const User = require('../models/User');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
+const bcrypt = require('bcryptjs');
 
-// @desc    Get all users (filtered by query)
 exports.getUsers = async (req, res) => {
     try {
         const { role, showroom } = req.query;
-        let query = {};
-        
-        // Agar showroom admini bo'lsa, faqat o'z showroomidagi xodimlarni ko'radi
+        let queryRef = db.collection('users');
+
         if (req.user.role !== 'super') {
-            if (!req.user.showroom) {
-                return res.json([]); // Showroom biriktirilmagan bo'lsa, hech kimni ko'rsatmaymiz
-            }
-            query.showroom = req.user.showroom;
-            // O'zini va Super Adminni ko'rmasligi kerak
-            query._id = { $ne: req.user.id };
-            query.role = { $ne: 'super' };
+            if (!req.user.showroom) return res.json([]);
+            queryRef = queryRef.where('showroom', '==', req.user.showroom);
         } else {
-            // Super Admin uchun filtrlar
-            if (role) query.role = role;
-            if (showroom) query.showroom = showroom;
+            if (role) queryRef = queryRef.where('role', '==', role);
+            if (showroom) queryRef = queryRef.where('showroom', '==', showroom);
         }
 
-        const users = await User.find(query).select('-password').sort({ name: 1 });
+        const snapshot = await queryRef.get();
+        let users = formatQuery(snapshot);
+
+        if (req.user.role !== 'super') {
+            users = users.filter(u => u._id !== req.user.id && u.role !== 'super');
+        }
+
+        users.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+        users = users.map(u => {
+            delete u.password;
+            return u;
+        });
+
         res.json(users);
     } catch (err) {
-        console.error(err.message);
+        console.error("GetUsers Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Create a new user
 exports.createUser = async (req, res) => {
     try {
         const { name, surname, login, password, role, showroom, phone } = req.body;
 
-        let user = await User.findOne({ login: login.toLowerCase() });
-        if (user) {
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.where('login', '==', login.toLowerCase()).get();
+
+        if (!snapshot.empty) {
             return res.status(400).json({ msg: 'Bu login allaqachon band' });
         }
 
-        user = new User({
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = {
             name,
             surname,
             login: login.toLowerCase(),
-            password,
+            password: hashedPassword,
             role,
-            phone,
-            showroom: showroom || req.user.showroom
-        });
+            phone: phone || '',
+            showroom: showroom || req.user.showroom || '',
+            status: 'active',
+            createdAt: new Date().toISOString()
+        };
 
-        await user.save();
-        res.json(user);
+        const docRef = await usersRef.add(newUser);
+        res.json({ _id: docRef.id, ...newUser });
     } catch (err) {
-        console.error(err.message);
+        console.error("CreateUser Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Update user
 exports.updateUser = async (req, res) => {
     try {
         const { name, surname, login, password, role, status, phone } = req.body;
-        
-        let user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ msg: 'Foydalanuvchi topilmadi' });
+        const userRef = db.collection('users').doc(req.params.id);
+        const doc = await userRef.get();
 
-        user.name = name || user.name;
-        user.surname = surname || user.surname;
-        user.login = login ? login.toLowerCase() : user.login;
-        if (password) user.password = password;
-        user.role = role || user.role;
-        user.status = status || user.status;
-        user.phone = phone !== undefined ? phone : user.phone;
+        if (!doc.exists) return res.status(404).json({ msg: 'Foydalanuvchi topilmadi' });
 
-        await user.save();
-        res.json(user);
+        const updateData = {};
+        if (name) updateData.name = name;
+        if (surname) updateData.surname = surname;
+        if (login) updateData.login = login.toLowerCase();
+        if (role) updateData.role = role;
+        if (status) updateData.status = status;
+        if (phone !== undefined) updateData.phone = phone;
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            updateData.password = await bcrypt.hash(password, salt);
+        }
+
+        await userRef.update(updateData);
+        const updatedDoc = await userRef.get();
+        res.json(formatDoc(updatedDoc));
     } catch (err) {
-        console.error(err.message);
+        console.error("UpdateUser Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Delete user
 exports.deleteUser = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id);
-        if (!user) return res.status(404).json({ msg: 'Foydalanuvchi topilmadi' });
+        const userRef = db.collection('users').doc(req.params.id);
+        const doc = await userRef.get();
 
-        await User.findByIdAndDelete(req.params.id);
+        if (!doc.exists) return res.status(404).json({ msg: 'Foydalanuvchi topilmadi' });
+
+        await userRef.delete();
         res.json({ msg: 'Foydalanuvchi o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
+        console.error("DeleteUser Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

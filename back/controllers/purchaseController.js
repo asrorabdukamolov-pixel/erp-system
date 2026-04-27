@@ -1,54 +1,62 @@
-const Purchase = require('../models/Purchase');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getPurchases = async (req, res) => {
     try {
-        const query = {};
+        let queryRef = db.collection('purchases');
         if (req.user.role !== 'super') {
-            query.showroom = req.user.showroom;
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-        const purchases = await Purchase.find(query).sort({ createdAt: -1 });
+        
+        const snapshot = await queryRef.get();
+        const purchases = formatQuery(snapshot);
+        purchases.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(purchases);
     } catch (err) {
-        console.error(err.message);
+        console.error("GetPurchases Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.createPurchase = async (req, res) => {
     try {
-        const newPurchase = new Purchase({
+        const newPurchase = {
             ...req.body,
-            showroom: req.user.showroom
-        });
-        const purchase = await newPurchase.save();
-        res.json(purchase);
+            showroom: req.user.showroom || '',
+            createdAt: new Date().toISOString()
+        };
+        const docRef = await db.collection('purchases').add(newPurchase);
+        res.json({ _id: docRef.id, ...newPurchase });
     } catch (err) {
-        console.error(err.message);
+        console.error("CreatePurchase Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.updatePurchase = async (req, res) => {
     try {
-        const purchase = await Purchase.findByIdAndUpdate(
-            req.params.id,
-            { $set: req.body },
-            { new: true }
-        );
-        res.json(purchase);
+        const purchaseRef = db.collection('purchases').doc(req.params.id);
+        const doc = await purchaseRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Xarid topilmadi' });
+
+        await purchaseRef.update(req.body);
+        const updated = await purchaseRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
-        console.error(err.message);
+        console.error("UpdatePurchase Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
 exports.deletePurchase = async (req, res) => {
     try {
-        const purchase = await Purchase.findByIdAndDelete(req.params.id);
-        if (!purchase) return res.status(404).json({ msg: 'Xarid topilmadi' });
+        const purchaseRef = db.collection('purchases').doc(req.params.id);
+        const doc = await purchaseRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Xarid topilmadi' });
+        
+        await purchaseRef.delete();
         res.json({ msg: 'Xarid o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
+        console.error("DeletePurchase Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

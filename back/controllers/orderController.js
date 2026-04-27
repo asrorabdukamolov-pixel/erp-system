@@ -1,185 +1,193 @@
-const Order = require('../models/Order');
-const Proposal = require('../models/Proposal');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
 
-// @desc    Get all orders
-// @access  Private
 exports.getOrders = async (req, res) => {
     try {
-        let query = {};
+        let queryRef = db.collection('orders').where('status', '!=', 'trash');
         
-        // Filter by showroom if not super admin
         if (req.user.role !== 'super') {
-            query.showroom = req.user.showroom;
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-        query.status = { $ne: 'trash' };
 
-        const orders = await Order.find(query).sort({ createdAt: -1 });
+        const snapshot = await queryRef.get();
+        const orders = formatQuery(snapshot);
+        orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(orders);
     } catch (err) {
-        console.error(err.message);
+        console.error("GetOrders Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Get single order
-// @access  Private
 exports.getOrderById = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
-        res.json(order);
+        const doc = await db.collection('orders').doc(req.params.id).get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        res.json(formatDoc(doc));
     } catch (err) {
-        console.error(err.message);
+        console.error("GetOrderById Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Create new order
-// @access  Private
 exports.createOrder = async (req, res) => {
     try {
-        const newOrder = new Order({
+        const newOrder = {
             ...req.body,
             managerId: req.user.id,
             managerName: req.user.name,
-            showroom: req.user.showroom,
+            showroom: req.user.showroom || '',
+            createdAt: new Date().toISOString(),
             timeline: [{
                 type: 'system',
                 text: 'Buyurtma yaratildi',
                 user: req.user.name,
-                time: new Date()
+                time: new Date().toISOString()
             }]
-        });
+        };
 
-        const order = await newOrder.save();
-        res.json(order);
+        const docRef = await db.collection('orders').add(newOrder);
+        res.json({ _id: docRef.id, ...newOrder });
     } catch (err) {
-        console.error(err.message);
+        console.error("CreateOrder Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Update order
-// @access  Private
 exports.updateOrder = async (req, res) => {
     try {
-        let order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const orderRef = db.collection('orders').doc(req.params.id);
+        const doc = await orderRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const order = doc.data();
 
-        // Add timeline log if status changed
+        const updateData = { ...req.body };
+
         if (req.body.status && req.body.status !== order.status) {
-            req.body.timeline = [
-                ...order.timeline,
+            updateData.timeline = [
+                ...(order.timeline || []),
                 {
                     type: 'status',
                     text: `Status o'zgardi: ${order.status} -> ${req.body.status}`,
                     user: req.user.name,
-                    time: new Date()
+                    time: new Date().toISOString()
                 }
             ];
         }
 
-        // Automatic Proposal status update if order confirmed
         if (req.body.status === 'tasdiqlandi' && order.proposalId) {
-            await Proposal.findByIdAndUpdate(order.proposalId, { status: 'sold' });
+            await db.collection('proposals').doc(order.proposalId).update({ status: 'sold' });
         }
 
-        order = await Order.findByIdAndUpdate(
-            req.params.id,
-            { $set: req.body },
-            { new: true }
-        );
-
-        res.json(order);
+        await orderRef.update(updateData);
+        const updated = await orderRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
-        console.error(err.message);
+        console.error("UpdateOrder Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Delete order (soft delete / move to trash)
-// @access  Private
 exports.deleteOrder = async (req, res) => {
     try {
         const { reason } = req.body;
-        let order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const orderRef = db.collection('orders').doc(req.params.id);
+        const doc = await orderRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const order = doc.data();
 
-        order.status = 'trash';
-        order.deleteReason = reason;
-        order.deletedBy = req.user.name;
-        order.deletedAt = new Date();
-        order.timeline.push({
-            type: 'system',
-            text: `Buyurtma o'chirildi (Savatga tashlandi). Sabab: ${reason}`,
-            user: req.user.name,
-            time: new Date()
-        });
+        const updateData = {
+            status: 'trash',
+            deleteReason: reason || '',
+            deletedBy: req.user.name,
+            deletedAt: new Date().toISOString(),
+            timeline: [
+                ...(order.timeline || []),
+                {
+                    type: 'system',
+                    text: `Buyurtma o'chirildi (Savatga tashlandi). Sabab: ${reason}`,
+                    user: req.user.name,
+                    time: new Date().toISOString()
+                }
+            ]
+        };
 
-        await order.save();
+        await orderRef.update(updateData);
         res.json({ msg: 'Buyurtma o\'chirildi' });
     } catch (err) {
-        console.error(err.message);
+        console.error("DeleteOrder Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Add timeline log to order
-// @access  Private
 exports.addOrderLog = async (req, res) => {
     try {
         const { text, type = 'comment' } = req.body;
-        const order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const orderRef = db.collection('orders').doc(req.params.id);
+        const doc = await orderRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const order = doc.data();
 
-        order.timeline.push({
+        const newLog = {
             type,
             text,
             user: req.user.name,
-            time: new Date()
+            time: new Date().toISOString()
+        };
+
+        await orderRef.update({
+            timeline: [...(order.timeline || []), newLog]
         });
 
-        await order.save();
-        res.json(order);
+        const updated = await orderRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
-        console.error(err.message);
+        console.error("AddOrderLog Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
-// @desc    Get trashed orders
-// @access  Private
+
 exports.getTrashedOrders = async (req, res) => {
     try {
-        const query = { status: 'trash' };
-        if (req.user.role === 'showroom_admin') query.showroom = req.user.showroom;
+        let queryRef = db.collection('orders').where('status', '==', 'trash');
+        if (req.user.role !== 'super') {
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
+        }
         
-        const orders = await Order.find(query).sort({ deletedAt: -1 });
+        const snapshot = await queryRef.get();
+        const orders = formatQuery(snapshot);
+        orders.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
         res.json(orders);
     } catch (err) {
-        console.error(err.message);
+        console.error("GetTrashedOrders Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
 
-// @desc    Restore order from trash
-// @access  Private
 exports.restoreOrder = async (req, res) => {
     try {
-        const order = await Order.findById(req.params.id);
-        if (!order) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const orderRef = db.collection('orders').doc(req.params.id);
+        const doc = await orderRef.get();
+        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
+        const order = doc.data();
 
-        order.status = 'pm'; // Restore to PM or some default state
-        order.timeline.push({
-            type: 'system',
-            text: `Buyurtma tiklandi.`,
-            user: req.user.name,
-            time: new Date()
-        });
+        const updateData = {
+            status: 'pm',
+            timeline: [
+                ...(order.timeline || []),
+                {
+                    type: 'system',
+                    text: `Buyurtma tiklandi.`,
+                    user: req.user.name,
+                    time: new Date().toISOString()
+                }
+            ]
+        };
 
-        await order.save();
-        res.json(order);
+        await orderRef.update(updateData);
+        const updated = await orderRef.get();
+        res.json(formatDoc(updated));
     } catch (err) {
-        console.error(err.message);
+        console.error("RestoreOrder Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };
