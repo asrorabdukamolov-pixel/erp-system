@@ -53,8 +53,12 @@ exports.updateSupplier = async (req, res) => {
 
 exports.deleteSupplier = async (req, res) => {
     try {
+        console.log("Attempting to delete supplier:", req.params.id);
         const supplier = await Supplier.findById(req.params.id);
-        if (!supplier) return res.status(404).json({ message: 'Topilmadi' });
+        if (!supplier) {
+            console.log("Supplier not found:", req.params.id);
+            return res.status(404).json({ message: 'Topilmadi' });
+        }
 
         // If not super admin, check ownership
         if (req.user.role !== 'super' && supplier.isGlobal) {
@@ -62,8 +66,10 @@ exports.deleteSupplier = async (req, res) => {
         }
 
         await Supplier.findByIdAndDelete(req.params.id);
+        console.log("Supplier deleted successfully");
         res.json({ message: 'Muvaffaqiyatli o\'chirildi' });
     } catch (err) {
+        console.error("Delete Supplier Error:", err);
         res.status(500).json({ message: 'O\'chirishda xatolik: ' + err.message });
     }
 };

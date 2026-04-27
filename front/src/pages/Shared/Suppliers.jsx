@@ -81,7 +81,7 @@ const Suppliers = () => {
         await api.delete(`/suppliers/${id}`);
         setSuppliers(suppliers.filter(s => s._id !== id));
       } catch (err) {
-        alert('O\'chirishda xatolik!');
+        alert('O\'chirishda xatolik: ' + (err.response?.data?.message || err.message));
       }
     }
   };
