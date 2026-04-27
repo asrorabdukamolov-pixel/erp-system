@@ -149,6 +149,7 @@ const AppContent = () => {
           <MainLayout><Suppliers /></MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/showroom-admin/partners" element={<Navigate to="/showroom-admin/suppliers" replace />} />
       <Route path="/showroom-admin/trash" element={
         <ProtectedRoute allowedRoles={['showroom']}>
           <MainLayout><ShowroomTrash /></MainLayout>

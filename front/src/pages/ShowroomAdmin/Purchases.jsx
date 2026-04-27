@@ -493,7 +493,7 @@ const ShowroomPurchases = () => {
                 >
                   <option value="" style={{ background: '#1e293b', color: 'white' }}>Tanlang...</option>
                   {partners.length === 0 ? (
-                    <option disabled style={{ background: '#1e293b', color: 'rgba(255,255,255,0.5)' }}>Hamkorlar hali qo'shilmagan</option>
+                    <option disabled style={{ background: '#1e293b', color: 'rgba(255,255,255,0.5)' }}>Yetkazib beruvchilar hali qo'shilmagan</option>
                   ) : (
                     partners.map(p => (
                       <option key={p._id} value={p._id} style={{ background: '#1e293b', color: 'white' }}>{p.companyName}</option>

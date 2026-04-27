@@ -132,7 +132,7 @@ const Suppliers = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontSize: '32px', fontWeight: '900', color: 'white', marginBottom: '8px' }}>Yetkazib beruvchilar</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Moliya va xaridlar uchun hamkorlar ro'yxati</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Moliya va xaridlar uchun yetkazib beruvchilar ro'yxati</p>
         </div>
         <button onClick={() => openModal()} className="gold-btn" style={{ padding: '14px 28px', borderRadius: '16px' }}>
           <Plus size={20} /> Yangi Yetkazib beruvchi

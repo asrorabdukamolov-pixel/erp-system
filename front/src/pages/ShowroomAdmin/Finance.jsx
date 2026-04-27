@@ -203,7 +203,7 @@ const Finance = () => {
               <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(16,185,129,0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Handshake size={40} /></div>
               <div>
                 <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '8px' }}>Kreditorlar</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Hamkorlar oldidagi qarz</p>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Yetkazib beruvchilar oldidagi qarz</p>
               </div>
               <div style={{ marginTop: 'auto', color: 'var(--accent-gold)', fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>Kirish <ArrowRight size={16} /></div>
             </div>
@@ -853,7 +853,7 @@ const Finance = () => {
             <button onClick={() => { setCurrentView('hub'); setSelectedPartnerDetails(null); }} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '12px', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}><ArrowLeft size={24} /></button>
             <div>
               <h2 style={{ fontSize: '32px', fontWeight: '900' }}>Kreditorlar <span style={{ color: '#10b981' }}>Nazorati</span></h2>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>Hamkorlar oldidagi qarzdorliklar tahlili.</p>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '16px' }}>Yetkazib beruvchilar oldidagi qarzdorliklar tahlili.</p>
             </div>
           </div>
 
