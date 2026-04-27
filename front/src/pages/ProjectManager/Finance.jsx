@@ -38,6 +38,7 @@ const Finance = () => {
   const [showPurchaseSuggest, setShowPurchaseSuggest] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const loadData = async () => {
     try {
