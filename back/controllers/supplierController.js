@@ -36,8 +36,16 @@ exports.createSupplier = async (req, res) => {
 
 exports.updateSupplier = async (req, res) => {
     try {
-        const supplier = await Supplier.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
-        res.json(supplier);
+        const supplier = await Supplier.findById(req.params.id);
+        if (!supplier) return res.status(404).json({ message: 'Topilmadi' });
+
+        // If not super admin, check ownership
+        if (req.user.role !== 'super' && supplier.isGlobal) {
+            return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'zgartira olmaysiz' });
+        }
+
+        const updated = await Supplier.findByIdAndUpdate(req.params.id, { $set: req.body }, { new: true });
+        res.json(updated);
     } catch (err) {
         res.status(500).json({ message: 'Yangilashda xatolik: ' + err.message });
     }
@@ -45,6 +53,14 @@ exports.updateSupplier = async (req, res) => {
 
 exports.deleteSupplier = async (req, res) => {
     try {
+        const supplier = await Supplier.findById(req.params.id);
+        if (!supplier) return res.status(404).json({ message: 'Topilmadi' });
+
+        // If not super admin, check ownership
+        if (req.user.role !== 'super' && supplier.isGlobal) {
+            return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'chira olmaysiz' });
+        }
+
         await Supplier.findByIdAndDelete(req.params.id);
         res.json({ message: 'Muvaffaqiyatli o\'chirildi' });
     } catch (err) {
