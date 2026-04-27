@@ -8,6 +8,7 @@ const PartnerSchema = new mongoose.Schema({
     type: { type: String, default: 'supplier' }, // supplier, service, etc.
     showroom: { type: String },
     addedBy: { type: String },
+    address: { type: String },
     balance: { type: Number, default: 0 } // Current debt/credit
 }, { timestamps: true });
 

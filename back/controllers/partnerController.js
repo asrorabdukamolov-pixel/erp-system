@@ -22,7 +22,7 @@ exports.createPartner = async (req, res) => {
         console.log("Creating partner:", req.body.name);
         const newPartner = new Partner({
             ...req.body,
-            showroom: req.user.showroom,
+            showroom: req.user.role === 'super' ? 'Asosiy (Super Admin)' : req.user.showroom,
             addedBy: req.user.name
         });
         const partner = await newPartner.save();
