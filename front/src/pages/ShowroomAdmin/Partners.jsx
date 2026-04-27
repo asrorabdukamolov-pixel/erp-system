@@ -19,10 +19,11 @@ const ShowroomPartners = () => {
   const [editingPartner, setEditingPartner] = useState(null);
   
   const [formData, setFormData] = useState({
-    companyName: '',
-    responsiblePerson: '',
+    name: '',
+    firm: '',
     phone: '',
-    address: ''
+    address: '',
+    logo: ''
   });
 
   const loadPartners = async () => {
@@ -74,10 +75,11 @@ const ShowroomPartners = () => {
     if (partner) {
       setEditingPartner(partner);
       setFormData({ 
-        companyName: partner.companyName, 
-        responsiblePerson: partner.responsiblePerson,
-        phone: partner.phone,
-        address: partner.address
+        name: partner.name, 
+        firm: partner.firm || '',
+        phone: partner.phone || '',
+        address: partner.address || '',
+        logo: partner.logo || ''
       });
     } else {
       setEditingPartner(null);
@@ -95,16 +97,17 @@ const ShowroomPartners = () => {
     setIsModalOpen(false);
     setEditingPartner(null);
     setFormData({ 
-      companyName: '', 
-      responsiblePerson: '',
+      name: '', 
+      firm: '',
       phone: '',
-      address: ''
+      address: '',
+      logo: ''
     });
   };
 
   const filteredPartners = partners.filter(p => 
-    p.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.responsiblePerson.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (p.firm?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -171,8 +174,8 @@ const ShowroomPartners = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)' }}>
-                <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Firma Nomi</th>
-                <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Mas'ul Xodim</th>
+                <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Firma / Hamkor</th>
+                <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Mas'ul</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Telefon</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Manzil</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Amallar</th>
@@ -190,16 +193,16 @@ const ShowroomPartners = () => {
                   <tr key={partner._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: '0.3s' }}>
                     <td style={{ padding: '20px 24px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(212,175,55,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}>
-                             <Building2 size={20} />
+                          <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '4px', overflow: 'hidden' }}>
+                             {partner.logo ? <img src={partner.logo} alt="" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <Building2 size={20} color="var(--accent-gold)" />}
                           </div>
-                          <span style={{ fontWeight: '800', fontSize: '15px' }}>{partner.companyName}</span>
+                          <span style={{ fontWeight: '800', fontSize: '15px' }}>{partner.firm || partner.name}</span>
                        </div>
                     </td>
                     <td style={{ padding: '20px 24px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <User size={16} color="var(--text-secondary)" />
-                          <span style={{ fontSize: '14px', fontWeight: '600' }}>{partner.responsiblePerson}</span>
+                          <span style={{ fontSize: '14px', fontWeight: '600' }}>{partner.name}</span>
                        </div>
                     </td>
                     <td style={{ padding: '20px 24px' }}>
@@ -252,60 +255,84 @@ const ShowroomPartners = () => {
               </button>
             </div>
             
-            <div style={{ padding: '32px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Firma Nomi</label>
-                <div style={{ position: 'relative' }}>
-                   <Building2 size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
-                   <input 
-                    type="text" 
-                    value={formData.companyName}
-                    onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                    placeholder="Masalan: Artel Mebel"
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
-                  />
+            <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Firma Nomi</label>
+                  <div style={{ position: 'relative' }}>
+                    <Building2 size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
+                    <input 
+                      type="text" 
+                      value={formData.firm}
+                      onChange={(e) => setFormData({ ...formData, firm: e.target.value })}
+                      placeholder="Masalan: Artel Mebel"
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mas'ul Xodim Ism-Familiyasi</label>
-                <div style={{ position: 'relative' }}>
-                   <User size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
-                   <input 
-                    type="text" 
-                    value={formData.responsiblePerson}
-                    onChange={(e) => setFormData({ ...formData, responsiblePerson: e.target.value })}
-                    placeholder="Masalan: Alisher Vohidov"
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
-                  />
+                <div>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Mas'ul Xodim Ismi</label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
+                    <input 
+                      type="text" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Masalan: Alisher Vohidov"
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Telefon Raqami</label>
-                <div style={{ position: 'relative' }}>
-                   <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
-                   <input 
-                    type="text" 
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    placeholder="+998 90 123 45 67"
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
-                  />
+                <div>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Telefon Raqami</label>
+                  <div style={{ position: 'relative' }}>
+                    <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
+                    <input 
+                      type="text" 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      placeholder="+998 90 123 45 67"
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Manzil</label>
-                <div style={{ position: 'relative' }}>
-                   <MapPin size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
-                   <input 
-                    type="text" 
-                    value={formData.address}
-                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                    placeholder="Shahar, Tuman, Ko'cha, Uy raqami"
-                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Manzil</label>
+                  <div style={{ position: 'relative' }}>
+                    <MapPin size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--accent-gold)' }} />
+                    <input 
+                      type="text" 
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      placeholder="Shahar, Tuman, Ko'cha, Uy raqami"
+                      style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '16px 16px 16px 48px', color: 'white', outline: 'none', fontSize: '15px' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '10px', fontSize: '13px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Logotip</label>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setFormData({ ...formData, logo: reader.result });
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '12px', color: 'white', fontSize: '14px' }}
                   />
+                  {formData.logo && (
+                    <div style={{ marginTop: '12px', height: '60px', width: '60px', background: 'white', borderRadius: '10px', padding: '5px', overflow: 'hidden' }}>
+                       <img src={formData.logo} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
