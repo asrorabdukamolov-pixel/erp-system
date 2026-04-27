@@ -24,6 +24,7 @@ import SalesTrash from './pages/SalesManager/Trash';
 import SalesFinance from './pages/SalesManager/Finance';
 import Migration from './pages/SuperAdmin/Migration';
 import CompanySettings from './pages/SuperAdmin/CompanySettings';
+import Suppliers from './pages/Shared/Suppliers';
 
 // Project Manager
 import ProjectOrders from './pages/ProjectManager/Orders';
@@ -86,6 +87,11 @@ const AppContent = () => {
           <MainLayout><SuperPartners /></MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/super-admin/suppliers" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><Suppliers /></MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/super-admin/migration" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><Migration /></MainLayout>
@@ -138,9 +144,9 @@ const AppContent = () => {
           <MainLayout><Finance /></MainLayout>
         </ProtectedRoute>
       } />
-      <Route path="/showroom-admin/partners" element={
+      <Route path="/showroom-admin/suppliers" element={
         <ProtectedRoute allowedRoles={['showroom']}>
-          <MainLayout><ShowroomPartners /></MainLayout>
+          <MainLayout><Suppliers /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/showroom-admin/trash" element={

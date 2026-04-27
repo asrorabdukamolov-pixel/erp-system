@@ -56,7 +56,7 @@ const Finance = () => {
   const loadPartnersAndPurchases = async () => {
     try {
       const [pRes, purRes] = await Promise.all([
-        api.get('/partners'),
+        api.get('/suppliers'),
         api.get('/purchases')
       ]);
       setPartners(pRes.data);

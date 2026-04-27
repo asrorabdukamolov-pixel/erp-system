@@ -46,6 +46,7 @@ const Sidebar = () => {
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
     { name: 'Tijorat taklifi identikasi', path: '/super-admin/partners', icon: <Handshake size={20} /> },
+    { name: 'Yetkazib beruvchilar', path: '/super-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Ma\'lumotlar Migratsiyasi', path: '/super-admin/migration', icon: <History size={20} /> },
     { name: 'Kompaniya Ma\'lumotlari', path: '/super-admin/company-settings', icon: <Building2 size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },
@@ -58,7 +59,7 @@ const Sidebar = () => {
     { name: 'Moliya', path: '/showroom-admin/finance', icon: <Wallet size={20} /> },
     { name: 'Mijozlar', path: '/showroom-admin/customers', icon: <UserPlus size={20} /> },
     { name: 'Xodimlar', path: '/showroom-admin/staff', icon: <Users size={20} /> },
-    { name: 'Hamkorlar', path: '/showroom-admin/partners', icon: <Handshake size={20} /> },
+    { name: 'Yetkazib beruvchilar', path: '/showroom-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Karzina', path: '/showroom-admin/trash', icon: <Trash2 size={20} /> },
     { name: 'Sozlamalar', path: '/showroom-admin/settings', icon: <Settings size={20} /> },
   ];

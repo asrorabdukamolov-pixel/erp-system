@@ -30,6 +30,7 @@ app.use('/api/requests', require('./routes/requests'));
 app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
+app.use('/api/suppliers', require('./routes/supplierRoutes'));
 
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../front/dist')));
