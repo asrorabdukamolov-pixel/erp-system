@@ -40,7 +40,7 @@ exports.updateSupplier = async (req, res) => {
         if (!supplier) return res.status(404).json({ message: 'Topilmadi' });
 
         // If not super admin, check ownership
-        if (req.user.role !== 'super' && supplier.isGlobal) {
+        if (req.user.role !== 'super' && (supplier.isGlobal || supplier.showroom === 'Global')) {
             return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'zgartira olmaysiz' });
         }
 
@@ -61,7 +61,7 @@ exports.deleteSupplier = async (req, res) => {
         }
 
         // If not super admin, check ownership
-        if (req.user.role !== 'super' && supplier.isGlobal) {
+        if (req.user.role !== 'super' && (supplier.isGlobal || supplier.showroom === 'Global')) {
             return res.status(403).json({ message: 'Siz Super Admin kiritgan ma\'lumotni o\'chira olmaysiz' });
         }
 

@@ -215,10 +215,23 @@ const Suppliers = () => {
                     </td>
                     <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                       <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                        {(user?.role === 'super' || !s.isGlobal) && (
+                        {/* Super Admin can manage everything. Showroom Admin can only manage their own (non-global) suppliers */}
+                        {(user?.role === 'super' || (user?.role === 'showroom' && !s.isGlobal && s.showroom !== 'Global')) && (
                           <>
-                            <button onClick={() => openModal(s)} style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={18} /></button>
-                            <button onClick={() => handleDelete(s._id)} style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Trash2 size={18} /></button>
+                            <button 
+                              onClick={() => openModal(s)} 
+                              style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
+                              title="Tahrirlash"
+                            >
+                              <Edit2 size={18} />
+                            </button>
+                            <button 
+                              onClick={() => handleDelete(s._id)} 
+                              style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
+                              title="O'chirish"
+                            >
+                              <Trash2 size={18} />
+                            </button>
                           </>
                         )}
                       </div>
