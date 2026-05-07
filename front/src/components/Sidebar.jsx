@@ -24,7 +24,8 @@ import {
   Factory,
   Truck,
   CheckSquare,
-  Send
+  Send,
+  BarChart3
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
