@@ -45,18 +45,35 @@ const ShowroomPurchases = () => {
 
   const loadData = async () => {
     try {
-      const [purRes, partRes, ordRes] = await Promise.all([
+      const [purRes, supRes, ordRes, reqRes] = await Promise.all([
         api.get('/purchases'),
-        api.get('/partners'),
-        api.get('/orders')
+        api.get('/suppliers'),
+        api.get('/orders'),
+        api.get('/requests')
       ]);
       setPurchases(purRes.data);
-      setPartners(partRes.data);
+      setMoneyRequests(reqRes.data);
       
-      const ORDER_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
+      // Normalize suppliers (EXCLUDE partners/proposal identity as requested)
+      const normalizedSuppliers = supRes.data.map(s => ({ 
+        ...s, 
+        displayName: s.firm || s.name || s.companyName 
+      }));
+      setPartners(normalizedSuppliers);
+      
+      const ORDER_STAGES = [
+        'tasdiqlandi', 'pm', 'kontrol_zamer', 'chizma_chizish', 'chizma_tasdiqlash', 
+        'ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'
+      ]; 
       let filtered = ordRes.data.filter(o => ORDER_STAGES.includes(o.status));
+      
       if (user?.role === 'proekt_manager') {
-        filtered = filtered.filter(o => o.assignedPmName === user.name);
+        filtered = filtered.filter(o => 
+          o.assignedPmId === user.id || 
+          (o.assignedPmName || '').trim().toLowerCase() === (user.name || '').trim().toLowerCase()
+        );
+      } else if (user?.role === 'sotuv_manager') {
+        filtered = filtered.filter(o => o.managerId === user.id);
       }
       setOrders(filtered);
     } catch (err) {
@@ -79,9 +96,10 @@ const ShowroomPurchases = () => {
     if (val.trim()) {
       const results = orders.filter(o => 
         (o.productionId || '').toLowerCase().includes(val.toLowerCase()) ||
+        (o.uniqueId || '').toLowerCase().includes(val.toLowerCase()) ||
         (o.selectedCustomer?.firstName || '').toLowerCase().includes(val.toLowerCase()) ||
         (o.selectedCustomer?.lastName || '').toLowerCase().includes(val.toLowerCase())
-      ).slice(0, 5);
+      ).slice(0, 10);
       setFilteredOrderResults(results);
       setShowOrderResults(true);
       setSelectedIdx(0);
@@ -100,6 +118,7 @@ const ShowroomPurchases = () => {
     }));
     setOrderSearch(order.productionId || order.uniqueId);
     setShowOrderResults(false);
+    setFilteredOrderResults([]); // Clear results after selection
   };
 
   const handleKeyDown = (e) => {
@@ -194,8 +213,9 @@ const ShowroomPurchases = () => {
   };
 
   const getPartnerName = (id) => {
-    const partner = partners.find(p => p.id === Number(id));
-    return partner ? partner.companyName : 'Noma\'lum hamkor';
+    if (!id) return '—';
+    const partner = partners.find(p => (p.id === Number(id)) || (p._id === id));
+    return partner ? partner.displayName : 'Noma\'lum hamkor';
   };
 
   const filteredPurchases = purchases.filter(p => {
@@ -218,21 +238,35 @@ const ShowroomPurchases = () => {
   const [activeTab, setActiveTab] = useState('all'); // 'all' or 'requests'
   const [moneyRequests, setMoneyRequests] = useState([]);
 
-  useEffect(() => {
-    const savedRequests = JSON.parse(localStorage.getItem('erp_money_requests') || '[]');
-    setMoneyRequests(savedRequests);
-  }, []);
-
   const pendingPurchaseRequests = moneyRequests.filter(r => 
     (r.category === 'Maxsulot uchun' || r.purchaseId) && 
     r.status === 'pending' && 
     r.adminApproved !== true
   );
 
-  const handleAdminApprove = (reqId) => {
-    const updated = moneyRequests.map(r => r.id === reqId ? { ...r, adminApproved: true } : r);
-    setMoneyRequests(updated);
-    localStorage.setItem('erp_money_requests', JSON.stringify(updated));
+  const handleAdminApprove = async (reqId, purchaseId, amount) => {
+    try {
+      // 1. Update the request
+      await api.put(`/requests/${reqId}`, { adminApproved: true });
+      
+      // 2. Find and update the purchase document if it exists
+      if (purchaseId) {
+        const purRes = await api.get('/purchases');
+        const purchase = purRes.data.find(p => p.uniqueXaridId === purchaseId);
+        if (purchase) {
+          await api.put(`/purchases/${purchase._id}`, { 
+            adminApproved: true,
+            total_amount: purchase.totalAmount || amount || 0 // Sync field names
+          });
+        }
+      }
+
+      alert("So'rov tasdiqlandi!");
+      loadData();
+    } catch (err) {
+      console.error("Approve error", err);
+      alert("Tasdiqlashda xatolik yuz berdi");
+    }
   };
 
   return (
@@ -318,13 +352,13 @@ const ShowroomPurchases = () => {
                     pendingPurchaseRequests.map(req => (
                       <tr key={req._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                         <td style={{ padding: '20px 24px', fontSize: '13px', fontWeight: '800', color: 'var(--accent-gold)' }}>{req._id?.slice(-6).toUpperCase()}</td>
-                        <td style={{ padding: '20px 24px', fontSize: '14px', fontWeight: '600' }}>{req.managerName}</td>
+                        <td style={{ padding: '20px 24px', fontSize: '14px', fontWeight: '600' }}>{req.userName || 'Noma\'lum'}</td>
                         <td style={{ padding: '20px 24px', fontSize: '14px', fontWeight: '800', color: '#10b981' }}>{req.purchaseId}</td>
                         <td style={{ padding: '20px 24px', fontSize: '15px', fontWeight: '900' }}>{req.amount?.toLocaleString()} UZS</td>
                         <td style={{ padding: '20px 24px', fontSize: '13px', color: 'var(--text-secondary)' }}>{req.comment || '—'}</td>
                         <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                           <button 
-                            onClick={() => handleAdminApprove(req._id)}
+                            onClick={() => handleAdminApprove(req._id, req.purchaseId, req.amount)}
                             style={{ background: 'var(--accent-gold)', color: '#000', border: 'none', padding: '10px 24px', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}
                           >
                             Tasdiqlash
@@ -372,12 +406,13 @@ const ShowroomPurchases = () => {
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Miqdor</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Narxi</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Jami Summa</th>
+                <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', textAlign: 'center' }}>Xolati</th>
                 <th style={{ padding: '20px 24px', fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Amallar</th>
               </tr>
             </thead>
             <tbody>
               {filteredPurchases.length === 0 ? (
-                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '80px', color: 'var(--text-secondary)' }}>Xaridlar topilmadi.</td></tr>
+                <tr><td colSpan="10" style={{ textAlign: 'center', padding: '80px', color: 'var(--text-secondary)' }}>Xaridlar topilmadi.</td></tr>
               ) : (
                 filteredPurchases.map(p => (
                   <tr key={p._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
@@ -402,6 +437,19 @@ const ShowroomPurchases = () => {
                     <td style={{ padding: '20px 24px', fontSize: '14px' }}>{p.quantity}</td>
                     <td style={{ padding: '20px 24px', textAlign: 'right', fontSize: '14px' }}>{Number(p.pricePerUnit).toLocaleString()}</td>
                     <td style={{ padding: '20px 24px', textAlign: 'right', fontWeight: '900', color: '#10b981' }}>{Number(p.totalAmount).toLocaleString()}</td>
+                    <td style={{ padding: '20px 24px', textAlign: 'center' }}>
+                       {(() => {
+                           const total = Number(p.total_amount) || Number(p.totalAmount) || 0;
+                           const paid = Number(p.paid_amount) || Number(p.paidAmount) || 0;
+                           if (paid >= total && total > 0) {
+                               return <span style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', whiteSpace: 'nowrap' }}>To'landi</span>;
+                           } else if (paid > 0) {
+                               return <span style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', whiteSpace: 'nowrap' }}>Qisman to'landi</span>;
+                           } else {
+                               return <span style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '4px 10px', borderRadius: '12px', fontSize: '11px', fontWeight: '800', whiteSpace: 'nowrap' }}>To'lanmagan</span>;
+                           }
+                       })()}
+                    </td>
                     <td style={{ padding: '20px 24px', textAlign: 'right' }}>
                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                           <button onClick={() => openModal(p)} style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><Edit2 size={18} /></button>
@@ -493,10 +541,10 @@ const ShowroomPurchases = () => {
                 >
                   <option value="" style={{ background: '#1e293b', color: 'white' }}>Tanlang...</option>
                   {partners.length === 0 ? (
-                    <option disabled style={{ background: '#1e293b', color: 'rgba(255,255,255,0.5)' }}>Yetkazib beruvchilar hali qo'shilmagan</option>
+                    <option disabled style={{ background: '#1e293b', color: 'rgba(255,255,255,0.5)' }}>Variantlar topilmadi</option>
                   ) : (
                     partners.map(p => (
-                      <option key={p._id} value={p._id} style={{ background: '#1e293b', color: 'white' }}>{p.companyName}</option>
+                      <option key={p._id || p.id} value={p._id || p.id} style={{ background: '#1e293b', color: 'white' }}>{p.displayName}</option>
                     ))
                   )}
                 </select>

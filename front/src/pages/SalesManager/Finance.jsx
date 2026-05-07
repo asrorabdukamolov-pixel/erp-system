@@ -24,12 +24,14 @@ const Finance = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [reqsRes, ordersRes] = await Promise.all([
+      const [reqsRes, ordersRes, trashRes] = await Promise.all([
         api.get('/requests'),
-        api.get('/orders')
+        api.get('/orders'),
+        api.get('/orders/trash/all')
       ]);
       setRequests(reqsRes.data);
-      setOrders(ordersRes.data);
+      // Merge active and trash orders so manager can request money for any of their orders
+      setOrders([...ordersRes.data, ...trashRes.data]);
     } catch (err) {
       console.error("Finance data load error", err);
     }
@@ -95,6 +97,13 @@ const Finance = () => {
   const handleSelectOrder = (o) => {
     setSelectedOrderId(o.productionId || o.uniqueId);
     setOrderSearch(o.productionId || o.uniqueId);
+    
+    // Automatically populate customer details into the comment field
+    if (o.selectedCustomer) {
+      const customerInfo = `Mijoz: ${o.selectedCustomer.firstName} ${o.selectedCustomer.lastName}\nTel: ${o.selectedCustomer.phone}\nManzil: ${o.selectedCustomer.address || '—'}`;
+      setComment(customerInfo);
+    }
+
     setShowOrderSuggest(false);
     setSelectedIndex(0);
   };
@@ -149,11 +158,11 @@ const Finance = () => {
     if (e) e.preventDefault();
     if (!amount || Number(amount) <= 0) return alert('Summani kiriting!');
     if (!neededDate) return alert('Sanani tanlang!');
-    if ((category === 'travel' || category === 'food') && !selectedOrderId) return alert('Buyurtmani tanlang!');
+    if ((category === 'travel' || category === 'food' || category === 'bonus') && !selectedOrderId) return alert('Buyurtmani tanlang!');
 
     const newRequest = {
       category: CATEGORIES.find(c => c.id === category).label,
-      orderId: (category === 'travel' || category === 'food') ? selectedOrderId : null,
+      orderId: (category === 'travel' || category === 'food' || category === 'bonus') ? selectedOrderId : null,
       amount: Number(amount),
       neededDate,
       comment,
@@ -177,7 +186,7 @@ const Finance = () => {
     setShowOrderSuggest(false);
   };
 
-  const myRequests = requests.filter(r => r.managerId === user.id);
+  const myRequests = requests.filter(r => r.userId === user.id);
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -230,7 +239,7 @@ const Finance = () => {
                       {req.orderId ? <span style={{ fontSize: '12px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px' }}>{req.orderId}</span> : '—'}
                     </td>
                     <td style={{ padding: '20px', fontWeight: '900', fontSize: '15px' }}>
-                      {req.amount?.toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
+                      {((Number(req.amount) || 0) + (Number(req.paidTotal) || 0)).toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
                     </td>
                     <td style={{ padding: '20px', fontSize: '13px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
@@ -324,13 +333,13 @@ const Finance = () => {
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Summa (UZS)</label>
                   <input 
-                    type="number" 
+                    type="text" 
                     ref={amountRef}
-                    value={amount} 
-                    onChange={e => setAmount(e.target.value)} 
+                    value={amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} 
+                    onChange={e => setAmount(e.target.value.replace(/\s/g, ''))} 
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (category === 'travel' || category === 'food') searchRef.current?.focus();
+                        if (category === 'travel' || category === 'food' || category === 'bonus') searchRef.current?.focus();
                         else commentRef.current?.focus();
                       }
                     }}
@@ -352,7 +361,7 @@ const Finance = () => {
                 </div>
               </div>
 
-              {(category === 'travel' || category === 'food') && (
+              {(category === 'travel' || category === 'food' || category === 'bonus') && (
                 <div style={{ position: 'relative' }}>
                   <label style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Buyurtmani tanlang</label>
                   <div style={{ position: 'relative' }}>
@@ -387,7 +396,11 @@ const Finance = () => {
                             background: selectedIndex === index ? 'rgba(251,191,36,0.15)' : 'transparent'
                           }}
                         >
-                           <p style={{ fontWeight: '800', fontSize: '14px', color: selectedIndex === index ? 'var(--accent-gold)' : 'white' }}>{o.productionId || o.uniqueId}</p>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                             <p style={{ fontWeight: '800', fontSize: '14px', color: selectedIndex === index ? 'var(--accent-gold)' : 'white' }}>{o.productionId || o.uniqueId}</p>
+                             {o.status === 'trash' && <span style={{ fontSize: '9px', background: '#ef4444', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' }}>O'CHIRILGAN</span>}
+                             {o.status === 'yopildi' && <span style={{ fontSize: '9px', background: '#10b981', color: 'white', padding: '2px 6px', borderRadius: '4px', fontWeight: '900' }}>ARXIV</span>}
+                           </div>
                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}</p>
                         </div>
                       ))}

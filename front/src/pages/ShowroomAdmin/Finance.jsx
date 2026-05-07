@@ -3,7 +3,7 @@ import {
   Wallet, TrendingUp, TrendingDown, Calendar, FileText, Search, 
   CreditCard, Banknote, Landmark, ArrowLeft, Package, Briefcase, 
   Users, ArrowRight, ShoppingCart, Clock, Eye, X, Filter, RotateCcw,
-  Handshake, Hash
+  Handshake, Hash, Trash2
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -40,6 +40,12 @@ const Finance = () => {
   const [selectedExpenseCategory, setSelectedExpenseCategory] = useState(null);
   const [debitorSubView, setDebitorSubView] = useState('active'); // 'active' | 'closed'
 
+  // Deletion States
+  const [contextMenu, setContextMenu] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedTxId, setSelectedTxId] = useState(null);
+  const [deleteReason, setDeleteReason] = useState('');
+
   const paymentMethodsList = [
     { id: 'Naqd', icon: <Banknote size={16}/>, label: 'Naqd' },
     { id: 'Karta', icon: <CreditCard size={16}/>, label: 'Karta' },
@@ -51,6 +57,10 @@ const Finance = () => {
     loadTransactions();
     loadOrders();
     loadPartnersAndPurchases();
+
+    const handleClick = () => setContextMenu(null);
+    window.addEventListener('click', handleClick);
+    return () => window.removeEventListener('click', handleClick);
   }, []);
 
   const loadPartnersAndPurchases = async () => {
@@ -69,9 +79,35 @@ const Finance = () => {
   const loadTransactions = async () => {
     try {
       const res = await api.get('/transactions');
-      setTransactions(res.data);
+      setTransactions(res.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
     } catch (err) {
       console.error("Transaction loading error", err);
+    }
+  };
+
+  const handleContextMenu = (e, tx) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, txId: tx.id || tx._id });
+  };
+
+  const startDelete = () => {
+    setSelectedTxId(contextMenu.txId);
+    setIsDeleteModalOpen(true);
+    setDeleteReason('');
+    setContextMenu(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteReason.trim()) { alert("Sababni yozishingiz shart."); return; }
+    try {
+      await api.delete(`/transactions/${selectedTxId}`, { data: { reason: deleteReason.trim() } });
+      alert("Tranzaksiya o'chirildi");
+      setIsDeleteModalOpen(false);
+      setSelectedTxId(null);
+      loadTransactions();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("O'chirishda xatolik: " + (err.response?.data?.msg || err.message));
     }
   };
 
@@ -85,8 +121,14 @@ const Finance = () => {
   };
 
   // Helper: Get transaction stats for a specific order
-  const getOrderStats = (oId) => {
-    const history = transactions.filter(t => t.orderId === oId);
+  const getOrderStats = (order) => {
+    if (!order) return { income: 0, expense: 0 };
+    const pId = order.productionId;
+    const uId = order.uniqueId;
+    
+    const history = transactions.filter(t => 
+      (pId && t.orderId === pId) || (uId && t.orderId === uId)
+    );
     const income = history.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amountUzs || 0), 0);
     const expense = history.filter(t => t.type === 'expense').reduce((sum, t) => sum + (t.amountUzs || 0), 0);
     return { income, expense };
@@ -120,8 +162,7 @@ const Finance = () => {
 
   // Aggregate Totals for Summary Cards
   const stats = filteredOrders.reduce((acc, order) => {
-    const orderId = order.productionId || order.uniqueId;
-    const { income, expense } = getOrderStats(orderId);
+    const { income, expense } = getOrderStats(order);
     acc.totalSum += Number(order.amount || 0);
     acc.totalIncome += income;
     acc.totalExpense += expense;
@@ -275,13 +316,13 @@ const Finance = () => {
                 </thead>
                 <tbody>
                   {filteredTxs.length === 0 ? (
-                    <tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>Hech qanday tranzaksiya topilmadi.</td></tr>
+                    <tr><td colSpan="7" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>Hech qanday tranzaksiya topilmadi.</td></tr>
                   ) : (
                     filteredTxs.map(t => (
-                      <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <tr key={t._id || t.id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'context-menu' }}>
                         <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{new Date(t.date).toLocaleDateString()}</td>
                         <td style={{ padding: '16px 8px' }}><span style={{ fontSize: '10px', fontWeight: '800', padding: '4px 8px', borderRadius: '4px', background: t.type === 'income' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? 'KIRIM' : 'CHIQIM'}</span></td>
-                        <td style={{ padding: '16px 8px' }}><div style={{ fontWeight: '600' }}>{t.personName}</div><div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Buyurtma: {t.orderId || '—'}</div></td>
+                        <td style={{ padding: '16px 8px' }}><div style={{ fontWeight: '600' }}>{t.personName || t.managerName || '—'}</div><div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Buyurtma: {t.orderId || '—'}</div></td>
                         <td style={{ padding: '16px 8px', fontSize: '13px' }}>{t.paymentMethod}</td>
                         <td style={{ padding: '16px 8px', fontSize: '13px' }}><div style={{ fontWeight: '600' }}>{t.category}</div><div style={{ color: 'var(--text-secondary)' }}>{t.comment}</div></td>
                         <td style={{ padding: '16px 8px', textAlign: 'right' }}>
@@ -434,6 +475,7 @@ const Finance = () => {
                          <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '13px' }}>
                            <th style={{ padding: '16px 8px' }}>Sana</th>
                            <th style={{ padding: '16px 8px' }}>Kategoriya</th>
+                           <th style={{ padding: '16px 8px' }}>Mas'ul</th>
                            <th style={{ padding: '16px 8px' }}>To'lov Turi</th>
                            <th style={{ padding: '16px 8px' }}>Izoh</th>
                            <th style={{ padding: '16px 8px', textAlign: 'right' }}>Summa (UZS)</th>
@@ -441,14 +483,21 @@ const Finance = () => {
                        </thead>
                        <tbody>
                          {tableData.length === 0 ? (
-                           <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>Ma'lumot topilmadi.</td></tr>
+                           <tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>Ma'lumot topilmadi.</td></tr>
                          ) : (
                            tableData.map(t => (
-                             <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                             <tr key={t.id || t._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{new Date(t.date).toLocaleDateString()}</td>
-                               <td style={{ padding: '16px 8px', fontWeight: '600' }}>{t.category || 'Boshqa'}</td>
+                               <td style={{ padding: '16px 8px', fontWeight: '600' }}>
+                                 <div>{t.category || 'Boshqa'}</div>
+                                 <div style={{ fontSize: '10px', color: 'var(--accent-gold)', marginTop: '2px' }}>Mas'ul: {t.personName || t.managerName || '—'}</div>
+                               </td>
+                               <td style={{ padding: '16px 8px', fontWeight: '700', color: 'var(--accent-gold)' }}>{t.personName || t.managerName || '—'}</td>
                                <td style={{ padding: '16px 8px', fontSize: '13px' }}>{t.paymentMethod}</td>
-                               <td style={{ padding: '16px 8px', color: 'var(--text-secondary)' }}>{t.comment || '—'}</td>
+                               <td style={{ padding: '16px 8px', color: 'var(--text-secondary)' }}>
+                                 <div style={{ fontWeight: '600', color: '#fff', fontSize: '12px', marginBottom: '2px' }}>{t.personName || t.managerName || '—'}</div>
+                                 {t.comment || t.description || '—'}
+                               </td>
                                <td style={{ padding: '16px 8px', textAlign: 'right', fontWeight: '900', color: '#ef4444' }}>-{t.amountUzs?.toLocaleString()}</td>
                              </tr>
                            ))
@@ -558,7 +607,7 @@ const Finance = () => {
                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '80px', color: 'var(--text-secondary)' }}>Qarzdorlik topilmadi.</td></tr>
                              ) : (
                                debtors.map(o => (
-                                 <tr key={o.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                 <tr key={o.id || o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '20px 24px' }}><span style={{ color: 'var(--accent-gold)', fontWeight: '900' }}>{o.productionId || o.uniqueId}</span></td>
                                     <td style={{ padding: '20px 24px' }}>
                                        <div style={{ fontWeight: '800', fontSize: '13px' }}>{o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}</div>
@@ -707,7 +756,7 @@ const Finance = () => {
                           const rowProfit = Number(order.amount || 0) - expense;
 
                           return (
-                            <tr key={order.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                            <tr key={order.id || order._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                <td style={{ padding: '20px 24px' }}><span style={{ color: 'var(--accent-gold)', fontWeight: '900' }}>{oId}</span></td>
                                <td style={{ padding: '20px 24px' }}>
                                   <div style={{ fontWeight: '800', fontSize: '13px' }}>{order.selectedCustomer?.firstName} {order.selectedCustomer?.lastName}</div>
@@ -771,29 +820,96 @@ const Finance = () => {
                       <h4 style={{ fontSize: '18px', fontWeight: '900' }}>{(Number(selectedOrderHistory.amount || 0) - getOrderStats(selectedOrderHistory.productionId || selectedOrderHistory.uniqueId).expense).toLocaleString()} <span style={{ fontSize: '12px' }}>so'm</span></h4>
                    </div>
                 </div>
-                <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Bog'langan Tranzaksiyalar</h3>
+                 <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <TrendingDown size={18} color="#ef4444" /> Xarajatlar Tahlili (Kategoriya bo'yicha)
+                 </h3>
+                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '32px' }}>
+                    {(() => {
+                       const pId = selectedOrderHistory.productionId;
+                       const uId = selectedOrderHistory.uniqueId;
+                       const orderTxs = transactions.filter(t => 
+                          ((pId && t.orderId === pId) || (uId && t.orderId === uId)) && 
+                          t.type === 'expense'
+                       );
+                       const categories = {};
+                       orderTxs.forEach(t => {
+                          const cat = t.category || 'Boshqa';
+                          categories[cat] = (categories[cat] || 0) + (t.amountUzs || 0);
+                       });
+                       
+                       const entries = Object.entries(categories).sort((a,b) => b[1] - a[1]);
+                       if (entries.length === 0) return <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Bu buyurtmada hali xarajatlar yo'q.</p>;
+                       
+                       return (
+                          <>
+                             <div 
+                                onClick={() => setSelectedExpenseCategory(null)}
+                                style={{ 
+                                   padding: '12px 20px', borderRadius: '12px', background: !selectedExpenseCategory ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', 
+                                   border: `1px solid ${!selectedExpenseCategory ? 'var(--accent-gold)' : 'var(--border-color)'}`,
+                                   cursor: 'pointer', transition: '0.3s'
+                                }}>
+                                <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '2px' }}>Jami Xarajat</div>
+                                <div style={{ fontSize: '14px', fontWeight: '800' }}>{entries.reduce((sum, e) => sum + e[1], 0).toLocaleString()} <span style={{ fontSize: '10px' }}>so'm</span></div>
+                             </div>
+                             {entries.map(([cat, sum]) => (
+                                <div 
+                                   key={cat}
+                                   onClick={() => setSelectedExpenseCategory(cat === selectedExpenseCategory ? null : cat)}
+                                   style={{ 
+                                      padding: '12px 20px', borderRadius: '12px', background: selectedExpenseCategory === cat ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', 
+                                      border: `1px solid ${selectedExpenseCategory === cat ? 'var(--accent-gold)' : 'var(--border-color)'}`,
+                                      cursor: 'pointer', transition: '0.3s'
+                                   }}>
+                                   <div style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '2px' }}>{cat}</div>
+                                   <div style={{ fontSize: '14px', fontWeight: '800', color: selectedExpenseCategory === cat ? 'var(--accent-gold)' : '#fff' }}>{sum.toLocaleString()} <span style={{ fontSize: '10px' }}>so'm</span></div>
+                                </div>
+                             ))}
+                          </>
+                       );
+                    })()}
+                 </div>
+
+                 <h3 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '16px' }}>Bog'langan Tranzaksiyalar</h3>
                 <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid var(--border-color)', overflow: 'hidden' }}>
                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                      <thead>
-                         <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)' }}>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>SANA</th>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>TUR</th>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>KATEGORIYA</th>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>TO'LOV TURI / IZOH</th>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>VALYUTA</th>
-                            <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>SUMMA (UZS)</th>
-                         </tr>
-                      </thead>
-                      <tbody>
-                         {transactions.filter(t => t.orderId === (selectedOrderHistory.productionId || selectedOrderHistory.uniqueId)).length === 0 ? (
-                           <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Bog'langan tranzaksiyalar yo'q.</td></tr>
-                         ) : (
-                           transactions.filter(t => t.orderId === (selectedOrderHistory.productionId || selectedOrderHistory.uniqueId)).map(t => (
-                             <tr key={t.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                       <thead>
+                          <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid var(--border-color)' }}>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>SANA</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>TUR</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>KATEGORIYA</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>MAS'UL</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)' }}>TO'LOV TURI / IZOH</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>VALYUTA</th>
+                             <th style={{ padding: '14px 20px', fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'right' }}>SUMMA (UZS)</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                        {(() => {
+                           const pId = selectedOrderHistory.productionId;
+                           const uId = selectedOrderHistory.uniqueId;
+                           const filtered = transactions.filter(t => {
+                             const matchesOrder = (pId && t.orderId === pId) || (uId && t.orderId === uId);
+                             const matchesCategory = !selectedExpenseCategory || t.category === selectedExpenseCategory;
+                             return matchesOrder && matchesCategory;
+                           });
+
+                          if (filtered.length === 0) {
+                            return <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Bog'langan tranzaksiyalar yo'q.</td></tr>;
+                          }
+
+                          return filtered.map(t => (
+                             <tr key={t.id || t._id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'context-menu' }}>
                                 <td style={{ padding: '14px 20px', fontSize: '13px' }}>{new Date(t.date).toLocaleDateString()}</td>
                                 <td style={{ padding: '14px 20px' }}><span style={{ fontSize: '10px', fontWeight: '800', padding: '2px 8px', borderRadius: '4px', background: t.type === 'income' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? 'KIRIM' : 'CHIQIM'}</span></td>
-                                 <td style={{ padding: '14px 20px' }}><div style={{ fontSize: '13px', fontWeight: '600' }}>{t.category}</div></td>
-                                 <td style={{ padding: '14px 20px' }}><div style={{ fontSize: '13px', color: 'var(--accent-gold)', fontWeight: '700' }}>{t.paymentMethod}</div><div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t.comment}</div></td>
+                                 <td style={{ padding: '14px 20px' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '600' }}>{t.category}</div>
+                                 </td>
+                                 <td style={{ padding: '14px 20px', fontWeight: '700', color: 'var(--accent-gold)' }}>{t.userName || t.personName || t.managerName || '—'}</td>
+                                 <td style={{ padding: '14px 20px' }}>
+                                    <div style={{ fontSize: '13px', color: 'var(--accent-gold)', fontWeight: '700' }}>{t.paymentMethod}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{t.comment}</div>
+                                 </td>
                                 <td style={{ padding: '14px 20px', textAlign: 'right' }}>
                                   {t.currency === 'USD' ? (
                                     <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>
@@ -804,9 +920,9 @@ const Finance = () => {
                                 </td>
                                 <td style={{ padding: '14px 20px', textAlign: 'right', fontWeight: '800', color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? '+' : '-'}{t.amountUzs?.toLocaleString()}</td>
                              </tr>
-                           ))
-                         )}
-                      </tbody>
+                           ));
+                        })()}
+                       </tbody>
                    </table>
                 </div>
              </div>
@@ -884,7 +1000,11 @@ const Finance = () => {
                 const pDate = new Date(p.date);
                 return pDate.getMonth().toString() === filterMonth && pDate.getFullYear().toString() === filterYear;
               });
-              const totalDebtAll = filteredPurchasesForPeriod.reduce((sum, p) => sum + (Number(p.totalAmount) || 0), 0);
+              const totalDebtAll = filteredPurchasesForPeriod.filter(p => p.adminApproved === true).reduce((sum, p) => {
+                const total = Number(p.total_amount) || Number(p.totalAmount) || 0;
+                const paid = Number(p.paid_amount) || Number(p.paidAmount) || 0;
+                return sum + Math.max(0, total - paid);
+              }, 0);
 
               return (
                 <>
@@ -904,25 +1024,32 @@ const Finance = () => {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                     {partners.map(partner => {
-                      const partnerPurchases = filteredPurchasesForPeriod.filter(p => Number(p.partnerId) === partner.id);
-                      const totalDebt = partnerPurchases.reduce((sum, p) => sum + (Number(p.totalAmount) || 0), 0);
+                      const partnerPurchases = filteredPurchasesForPeriod.filter(p => 
+                        p.adminApproved === true && 
+                        (Number(p.partnerId) === partner.id || p.partnerId === partner._id)
+                      );
+                      const totalDebt = partnerPurchases.reduce((sum, p) => {
+                        const total = Number(p.total_amount) || Number(p.totalAmount) || 0;
+                        const paid = Number(p.paid_amount) || Number(p.paidAmount) || 0;
+                        return sum + Math.max(0, total - paid);
+                      }, 0);
                       const percentage = totalDebtAll > 0 ? (totalDebt / totalDebtAll) * 100 : 0;
 
-                      if (totalDebt === 0) return null;
+                      if (totalDebt <= 0) return null;
 
                       return (
-                        <div key={partner.id} onClick={() => setSelectedPartnerDetails(partner)} style={{ cursor: 'pointer' }}>
+                        <div key={partner.id || partner._id} onClick={() => setSelectedPartnerDetails(partner)} style={{ cursor: 'pointer' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'flex-end' }}>
-                            <span style={{ fontWeight: '700', fontSize: '14px', color: selectedPartnerDetails?.id === partner.id ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>{partner.companyName} {selectedPartnerDetails?.id === partner.id && '•'}</span>
+                            <span style={{ fontWeight: '700', fontSize: '14px', color: selectedPartnerDetails?.id === (partner.id || partner._id) ? 'var(--accent-gold)' : 'var(--text-secondary)' }}>{partner.companyName || partner.firm} {selectedPartnerDetails?.id === (partner.id || partner._id) && '•'}</span>
                             <span style={{ fontSize: '13px', fontWeight: '800' }}>{totalDebt.toLocaleString()} so'm ({percentage.toFixed(1)}%)</span>
                           </div>
                           <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.03)', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${percentage}%`, height: '100%', background: selectedPartnerDetails?.id === partner.id ? 'var(--accent-gold)' : 'linear-gradient(90deg, #3b82f6, #ef4444)', borderRadius: '3px', transition: 'width 1s ease' }} />
+                            <div style={{ width: `${percentage}%`, height: '100%', background: selectedPartnerDetails?.id === (partner.id || partner._id) ? 'var(--accent-gold)' : 'linear-gradient(90deg, #3b82f6, #ef4444)', borderRadius: '3px', transition: 'width 1s ease' }} />
                           </div>
                         </div>
                       );
                     })}
-                    {filteredPurchasesForPeriod.length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px' }}>Ushbu davrda xaridlar topilmadi.</p>}
+                    {filteredPurchasesForPeriod.filter(p => p.adminApproved === true).length === 0 && <p style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '40px' }}>Ushbu davrda tasdiqlangan qarzlar topilmadi.</p>}
                   </div>
                 </>
               );
@@ -933,7 +1060,7 @@ const Finance = () => {
           {selectedPartnerDetails && (
             <div className="premium-card" style={{ padding: '32px', animation: 'fadeInUp 0.4s ease-out' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-                <h3 style={{ fontSize: '22px', fontWeight: '900' }}>{selectedPartnerDetails.companyName} - <span style={{ color: 'var(--text-secondary)' }}>Tafsilotlar</span></h3>
+                <h3 style={{ fontSize: '22px', fontWeight: '900' }}>{selectedPartnerDetails.companyName || selectedPartnerDetails.firm} - <span style={{ color: 'var(--text-secondary)' }}>Tafsilotlar</span></h3>
                 <button onClick={() => setSelectedPartnerDetails(null)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: '50%', padding: '8px', cursor: 'pointer', color: 'white' }}><X size={20} /></button>
               </div>
 
@@ -951,31 +1078,63 @@ const Finance = () => {
                   </thead>
                   <tbody>
                     {purchases.filter(p => {
+                      if (p.adminApproved !== true) return false;
                       const pDate = new Date(p.date);
                       const matchesPeriod = pDate.getMonth().toString() === filterMonth && pDate.getFullYear().toString() === filterYear;
                       if (!matchesPeriod) return false;
                       if (selectedPartnerDetails.id === 'all') return true;
-                      return Number(p.partnerId) === selectedPartnerDetails.id;
-                    }).map(p => (
-                      <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                        <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{p.date}</td>
-                        <td style={{ padding: '16px 8px' }}><span style={{ fontSize: '11px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 8px', borderRadius: '6px', fontWeight: '800' }}>{p.uniqueXaridId || 'XR-????'}</span></td>
-                        <td style={{ padding: '16px 8px' }}>
-                          <div style={{ fontWeight: '700' }}>{p.itemName}</div>
-                          {p.comment && <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.comment}</div>}
-                        </td>
-                        <td style={{ padding: '16px 8px', fontSize: '13px' }}>
-                          {p.orderId ? <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}>{p.orderId}</span> : '—'}
-                        </td>
-                        <td style={{ padding: '16px 8px', fontSize: '13px' }}>{p.createdBy || 'Showroom'}</td>
-                        <td style={{ padding: '16px 8px', textAlign: 'right', fontWeight: '900', color: '#ef4444' }}>-{Number(p.totalAmount).toLocaleString()}</td>
-                      </tr>
-                    ))}
+                      const partnerId = selectedPartnerDetails.id || selectedPartnerDetails._id;
+                      return Number(p.partnerId) === partnerId || p.partnerId === partnerId;
+                    }).map(p => {
+                      const total = Number(p.total_amount) || Number(p.totalAmount) || 0;
+                      const paid = Number(p.paid_amount) || Number(p.paidAmount) || 0;
+                      const debt = total - paid;
+                      
+                      if (debt <= 0 && selectedPartnerDetails.id !== 'all') return null;
+
+                      return (
+                        <tr key={p._id || p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                          <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{p.date}</td>
+                          <td style={{ padding: '16px 8px' }}><span style={{ fontSize: '11px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 8px', borderRadius: '6px', fontWeight: '800' }}>{p.uniqueXaridId || 'XR-????'}</span></td>
+                          <td style={{ padding: '16px 8px' }}>
+                            <div style={{ fontWeight: '700' }}>{p.itemName}</div>
+                            {p.comment && <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{p.comment}</div>}
+                          </td>
+                          <td style={{ padding: '16px 8px', fontSize: '13px' }}>
+                            {p.orderId ? <span style={{ background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '4px' }}>{p.orderId}</span> : '—'}
+                          </td>
+                          <td style={{ padding: '16px 8px', fontSize: '13px' }}>{p.createdBy || 'Showroom'}</td>
+                          <td style={{ padding: '16px 8px', textAlign: 'right', fontWeight: '900', color: '#ef4444' }}>{debt.toLocaleString()}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ─── CUSTOM CONTEXT MENU ─── */}
+      {contextMenu && (
+        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, zIndex: 4000, minWidth: '160px', background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
+          <button onClick={startDelete} style={{ width: '100%', padding: '12px 16px', textAlign: 'left', background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '700', fontSize: '13px' }}><Trash2 size={16} /> O'chirish</button>
+        </div>
+      )}
+
+      {/* ─── DELETE REASON MODAL ─── */}
+      {isDeleteModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 5000, padding: '20px' }}>
+          <div className="premium-card" style={{ width: '450px', padding: '32px', border: '1px solid #ef4444' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '16px', color: '#ef4444' }}>O'chirish Sababi</h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '20px' }}>Ushbu tranzaksiyani o'chirish sababini yozing. Bu ma'lumot Karzinka bo'limida saqlanadi.</p>
+            <textarea value={deleteReason} onChange={e => setDeleteReason(e.target.value)} required placeholder="Masalan: Xato summa kiritildi..." style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '12px', borderRadius: '12px', color: '#fff', minHeight: '100px', marginBottom: '24px' }} />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button onClick={() => setIsDeleteModalOpen(false)} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: '1px solid var(--border-color)', background: 'transparent', color: '#fff' }}>Bekor qilish</button>
+              <button onClick={confirmDelete} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: 'none', background: '#ef4444', color: '#fff', fontWeight: '700' }}>Tasdiqlayman</button>
+            </div>
+          </div>
         </div>
       )}
 

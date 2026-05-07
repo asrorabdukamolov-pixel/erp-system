@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, Check, X, Search, Filter, AlertCircle, Package, Calendar } from 'lucide-react';
+import api from '../../utils/api';
 
 const MoneyRequests = () => {
-  const [moneyRequests, setMoneyRequests] = useState(() => JSON.parse(localStorage.getItem('erp_money_requests') || '[]'));
+  const [moneyRequests, setMoneyRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
   const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [requestToReject, setRequestToReject] = useState(null);
@@ -17,9 +19,20 @@ const MoneyRequests = () => {
     { id: 'Shartnoma', label: 'Shartnoma' }
   ];
 
+  const loadRequests = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get('/requests');
+      setMoneyRequests(res.data);
+    } catch (err) {
+      console.error("Load requests error", err);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
-    localStorage.setItem('erp_money_requests', JSON.stringify(moneyRequests));
-  }, [moneyRequests]);
+    loadRequests();
+  }, []);
 
   const [payingAmount, setPayingAmount] = useState('');
 
@@ -29,69 +42,63 @@ const MoneyRequests = () => {
     setApproveModalOpen(true);
   };
 
-  const handleApproveRequest = (req) => {
-    const payAmt = Number(payingAmount);
+  const handleApproveRequest = async (req) => {
+    const payAmt = Number(payingAmount.toString().replace(/\s/g, ''));
     if (!payAmt || payAmt <= 0) return alert('To\'g\'ri summani kiriting!');
     if (payAmt > req.amount) return alert('Berilayotgan summa so\'rov summasidan ko\'p bo\'lishi mumkin emas!');
 
-    // 1. Create a transaction
-    const transactions = JSON.parse(localStorage.getItem('erp_transactions') || '[]');
-    const newTx = {
-      id: Date.now().toString(),
-      type: 'expense',
-      orderId: req.orderId || '',
-      amountUzs: payAmt,
-      originalAmount: payAmt,
-      currency: 'UZS',
-      usdRate: null,
-      personName: req.managerName,
-      paymentMethod: selectedPaymentMethod,
-      category: req.category,
-      comment: `[BERILDI] ${req.comment || ''}`,
-      date: new Date().toISOString()
-    };
+    try {
+      // 1. Create a transaction in the database
+      await api.post('/transactions', {
+        type: 'expense',
+        orderId: req.orderId || '',
+        purchaseId: req.purchaseId || '',
+        amountUzs: payAmt,
+        paymentMethod: selectedPaymentMethod,
+        category: req.category,
+        personName: req.userName || req.managerName || 'Noma\'lum',
+        userName: req.userName || req.managerName || 'Noma\'lum',
+        description: `[BERILDI] ${req.comment || ''}`
+      });
 
-    const updatedTxs = [newTx, ...transactions];
-    localStorage.setItem('erp_transactions', JSON.stringify(updatedTxs));
+      // 2. Update request status in the database
+      const isFullPayment = payAmt >= req.amount;
+      const updateData = {
+        status: isFullPayment ? 'approved' : 'pending',
+        paidTotal: (Number(req.paidTotal) || 0) + payAmt,
+        paymentMethod: selectedPaymentMethod,
+        amount: isFullPayment ? 0 : req.amount - payAmt
+      };
 
-    // 2. Update request status or amount
-    const isFullPayment = payAmt >= req.amount;
-    const updatedReqs = moneyRequests.map(r => {
-      if (r.id === req.id) {
-        if (isFullPayment) {
-          return { 
-            ...r, 
-            status: 'approved', 
-            paidTotal: (Number(r.paidTotal) || 0) + payAmt,
-            approvedAt: new Date().toISOString(), 
-            paymentMethod: selectedPaymentMethod 
-          };
-        } else {
-          return { 
-            ...r, 
-            amount: r.amount - payAmt, 
-            paidTotal: (Number(r.paidTotal) || 0) + payAmt 
-          };
-        }
-      }
-      return r;
-    });
-
-    setMoneyRequests(updatedReqs);
-    setApproveModalOpen(false);
-    setRequestToApprove(null);
+      await api.put(`/requests/${req._id}`, updateData);
+      
+      alert("Muvaffaqiyatli bajarildi");
+      setApproveModalOpen(false);
+      setRequestToApprove(null);
+      loadRequests();
+    } catch (err) {
+      console.error("Approve error", err);
+      alert("Tasdiqlashda xatolik yuz berdi");
+    }
   };
 
-  const handleRejectRequest = () => {
+  const handleRejectRequest = async () => {
     if (!rejectionReason.trim()) return alert('Rad etish sababini yozing!');
     
-    const updatedReqs = moneyRequests.map(r => 
-      r.id === requestToReject.id ? { ...r, status: 'rejected', rejectReason: rejectionReason } : r
-    );
-    setMoneyRequests(updatedReqs);
-    setRejectModalOpen(false);
-    setRequestToReject(null);
-    setRejectionReason('');
+    try {
+      await api.put(`/requests/${requestToReject._id}`, { 
+        status: 'rejected', 
+        rejectReason: rejectionReason 
+      });
+      alert("So'rov rad etildi");
+      setRejectModalOpen(false);
+      setRequestToReject(null);
+      setRejectionReason('');
+      loadRequests();
+    } catch (err) {
+      console.error("Reject error", err);
+      alert("Xatolik yuz berdi");
+    }
   };
 
   const [selectedManager, setSelectedManager] = useState(null);
@@ -100,16 +107,17 @@ const MoneyRequests = () => {
 
   // Grouping by Manager
   const groupedManagers = pendingRequests.reduce((acc, req) => {
-    if (!acc[req.managerName]) {
-      acc[req.managerName] = { name: req.managerName, total: 0, count: 0 };
+    const mName = req.userName || 'Noma\'lum';
+    if (!acc[mName]) {
+      acc[mName] = { name: mName, total: 0, count: 0 };
     }
-    acc[req.managerName].total += (Number(req.amount) || 0);
-    acc[req.managerName].count += 1;
+    acc[mName].total += (Number(req.amount) || 0);
+    acc[mName].count += 1;
     return acc;
   }, {});
 
   const managersList = Object.values(groupedManagers);
-  const managerRequests = selectedManager ? pendingRequests.filter(r => r.managerName === selectedManager) : [];
+  const managerRequests = selectedManager ? pendingRequests.filter(r => (r.userName || 'Noma\'lum') === selectedManager) : [];
 
   return (
     <div style={{ padding: '20px', color: '#fff' }}>
@@ -129,7 +137,11 @@ const MoneyRequests = () => {
         )}
       </div>
 
-      {pendingRequests.length === 0 ? (
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}>
+          <div className="loader">Yuklanmoqda...</div>
+        </div>
+      ) : pendingRequests.length === 0 ? (
         <div className="premium-card" style={{ padding: '100px', textAlign: 'center', border: '1px dashed var(--border-color)' }}>
           <div style={{ display: 'inline-flex', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
             <Check size={40} />
@@ -202,9 +214,9 @@ const MoneyRequests = () => {
                 const needsAdminApproval = isProduct && !req.adminApproved;
                 
                 return (
-                  <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                  <tr key={req._id || req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '20px' }}>
-                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req.id}</p>
+                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{(req._id || req.id)?.slice(-6).toUpperCase()}</p>
                       <p style={{ fontSize: '14px', fontWeight: '700' }}>{req.category}</p>
                     </td>
                     <td style={{ padding: '20px' }}>
@@ -282,9 +294,9 @@ const MoneyRequests = () => {
             <div style={{ marginBottom: '24px' }}>
               <label style={{ display: 'block', color: 'var(--text-secondary)', marginBottom: '8px', fontSize: '13px' }}>Berilayotgan Summa (UZS)</label>
               <input 
-                type="number" 
-                value={payingAmount}
-                onChange={e => setPayingAmount(e.target.value)}
+                type="text" 
+                value={payingAmount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")}
+                onChange={e => setPayingAmount(e.target.value.replace(/\s/g, ''))}
                 style={{ width: '100%', padding: '16px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', fontSize: '18px', fontWeight: '800' }}
               />
               <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px' }}>Maksimal: {requestToApprove?.amount?.toLocaleString()} UZS</p>

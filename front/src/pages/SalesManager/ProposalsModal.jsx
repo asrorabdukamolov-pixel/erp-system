@@ -125,7 +125,7 @@ const ProposalsModal = ({ onClose }) => {
     <div class="info-card">
       <div class="card-title">Taklif Tayyorladi</div>
       <div class="manager-box">
-        <div class="manager-placeholder">👤</div>
+        <div class="manager-placeholder"><svg viewBox="0 0 24 24" width="22" height="22" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>
         <div class="person-details">
           <div class="person-name" style="font-size:16px; margin-bottom:2px;">${p.managerName || 'Menejer'}</div>
           <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">${companySettings.companyName}</div>
@@ -151,7 +151,7 @@ const ProposalsModal = ({ onClose }) => {
         <tr>
           <td>${idx + 1}</td>
           <td>
-            ${item.image ? `<img src="${item.image}" class="item-img" />` : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;">🛋️</div>'}
+            ${item.image ? `<img src="${item.image}" class="item-img" />` : `<div class="item-img" style="display:flex;align-items:center;justify-content:center;background:#f9fafb;opacity:0.6;"><svg viewBox="0 0 24 24" width="30" height="30" stroke="#999" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></div>`}
           </td>
           <td class="item-info">
             <strong>${item.name}</strong>

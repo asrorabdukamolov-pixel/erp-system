@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Wallet, TrendingUp, TrendingDown, Calendar, FileText, Search, 
   CreditCard, Banknote, Landmark, ArrowLeft, Package, Briefcase, 
-  Users, ArrowRight, ShoppingCart, Clock, Eye, X, User, ChevronDown, ListFilter, Trash2, RotateCcw, Plus
+  Users, ArrowRight, ShoppingCart, Clock, Eye, X, User, ChevronDown, ListFilter, Trash2, RotateCcw, Plus, TrendingDown as TrendingDownIcon
 } from 'lucide-react';
+import api from '../../utils/api';
 
 const KassaDashboard = () => {
   const navigate = useNavigate();
@@ -32,6 +33,8 @@ const KassaDashboard = () => {
   const [paymentMethod, setPaymentMethod] = useState('Naqd');
   const [category, setCategory] = useState('');
   const [comment, setComment] = useState('');
+  const [costCenters, setCostCenters] = useState([]);
+  const [selectedCostCenter, setSelectedCostCenter] = useState(null);
   
   // Autocomplete states
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -70,23 +73,39 @@ const KassaDashboard = () => {
   const [foundRequest, setFoundRequest] = useState(null);
 
   useEffect(() => {
-    loadTransactions();
-    loadOrders();
-    loadDeletedTransactions();
+    loadData();
     
-    // Load lookup data
-    setMoneyRequests(JSON.parse(localStorage.getItem('erp_money_requests') || '[]'));
-    setPurchases(JSON.parse(localStorage.getItem('erp_showroom_purchases') || '[]'));
-    setPartners(JSON.parse(localStorage.getItem('erp_showroom_partners') || '[]'));
-
     const handleClick = () => setContextMenu(null);
     window.addEventListener('click', handleClick);
-    window.addEventListener('focus', loadTransactions);
+    window.addEventListener('focus', loadData);
     return () => {
       window.removeEventListener('click', handleClick);
-      window.removeEventListener('focus', loadTransactions);
+      window.removeEventListener('focus', loadData);
     };
   }, []);
+
+  const loadData = async () => {
+    try {
+      const [txRes, ordRes, delRes, reqRes, purRes, supRes] = await Promise.all([
+        api.get('/transactions'),
+        api.get('/orders'),
+        api.get('/transactions/trash/all'),
+        api.get('/requests'),
+        api.get('/purchases'),
+        api.get('/suppliers'),
+        api.get('/cost-centers')
+      ]);
+      setTransactions(txRes.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+      setOrders(ordRes.data);
+      setDeletedTransactions(delRes.data.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
+      setMoneyRequests(reqRes.data);
+      setPurchases(purRes.data);
+      setPartners(supRes.data.map(s => ({ ...s, name: s.firm || s.name || s.companyName })));
+      setCostCenters(arguments[0][6].data); // Using the 7th promise result
+    } catch (err) {
+      console.error("Data loading error", err);
+    }
+  };
 
   // Lookup logic when purchaseId changes
   useEffect(() => {
@@ -103,7 +122,7 @@ const KassaDashboard = () => {
         });
         
         // Auto-fill
-        setPersonName(req.managerName);
+        setPersonName(req.userName || req.managerName || '');
         setAmount(req.amount.toString());
       } else {
         setFoundRequest(null);
@@ -113,31 +132,18 @@ const KassaDashboard = () => {
     }
   }, [purchaseId, category, tab]);
 
-  const loadTransactions = () => {
-    try {
-      const all = JSON.parse(localStorage.getItem('erp_transactions') || '[]');
-      setTransactions(all.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    } catch { setTransactions([]); }
-  };
+  // These individual loaders are now covered by loadData()
+  const loadTransactions = () => loadData();
+  const loadDeletedTransactions = () => loadData();
+  const loadOrders = () => loadData();
 
-  const loadDeletedTransactions = () => {
-    try {
-      const all = JSON.parse(localStorage.getItem('erp_trash_transactions') || '[]');
-      setDeletedTransactions(all.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
-    } catch { setDeletedTransactions([]); }
-  };
-
-  const loadOrders = () => {
-    try {
-      const all = JSON.parse(localStorage.getItem('erp_orders') || '[]');
-      setOrders(all);
-    } catch { setOrders([]); }
-  };
-
-  const getOrderBalance = (oId) => {
-    const order = orders.find(o => (o.productionId || o.uniqueId) === oId);
+  const getOrderBalance = (order) => {
     if (!order) return null;
-    const history = transactions.filter(t => t.orderId === oId);
+    const pId = order.productionId;
+    const uId = order.uniqueId;
+    const history = transactions.filter(t => 
+      (pId && t.orderId === pId) || (uId && t.orderId === uId)
+    );
     const paid = history.filter(t => t.type === 'income').reduce((sum, t) => sum + (t.amountUzs || 0), 0);
     const total = Number(order.amount || 0);
     return { total, paid, debt: total - paid };
@@ -146,7 +152,7 @@ const KassaDashboard = () => {
   const handleOrderSelect = (order) => {
     const pId = order.productionId || order.uniqueId;
     setOrderId(pId);
-    setSelectedOrderDetails(getOrderBalance(pId));
+    setSelectedOrderDetails(getOrderBalance(order));
     setShowSuggestions(false);
   };
 
@@ -162,23 +168,23 @@ const KassaDashboard = () => {
     setPaymentMethod('Naqd'); setCategory(''); setComment('');
     setPurchaseId(''); setFoundRequest(null);
     setSelectedOrderDetails(null); setSuggestionIndex(0); setCategoryIndex(0);
+    setSelectedCostCenter(null);
     orderIdRef.current?.focus();
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     if (e) e.preventDefault();
     if (!amount || isNaN(amount) || Number(amount) <= 0) { alert("Iltimos, to'g'ri summa kiriting."); return; }
     if (!category) { alert("Iltimos, yo'nalishni tanlang."); return; }
     if (currency === 'USD' && (!usdRate || isNaN(usdRate) || Number(usdRate) <= 0)) { alert("Kursni kiriting."); return; }
 
-    const numericAmount = Number(amount);
+    const numericAmount = Number(amount.toString().replace(/\s/g, ''));
     const numericRate = Number(usdRate);
     const amountUzs = currency === 'USD' ? numericAmount * numericRate : numericAmount;
 
     if (currency === 'USD') localStorage.setItem('erp_last_usd_rate', numericRate.toString());
 
     const newTx = {
-      id: Date.now().toString(),
       type: tab,
       orderId: orderId.trim(),
       purchaseId: purchaseId.trim(),
@@ -189,42 +195,48 @@ const KassaDashboard = () => {
       personName: personName.trim() || 'Noma\'lum',
       paymentMethod: paymentMethod,
       category: category,
+      costCenterId: selectedCostCenter?._id || null,
+      financialCategory: selectedCostCenter?.category || null,
       comment: comment.trim(),
       date: new Date().toISOString()
     };
 
-    const updated = [newTx, ...transactions];
-    localStorage.setItem('erp_transactions', JSON.stringify(updated));
-    setTransactions(updated);
-
-    // Update Money Requests if linked to a purchase
-    if (tab === 'expense' && category === 'Maxsulot uchun' && purchaseId.trim()) {
-      const allReqs = JSON.parse(localStorage.getItem('erp_money_requests') || '[]');
-      const updatedReqs = allReqs.map(r => {
-        if (r.purchaseId === purchaseId.trim() && r.status === 'pending') {
-          const isFullPayment = amountUzs >= r.amount;
-          if (isFullPayment) {
-            return { 
-              ...r, 
-              status: 'approved', 
-              paidTotal: (Number(r.paidTotal) || 0) + amountUzs,
-              approvedAt: new Date().toISOString() 
-            };
-          } else {
-            return { 
-              ...r, 
-              amount: r.amount - amountUzs, 
-              paidTotal: (Number(r.paidTotal) || 0) + amountUzs 
-            };
+    try {
+      await api.post('/transactions', newTx);
+      loadTransactions();
+      resetFormFields();
+      setIsModalOpen(false);
+      
+      // Update local storage for money requests if needed (legacy logic)
+      if (tab === 'expense' && category === 'Maxsulot uchun' && purchaseId.trim()) {
+        const allReqs = JSON.parse(localStorage.getItem('erp_money_requests') || '[]');
+        const updatedReqs = allReqs.map(r => {
+          if (r.purchaseId === purchaseId.trim() && r.status === 'pending') {
+            const isFullPayment = amountUzs >= r.amount;
+            if (isFullPayment) {
+              return { 
+                ...r, 
+                status: 'approved', 
+                paidTotal: (Number(r.paidTotal) || 0) + amountUzs,
+                approvedAt: new Date().toISOString() 
+              };
+            } else {
+              return { 
+                ...r, 
+                amount: r.amount - amountUzs, 
+                paidTotal: (Number(r.paidTotal) || 0) + amountUzs 
+              };
+            }
           }
-        }
-        return r;
-      });
-      localStorage.setItem('erp_money_requests', JSON.stringify(updatedReqs));
-      setMoneyRequests(updatedReqs);
+          return r;
+        });
+        localStorage.setItem('erp_money_requests', JSON.stringify(updatedReqs));
+        setMoneyRequests(updatedReqs);
+      }
+    } catch (err) {
+      console.error("Saqlashda xato:", err);
+      alert("Xatolik yuz berdi: " + (err.response?.data?.message || err.message));
     }
-
-    resetFormFields();
   };
 
   // Context Menu Handlers
@@ -232,10 +244,10 @@ const KassaDashboard = () => {
     const txDate = new Date(tx.date).toDateString();
     const today = new Date().toDateString();
     
-    if (txDate !== today) return; // Only allow deletion of today's transactions
+    // Allowed for all transactions now as per user request
 
     e.preventDefault();
-    setContextMenu({ x: e.pageX, y: e.pageY, txId: tx.id });
+    setContextMenu({ x: e.pageX, y: e.pageY, txId: tx._id || tx.id });
   };
 
   const startDelete = () => {
@@ -245,48 +257,33 @@ const KassaDashboard = () => {
     setContextMenu(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteReason.trim()) { alert("Sababni yozishingiz shart."); return; }
 
-    const txToDelete = transactions.find(t => t.id === selectedTxId);
-    if (!txToDelete) return;
-
-    // 1. Remove from active
-    const newActive = transactions.filter(t => t.id !== selectedTxId);
-    localStorage.setItem('erp_transactions', JSON.stringify(newActive));
-    setTransactions(newActive);
-
-    // 2. Add to trash
-    const deletedTx = {
-      ...txToDelete,
-      deletedAt: new Date().toISOString(),
-      deleteReason: deleteReason.trim(),
-      deletedBy: 'Kassir'
-    };
-    const newTrash = [deletedTx, ...deletedTransactions];
-    localStorage.setItem('erp_trash_transactions', JSON.stringify(newTrash));
-    setDeletedTransactions(newTrash);
-
-    setIsDeleteModalOpen(false);
-    setSelectedTxId(null);
+    try {
+      await api.delete(`/transactions/${selectedTxId}`, { data: { reason: deleteReason.trim() } });
+      alert("Tranzaksiya o'chirildi");
+      setIsDeleteModalOpen(false);
+      setSelectedTxId(null);
+      loadTransactions();
+      loadDeletedTransactions();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("O'chirishda xatolik: " + (err.response?.data?.msg || err.message));
+    }
   };
 
-  const handleRestore = (txId) => {
-    const txToRestore = deletedTransactions.find(t => t.id === txId);
-    if (!txToRestore) return;
-
-    // 1. Remove from trash
-    const newTrash = deletedTransactions.filter(t => t.id !== txId);
-    localStorage.setItem('erp_trash_transactions', JSON.stringify(newTrash));
-    setDeletedTransactions(newTrash);
-
-    // 2. Add back to active
-    const { deletedAt, deleteReason, deletedBy, ...originalData } = txToRestore;
-    const newActive = [originalData, ...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-    localStorage.setItem('erp_transactions', JSON.stringify(newActive));
-    setTransactions(newActive);
-    
-    if (newTrash.length === 0) setShowTrashModal(false);
+  const handleRestore = async (txId) => {
+    try {
+      await api.post(`/transactions/${txId}/restore`);
+      alert("Tranzaksiya tiklandi");
+      loadTransactions();
+      loadDeletedTransactions();
+      if (deletedTransactions.length <= 1) setShowTrashModal(false);
+    } catch (err) {
+      console.error("Restore error:", err);
+      alert("Tiklashda xatolik: " + (err.response?.data?.msg || err.message));
+    }
   };
 
   // Keyboard Navigation logic
@@ -304,8 +301,14 @@ const KassaDashboard = () => {
       else if (e.key === 'ArrowUp') { e.preventDefault(); setCategoryIndex(prev => (prev > 0 ? prev - 1 : prev)); }
       else if (e.key === 'Enter' && categoryIndex >= 0) {
         e.preventDefault(); 
-        const selectedCat = filteredCategoriesForSuggest[categoryIndex];
-        setCategory(selectedCat); 
+        const selected = filteredCategoriesForSuggest[categoryIndex];
+        if (typeof selected === 'object') {
+          setCategory(selected.name);
+          setSelectedCostCenter(selected);
+        } else {
+          setCategory(selected);
+          setSelectedCostCenter(null);
+        }
         setShowCategorySuggestions(false); 
         setTimeout(() => paymentAreaRef.current?.focus(), 50);
       }
@@ -347,8 +350,15 @@ const KassaDashboard = () => {
   const currentBalance = totalIncome - totalExpense;
   const cancelledExpenses = getCancelledOrderExpenses();
 
-  const filteredOrdersForSuggest = orders.filter(o => (o.productionId || '').toLowerCase().includes(orderId.toLowerCase()));
-  const filteredCategoriesForSuggest = (tab === 'income' ? incomeCategories : expenseCategories).filter(c => c.toLowerCase().includes(category.toLowerCase()));
+  const filteredOrdersForSuggest = orders.filter(o => {
+    const searchStr = (o.productionId || o.uniqueId || '').toLowerCase();
+    const matchesSearch = searchStr.includes(orderId.toLowerCase());
+    const ACTIVE_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi', 'kontrol_zamer', 'chizma_chizish', 'chizma_tasdiqlash'];
+    return matchesSearch && ACTIVE_STAGES.includes(o.status);
+  });
+  const filteredCategoriesForSuggest = tab === 'income' 
+    ? incomeCategories.filter(c => c.toLowerCase().includes(category.toLowerCase()))
+    : costCenters.filter(c => c.name.toLowerCase().includes(category.toLowerCase()));
 
   const recentTxs = transactions.slice(0, 5);
 
@@ -399,7 +409,7 @@ const KassaDashboard = () => {
             <tbody>
               {recentTxs.length === 0 ? (<tr><td colSpan="6" style={{ padding: '60px', textAlign: 'center' }}>Ma'lumotlar yo'q.</td></tr>) : (
                 recentTxs.map(t => (
-                  <tr key={t.id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'context-menu' }}>
+                  <tr key={t._id || t.id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'context-menu' }}>
                     <td style={{ padding: '16px', fontSize: '13px' }}>{new Date(t.date).toLocaleDateString()}</td>
                     <td style={{ padding: '16px' }}><span style={{ fontSize: '10px', fontWeight: '800', padding: '4px 8px', borderRadius: '4px', background: t.type === 'income' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? 'KIRIM' : 'CHIQIM'}</span></td>
                     <td style={{ padding: '16px' }}><div style={{ fontWeight: '700', fontSize: '13px' }}>{t.personName}</div></td>
@@ -454,7 +464,7 @@ const KassaDashboard = () => {
                 <tbody>
                   {deletedTransactions.length === 0 ? (<tr><td colSpan="5" style={{ padding: '80px', textAlign: 'center' }}>Karzina bo'sh.</td></tr>) : (
                     deletedTransactions.map(t => (
-                      <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <tr key={t._id || t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '14px', fontSize: '11px' }}>{new Date(t.deletedAt).toLocaleString()}</td>
                         <td style={{ padding: '14px' }}>
                           <div style={{ fontWeight: '700', fontSize: '13px' }}>{t.category}</div>
@@ -465,7 +475,7 @@ const KassaDashboard = () => {
                           <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{t.type?.toUpperCase()}</div>
                         </td>
                         <td style={{ padding: '14px' }}><div style={{ fontSize: '12px', background: 'rgba(239,68,68,0.05)', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>{t.deleteReason}</div></td>
-                        <td style={{ padding: '14px' }}><button onClick={() => handleRestore(t.id)} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', cursor: 'pointer' }}><RotateCcw size={14} /> Tiklash</button></td>
+                        <td style={{ padding: '14px' }}><button onClick={() => handleRestore(t._id || t.id)} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', cursor: 'pointer' }}><RotateCcw size={14} /> Tiklash</button></td>
                       </tr>
                     ))
                   )}
@@ -503,7 +513,7 @@ const KassaDashboard = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}><div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '4px' }}><button type="button" onClick={() => setTab('income')} style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: tab === 'income' ? 'var(--accent-gold)' : 'transparent', color: tab === 'income' ? '#000' : '#fff' }}>KIRIM</button><button type="button" onClick={() => setTab('expense')} style={{ padding: '8px 20px', borderRadius: '10px', border: 'none', background: tab === 'expense' ? '#ef4444' : 'transparent', color: '#fff' }}>CHIQIM</button></div><button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff' }}><X size={24} /></button></div>
             <form onSubmit={handleSave}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                <div style={{ position: 'relative' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Buyurtma ID</label><input ref={orderIdRef} type="text" value={orderId} onChange={e => {setOrderId(e.target.value); setShowSuggestions(true); setSuggestionIndex(0);}} onFocus={() => setShowSuggestions(true)} onKeyDown={handleOrderIdKeyDown} placeholder="ORD-XXX" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '15px' }} />{showSuggestions && orderId.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 100, maxHeight: '200px', overflowY: 'auto', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>{filteredOrdersForSuggest.map((o, idx) => (<div key={o.id} onClick={() => handleOrderSelect(o)} style={{ padding: '14px 18px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', background: suggestionIndex === idx ? 'rgba(212,175,55,0.2)' : 'transparent' }} onMouseEnter={() => setSuggestionIndex(idx)}><div style={{ fontWeight: '800', fontSize: '13px', color: suggestionIndex === idx ? 'var(--accent-gold)' : '#fff' }}>{o.productionId}</div><div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o.selectedCustomer?.firstName}</div></div>))}</div>)}{selectedOrderDetails && (<div style={{ marginTop: '12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px' }}><div style={{ color: 'var(--text-secondary)' }}>Qarzdorlik: <span style={{ color: '#ef4444', fontWeight: '800' }}>{selectedOrderDetails.debt.toLocaleString()} so'm</span></div></div>)}</div>
+                <div style={{ position: 'relative' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Buyurtma ID</label><input ref={orderIdRef} type="text" value={orderId} onChange={e => {setOrderId(e.target.value); setShowSuggestions(true); setSuggestionIndex(0);}} onFocus={() => setShowSuggestions(true)} onKeyDown={handleOrderIdKeyDown} placeholder="ORD-XXX" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '15px' }} />{showSuggestions && orderId.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 100, maxHeight: '200px', overflowY: 'auto', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>{filteredOrdersForSuggest.map((o, idx) => (<div key={o._id || o.id} onClick={() => handleOrderSelect(o)} style={{ padding: '14px 18px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', background: suggestionIndex === idx ? 'rgba(212,175,55,0.2)' : 'transparent' }} onMouseEnter={() => setSuggestionIndex(idx)}><div style={{ fontWeight: '800', fontSize: '13px', color: suggestionIndex === idx ? 'var(--accent-gold)' : '#fff' }}>{o.productionId || o.uniqueId}</div><div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}</div></div>))}</div>)}{selectedOrderDetails && (<div style={{ marginTop: '12px', fontSize: '12px', background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px' }}><div style={{ color: 'var(--text-secondary)' }}>Qarzdorlik: <span style={{ color: '#ef4444', fontWeight: '800' }}>{selectedOrderDetails.debt.toLocaleString()} so'm</span></div></div>)}</div>
                 <div><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Kim olgan/bergan *</label><input type="text" value={personName} onChange={e => setPersonName(e.target.value)} required placeholder="F.I.SH" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '15px' }} /></div>
               </div>
               
@@ -523,11 +533,16 @@ const KassaDashboard = () => {
               )}
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px', alignItems: 'end' }}>
-                 <div><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Summa *</label><input type="number" value={amount} onChange={e => setAmount(e.target.value)} required placeholder="0.00" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '22px', fontWeight: '900' }} /></div>
+                 <div><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Summa *</label><input type="text" value={amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} onChange={e => setAmount(e.target.value.replace(/\s/g, ''))} required placeholder="0.00" style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '22px', fontWeight: '900' }} /></div>
                  <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', padding: '6px', height: '60px' }}><button type="button" onClick={() => setCurrency('UZS')} style={{ flex: 1, border: 'none', borderRadius: '10px', background: currency === 'UZS' ? '#3b82f6' : 'transparent', color: '#fff', fontWeight: '700', fontSize: '15px' }}>UZS</button><button type="button" onClick={() => setCurrency('USD')} style={{ flex: 1, border: 'none', borderRadius: '10px', background: currency === 'USD' ? '#10b981' : 'transparent', color: '#fff', fontWeight: '700', fontSize: '15px' }}>USD $</button></div>
               </div>
               {currency === 'USD' && (<div style={{ background: 'rgba(16,185,129,0.05)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.2)', marginBottom: '20px' }}><label style={{ fontSize: '11px', color: '#10b981', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Kurs ($1 = ? so'm) *</label><input type="number" value={usdRate} onChange={e => setUsdRate(e.target.value)} style={{ width: '100%', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(16,185,129,0.3)', padding: '10px', borderRadius: '8px', color: '#fff', fontWeight: '700' }} /></div>)}
-              <div style={{ marginBottom: '24px', position: 'relative' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Yo'nalish *</label><div style={{ position: 'relative' }}><input ref={categoryRef} type="text" value={category} onChange={e => {setCategory(e.target.value); setShowCategorySuggestions(true); setCategoryIndex(0);}} onFocus={() => {setShowCategorySuggestions(true); setCategoryIndex(0);}} onKeyDown={handleCategoryKeyDown} placeholder="Qidirish..." style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '15px' }} />{showCategorySuggestions && (<div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 110, maxHeight: '200px', overflowY: 'auto', marginBottom: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>{filteredCategoriesForSuggest.map((c, idx) => (<div key={c} onClick={() => {setCategory(c); setShowCategorySuggestions(false); setTimeout(()=>paymentAreaRef.current?.focus(), 50);}} style={{ padding: '14px 18px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', background: categoryIndex === idx ? 'rgba(212,175,55,0.2)' : 'transparent' }} onMouseEnter={() => setCategoryIndex(idx)}>{c}</div>))}</div>)}</div></div>
+              <div style={{ marginBottom: '24px', position: 'relative' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Yo'nalish *</label><div style={{ position: 'relative' }}><input ref={categoryRef} type="text" value={category} onChange={e => {setCategory(e.target.value); setShowCategorySuggestions(true); setCategoryIndex(0);}} onFocus={() => {setShowCategorySuggestions(true); setCategoryIndex(0);}} onKeyDown={handleCategoryKeyDown} placeholder="Qidirish..." style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', fontSize: '15px' }} />{showCategorySuggestions && (<div style={{ position: 'absolute', bottom: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 110, maxHeight: '200px', overflowY: 'auto', marginBottom: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>{filteredCategoriesForSuggest.map((c, idx) => (<div key={typeof c === 'string' ? c : c._id} onClick={() => {if (typeof c === 'object') { setCategory(c.name); setSelectedCostCenter(c); } else { setCategory(c); setSelectedCostCenter(null); } setShowCategorySuggestions(false); setTimeout(()=>paymentAreaRef.current?.focus(), 50);}} style={{ padding: '14px 18px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', fontSize: '14px', background: categoryIndex === idx ? 'rgba(212,175,55,0.2)' : 'transparent' }} onMouseEnter={() => setCategoryIndex(idx)}>{typeof c === 'string' ? c : (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>{c.name}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--accent-gold)', textTransform: 'uppercase' }}>{c.category}</span>
+                </div>
+              )}</div>))}</div>)}</div></div>
               <div style={{ marginBottom: '32px' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>To'lov Turi</label><div ref={paymentAreaRef} tabIndex="0" onKeyDown={handlePaymentKeyDown} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', outline: 'none' }}>{paymentMethods.map(m => (<div key={m.id} style={{ padding: '14px 8px', borderRadius: '14px', border: '1px solid var(--border-color)', background: paymentMethod === m.id ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: paymentMethod === m.id ? '#000' : '#fff', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', cursor: 'pointer', transition: '0.2s' }} onClick={() => setPaymentMethod(m.id)}>{m.icon} <span style={{ fontSize: '11px', fontWeight: '700' }}>{m.label}</span></div>))}</div></div>
               <div style={{ marginBottom: '32px' }}><label style={{ fontSize: '13px', color: 'var(--text-secondary)', display: 'block', marginBottom: '8px', fontWeight: '700' }}>Izoh</label><textarea ref={commentRef} value={comment} onChange={e => setComment(e.target.value)} onKeyDown={handleCommentKeyDown} placeholder="Batafsil..." style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', padding: '16px', borderRadius: '14px', color: '#fff', minHeight: '100px', fontSize: '15px' }} /></div>
               <div style={{ display: 'flex', gap: '20px' }}><button type="button" onClick={() => setIsModalOpen(false)} style={{ flex: 1, padding: '18px', borderRadius: '14px', border: '1px solid var(--border-color)', background: 'transparent', color: '#fff', fontSize: '16px', fontWeight: '600' }}>Bekor qilish</button><button ref={saveBtnRef} type="submit" style={{ flex: 2, padding: '18px', borderRadius: '14px', border: 'none', background: tab === 'income' ? 'var(--accent-gold)' : '#ef4444', color: tab === 'income' ? '#000' : '#fff', fontWeight: '900', fontSize: '18px' }}>Saqlash (Enter)</button></div>

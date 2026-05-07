@@ -1,12 +1,15 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 
 // Pages (Will create these next)
 import Login from './pages/Auth/Login';
 import SuperDashboard from './pages/SuperAdmin/Dashboard';
 import ShowroomDashboard from './pages/ShowroomAdmin/Dashboard';
 import ShowroomsList from './pages/SuperAdmin/Showrooms';
+import Departments from './pages/SuperAdmin/Departments';
+import CostCenters from './pages/SuperAdmin/CostCenters';
 import Staff from './pages/ShowroomAdmin/Staff';
 import SalesOrders from './pages/SalesManager/Orders';
 import ShowroomOrders from './pages/ShowroomAdmin/Orders';
@@ -18,13 +21,15 @@ import ShowroomProposals from './pages/ShowroomAdmin/Proposals';
 import SalesProfile from './pages/SalesManager/Profile';
 import SuperOrders from './pages/SuperAdmin/Orders';
 import SuperCustomerBase from './pages/SuperAdmin/CustomerBase';
+import Fabrika from './pages/SuperAdmin/Fabrika';
 import SuperPartners from './pages/SuperAdmin/Partners';
 import Proposals from './pages/SalesManager/Proposals';
 import SalesTrash from './pages/SalesManager/Trash';
 import SalesFinance from './pages/SalesManager/Finance';
-import Migration from './pages/SuperAdmin/Migration';
 import CompanySettings from './pages/SuperAdmin/CompanySettings';
+import SuperSettings from './pages/SuperAdmin/Settings';
 import Suppliers from './pages/Shared/Suppliers';
+import Tasks from './pages/Shared/Tasks';
 
 // Project Manager
 import ProjectOrders from './pages/ProjectManager/Orders';
@@ -38,6 +43,7 @@ import Finance from './pages/ShowroomAdmin/Finance';
 import KassaDashboard from './pages/Kassa/Dashboard';
 import KassaTransactions from './pages/Kassa/Transactions';
 import KassaRequests from './pages/Kassa/MoneyRequests';
+import FabrikaOrders from './pages/Fabrika/Orders';
 
 import PlaceholderPage from './components/PlaceholderPage';
 
@@ -72,6 +78,21 @@ const AppContent = () => {
           <MainLayout><ShowroomsList /></MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/super-admin/departments" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><Departments /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/super-admin/cost-centers" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><CostCenters /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/super-admin/fabrika" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><Fabrika /></MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/super-admin/customers" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><SuperCustomerBase /></MainLayout>
@@ -82,29 +103,21 @@ const AppContent = () => {
           <MainLayout><SuperOrders /></MainLayout>
         </ProtectedRoute>
       } />
-      <Route path="/super-admin/partners" element={
-        <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><SuperPartners /></MainLayout>
-        </ProtectedRoute>
-      } />
+      <Route path="/super-admin/partners" element={<Navigate to="/super-admin/settings" replace />} />
+      <Route path="/super-admin/company-settings" element={<Navigate to="/super-admin/settings" replace />} />
       <Route path="/super-admin/suppliers" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><Suppliers /></MainLayout>
         </ProtectedRoute>
       } />
-      <Route path="/super-admin/migration" element={
-        <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><Migration /></MainLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/super-admin/company-settings" element={
-        <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><CompanySettings /></MainLayout>
-        </ProtectedRoute>
-      } />
       <Route path="/super-admin/settings" element={
         <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><PlaceholderPage title="Sozlamalar" description="Global tizim sozlamalari." /></MainLayout>
+          <MainLayout><SuperSettings /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/super-admin/tasks" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><Tasks /></MainLayout>
         </ProtectedRoute>
       } />
 
@@ -155,6 +168,11 @@ const AppContent = () => {
           <MainLayout><ShowroomTrash /></MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/showroom-admin/tasks" element={
+        <ProtectedRoute allowedRoles={['showroom']}>
+          <MainLayout><Tasks /></MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/showroom-admin/settings" element={
         <ProtectedRoute allowedRoles={['showroom']}>
           <MainLayout><PlaceholderPage title="Sozlamalar" description="Filial sozlamalari." /></MainLayout>
@@ -170,6 +188,11 @@ const AppContent = () => {
       <Route path="/sotuv-manager/archive" element={
         <ProtectedRoute allowedRoles={['sotuv_manager']}>
           <MainLayout><SalesOrders /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/sotuv-manager/tasks" element={
+        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+          <MainLayout><Tasks /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/proposals" element={
@@ -207,6 +230,11 @@ const AppContent = () => {
       <Route path="/proekt-manager/archive" element={
         <ProtectedRoute allowedRoles={['proekt_manager']}>
           <MainLayout><ProjectOrders /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/proekt-manager/tasks" element={
+        <ProtectedRoute allowedRoles={['proekt_manager']}>
+          <MainLayout><Tasks /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/proekt-manager/proposals" element={
@@ -257,25 +285,83 @@ const AppContent = () => {
         </ProtectedRoute>
       } />
 
+      {/* Fabrika Routes */}
+      <Route path="/fabrika" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Fabrika Dashboard" description="Ishlab chiqarish umumiy ko'rinishi." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/orders" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><FabrikaOrders /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/finance" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Moliya" description="Fabrika moliyaviy oqimi." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/staff" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Xodimlar" description="Fabrika ishchi-xodimlari." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/inventory" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Sklad" description="Xom-ashyo zaxirasi." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/purchases" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Xarid bo'limi" description="Fabrika uchun xaridlar." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/warehouse" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Ombor" description="Tayyor mahsulotlar ombori." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/logistics" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Logistika" description="Yetkazib berish va o'rnatish." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/settings" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Sozlamalar" description="Fabrika sozlamalari." /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/trash" element={
+        <ProtectedRoute allowedRoles={['fabrika']}>
+          <MainLayout><PlaceholderPage title="Karzina" description="O'chirilgan ma'lumotlar." /></MainLayout>
+        </ProtectedRoute>
+      } />
+
       {/* Root handling */}
       <Route path="/" element={
         user ? (
           user.role === 'super' ? <Navigate to="/super-admin" /> : 
           user.role === 'showroom' ? <Navigate to="/showroom-admin" /> : 
           user.role === 'kassa' ? <Navigate to="/kassa/dashboard" /> :
+          user.role === 'fabrika' ? <Navigate to="/fabrika" /> :
           <Navigate to={`/${user.role.replace('_', '-')}/orders`} />
         ) : <Navigate to="/login" />
       } />
+      <Route path="*" element={<PlaceholderPage title="404" description="Sahifa topilmadi." />} />
     </Routes>
   );
 };
 
+
+
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <NotificationProvider>
+        <Router>
+          <AppContent />
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

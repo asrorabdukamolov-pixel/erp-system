@@ -14,6 +14,43 @@ const Purchase = require('../models/Purchase');
 const MoneyRequest = require('../models/MoneyRequest');
 const Settings = require('../models/Settings');
 
+const cleanData = (obj) => {
+    if (obj === null || obj === undefined) return null;
+    
+    // Handle Mongoose/MongoDB ObjectId
+    if (obj._bsontype === 'ObjectID' || (obj.constructor && obj.constructor.name === 'ObjectId')) {
+        return obj.toString();
+    }
+
+    if (Buffer.isBuffer(obj)) {
+        return obj.toString('base64');
+    }
+
+    if (Array.isArray(obj)) {
+        return obj.map(cleanData);
+    } 
+    
+    if (obj instanceof Date) {
+        return obj.toISOString();
+    }
+
+    if (typeof obj === 'object') {
+        // If it's a plain object but has a toJSON method (like Mongoose docs), use it
+        const plainObj = (typeof obj.toJSON === 'function') ? obj.toJSON() : obj;
+        
+        const newObj = {};
+        for (const key in plainObj) {
+            if (plainObj[key] === undefined) continue;
+            if (key.startsWith('$') || key === '__v') continue;
+
+            newObj[key] = cleanData(plainObj[key]);
+        }
+        return newObj;
+    }
+    
+    return obj;
+};
+
 const migrate = async () => {
     try {
         console.log("Connecting to MongoDB...");
@@ -44,10 +81,16 @@ const migrate = async () => {
                 delete doc._id;
                 delete doc.__v;
 
-                if (col.singleton) {
-                    await db.collection(col.name).doc('global').set(doc);
-                } else {
-                    await db.collection(col.name).doc(id).set(doc);
+                const cleanedDoc = cleanData(doc);
+
+                try {
+                    if (col.singleton) {
+                        await db.collection(col.name).doc('global').set(cleanedDoc);
+                    } else {
+                        await db.collection(col.name).doc(id).set(cleanedDoc);
+                    }
+                } catch (err) {
+                    console.error(`Failed to migrate doc ${id} in ${col.name}:`, err.message);
                 }
             }
             console.log(`Finished ${col.name}.`);
@@ -56,7 +99,7 @@ const migrate = async () => {
         console.log("Migration completed successfully!");
         process.exit(0);
     } catch (err) {
-        console.error("Migration failed:", err);
+        console.error("Migration fatal error:", err);
         process.exit(1);
     }
 };

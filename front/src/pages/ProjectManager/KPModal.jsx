@@ -195,10 +195,41 @@ const KPModal = ({ onClose, editData = null }) => {
     }
   };
 
-  // в”Ђв”Ђ PDF chop etish (Professional Design V3.2) в”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђв”Ђ
-  const handlePrint = () => {
+  // ── Rasmni base64 ga o'tkazish (CORS muammosini hal qilish uchun) ───────
+  const toBase64 = (url) => {
+    return new Promise((resolve) => {
+      if (!url || url.startsWith('data:')) { resolve(url || ''); return; }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) { resolve(url); }
+      };
+      img.onerror = () => resolve(url);
+      img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    });
+  };
+
+  // ── PDF chop etish (Professional Design V3.2) ───────────────────────────
+  const handlePrint = async () => {
     const activePartners = partnersList.filter(p => selectedPartners.includes(p._id));
     const basisText     = getBasisText();
+
+    // Barcha rasmlarni base64 ga konvertatsiya qilamiz (PDF da ko'rinishi uchun)
+    const logoUrl = companySettings.kpLogo || companySettings.companyLogo || '';
+    const logoBase64 = logoUrl ? await toBase64(logoUrl) : '';
+
+    const partnersWithBase64 = await Promise.all(
+      activePartners.map(async (p) => ({
+        ...p,
+        logoBase64: (p.logo && !p.logo.startsWith('<svg')) ? await toBase64(p.logo) : (p.logo || '')
+      }))
+    );
 
     const printContent = `<!DOCTYPE html>
 <html>
@@ -407,7 +438,7 @@ const KPModal = ({ onClose, editData = null }) => {
 <body>
   <div class="hdr">
     <div class="logo-container">
-      ${companySettings.kpLogo ? `<img src="${companySettings.kpLogo}" class="official-logo" />` : (companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>')}
+      ${logoBase64 ? `<img src="${logoBase64}" class="official-logo" />` : '<div></div>'}
     </div>
     <div class="tt-badge-side">
       <div class="tt-badge">Tijorat Taklifi</div>
@@ -428,7 +459,7 @@ const KPModal = ({ onClose, editData = null }) => {
     <div class="info-card">
       <div class="card-title">Taklif Tayyorladi</div>
       <div class="manager-box">
-        ${user?.photo ? `<img src="${user.photo}" class="manager-photo" />` : '<div class="manager-placeholder">рџ‘¤</div>'}
+        ${user?.photo ? `<img src="${user.photo}" class="manager-photo" />` : `<div class="manager-placeholder"><svg viewBox="0 0 24 24" width="22" height="22" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>`}
         <div class="person-details">
           <div class="person-name" style="font-size:16px; margin-bottom:2px;">${user?.name || 'Menejer'}</div>
           <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">${companySettings.companyName}</div>
@@ -439,12 +470,14 @@ const KPModal = ({ onClose, editData = null }) => {
   </div>
 
   <div class="partners-section">
-    ${activePartners.length > 0 ? `
+    ${partnersWithBase64.length > 0 ? `
     <div class="partners-label">Loyihadagi Hamkorlarimiz</div>
     <div class="partners-row">
-      ${activePartners.map(p => `
+      ${partnersWithBase64.map(p => `
         <div class="partner-logo-item">
-          ${p.logo.startsWith('<svg') ? p.logo.replace('<svg', '<svg style="height:22px;width:auto;"') : `<img src="${p.logo}" style="height:22px;object-fit:contain;" />`}
+          ${p.logoBase64.startsWith('<svg') 
+            ? p.logoBase64.replace('<svg', '<svg style="height:22px;width:auto;"') 
+            : (p.logoBase64 ? `<img src="${p.logoBase64}" style="height:22px;object-fit:contain;" />` : `<span style="font-size:11px;font-weight:700;">${p.name || ''}</span>`)}
         </div>
       `).join('')}
     </div>` : ''}
@@ -466,7 +499,7 @@ const KPModal = ({ onClose, editData = null }) => {
         <tr>
           <td>${idx + 1}</td>
           <td>
-            ${item.image ? `<img src="${item.image}" class="item-img" />` : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;">рџ›‹пёЏ</div>'}
+            ${item.image ? `<img src="${item.image}" class="item-img" />` : `<div class="item-img" style="display:flex;align-items:center;justify-content:center;background:#f9fafb;opacity:0.6;"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#999" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></div>`}
           </td>
           <td class="item-info">
             <strong>${item.name}</strong>

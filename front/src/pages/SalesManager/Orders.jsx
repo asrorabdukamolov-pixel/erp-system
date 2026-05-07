@@ -59,6 +59,16 @@ const SOURCE_OPTIONS = [
   { value: 'agent', label: 'Agentlar orqali' },
 ];
 
+const getNowDateTime = () => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
 // --- Formatters ---
 const formatAmount = (val) => {
   if (val === undefined || val === null || val === "" || val === 0) return "";
@@ -112,11 +122,37 @@ const IconInput = ({ icon: Icon, ...props }) => (
 // --- FileManagerModal ---
 const FileManagerModal = ({ type, files, onClose, onRemove, onAdd, readOnly }) => {
   const fileInputRef = useRef(null);
-  const handleFileChange = (e) => {
-    const newFiles = Array.from(e.target.files).map(f => ({
-      name: f.name, size: f.size, type: f.type, url: URL.createObjectURL(f), uploadedAt: new Date().toISOString()
-    }));
-    onAdd(newFiles);
+  const handleFileChange = async (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (selectedFiles.length === 0) return;
+    
+    // Show loading state or feedback if needed
+    const uploadedFiles = [];
+    for (const f of selectedFiles) {
+      try {
+        const formData = new FormData();
+        formData.append('file', f);
+        const res = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        uploadedFiles.push({
+          name: res.data.name,
+          size: f.size,
+          type: f.type,
+          url: res.data.url,
+          uploadedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error("File upload error", err);
+        alert(`"${f.name}" faylini yuklashda xatolik yuz berdi.`);
+      }
+    }
+    
+    if (uploadedFiles.length > 0) {
+      onAdd(uploadedFiles);
+    }
+    // Reset input
+    e.target.value = '';
   };
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(15px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 4000 }}>
@@ -280,12 +316,14 @@ const Orders = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [allOrders, setAllOrders] = useState(() => JSON.parse(localStorage.getItem('erp_orders') || '[]'));
+  const [tasks, setTasks] = useState([]);
+  const [newTaskInput, setNewTaskInput] = useState({ title: '', dueDate: getNowDateTime() });
   const [customers, setCustomers] = useState(() => JSON.parse(localStorage.getItem('erp_customers') || '[]'));
   const [currentView, setCurrentView] = useState(() => {
     if (location.pathname.includes('archive')) return 'archive';
     return 'kanban';
   });
-
+  const [modalTab, setModalTab] = useState('timeline');
   const [dateFilter, setDateFilter] = useState('all'); // 'all', 'day', 'month', 'year'
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
@@ -306,13 +344,15 @@ const Orders = () => {
   const [fileManager, setFileManager] = useState({ isOpen: false, type: 'kp', files: [], orderId: null });
   const [editingId, setEditingId] = useState(null);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
 
   const emptyOrder = { 
-    customerSearch: '', selectedCustomer: null, amount: '', currency: 'UZS', exchangeRate: localStorage.getItem('erp_last_rate') || '', 
+    customerSearch: '', selectedCustomer: null, kpAmount: '', discount: '0', amount: '', currency: 'UZS', exchangeRate: localStorage.getItem('erp_last_rate') || '', 
     propertyType: 'kvartira', orderDate: new Date().toISOString().split('T')[0], deliveryDate: '', durationDays: '',
     kpFiles: [], designFiles: [], checklist: { design3d: false, construction: false, color: false, handle: false, materials: false }, 
     status: 'yangi', description: '', timeline: [],
-    proposalId: null, proposalNumber: ''
+    proposalId: null, proposalNumber: '',
+    productionAmount: ''
   };
 
   const [newOrder, setNewOrder] = useState(emptyOrder);
@@ -322,6 +362,8 @@ const Orders = () => {
   const [proposalSearch, setProposalSearch] = useState('');
   const [proposalSuggestions, setProposalSuggestions] = useState([]);
   const [commentText, setCommentText] = useState('');
+  const [inputType, setInputType] = useState('comment'); // 'comment' or 'task'
+  const [taskDueDate, setTaskDueDate] = useState(getNowDateTime());
   
   const timelineEndRef = useRef(null);
 
@@ -357,6 +399,55 @@ const Orders = () => {
   }, []);
 
   useEffect(() => {
+    if (editingId) {
+      loadOrderTasks(editingId);
+    } else {
+      setTasks([]);
+    }
+  }, [editingId]);
+
+  const loadOrderTasks = async (orderId) => {
+    try {
+      const res = await api.get('/tasks');
+      setTasks(res.data.filter(t => t.orderId === orderId));
+    } catch (err) {
+      console.error("Order tasks load error", err);
+    }
+  };
+
+  const handleAddTask = async () => {
+    if (!newTaskInput.title.trim() || !editingId) return;
+    try {
+      const order = allOrders.find(o => o._id === editingId);
+      const payload = {
+        title: newTaskInput.title,
+        dueDate: newTaskInput.dueDate,
+        status: 'jarayonda',
+        assigneeId: user.id || user._id,
+        assigneeName: user.name,
+        orderId: editingId,
+        orderUniqueId: order?.uniqueId,
+        priority: 'orta'
+      };
+      const res = await api.post('/tasks', payload);
+      setTasks([...tasks, res.data]);
+      setNewTaskInput({ ...newTaskInput, title: '' });
+    } catch (err) {
+      alert("Vazifa qo'shishda xatolik!");
+    }
+  };
+
+  const toggleTaskStatus = async (task) => {
+    try {
+      const newStatus = task.status === 'bajarildi' ? 'yangi' : 'bajarildi';
+      const res = await api.put(`/tasks/${task._id}`, { status: newStatus });
+      setTasks(tasks.map(t => t._id === task._id ? res.data : t));
+    } catch (err) {
+      alert("Xatolik!");
+    }
+  };
+
+  useEffect(() => {
     if (newOrder.orderDate && newOrder.durationDays) {
       const start = new Date(newOrder.orderDate); start.setDate(start.getDate() + parseInt(newOrder.durationDays));
       const calculated = start.toISOString().split('T')[0];
@@ -365,14 +456,24 @@ const Orders = () => {
   }, [newOrder.orderDate, newOrder.durationDays]);
 
   useEffect(() => {
-    const term = newOrder.customerSearch.toLowerCase();
+    const term = newOrder.customerSearch.toLowerCase().trim();
+    if (term.length < 1) {
+      setCustomerSuggestions([]);
+      return;
+    }
+
+    if (newOrder.selectedCustomer && `${newOrder.selectedCustomer.firstName} ${newOrder.selectedCustomer.lastName}`.toLowerCase() === term) {
+      setCustomerSuggestions([]);
+      return;
+    }
+
     const filtered = customers.filter(c => 
       `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) || 
-      c.phone.includes(term)
+      c.phone.replace(/\D/g, '').includes(term.replace(/\D/g, ''))
     );
     setCustomerSuggestions(filtered);
     setSelectedIndex(0);
-  }, [newOrder.customerSearch, customers]);
+  }, [newOrder.customerSearch, customers, newOrder.selectedCustomer]);
 
   const handleSelectCustomer = (c) => {
     setNewOrder({ ...newOrder, selectedCustomer: c, customerSearch: `${c.firstName} ${c.lastName}` });
@@ -380,23 +481,35 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    if (proposalSearch.length > 1) {
-      const filtered = proposals.filter(p => 
-        p.kpNumber.toLowerCase().includes(proposalSearch.toLowerCase()) ||
-        `${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(proposalSearch.toLowerCase())
-      );
-      setProposalSuggestions(filtered);
-    } else {
+    const term = proposalSearch.toLowerCase().trim();
+    if (term.length < 1) {
       setProposalSuggestions([]);
+      return;
     }
-  }, [proposalSearch, proposals]);
+
+    if (newOrder.proposalNumber && newOrder.proposalNumber.toLowerCase() === term) {
+      setProposalSuggestions([]);
+      return;
+    }
+
+    const filtered = proposals.filter(p => 
+      p.kpNumber.toLowerCase().includes(term) ||
+      `${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(term)
+    );
+    setProposalSuggestions(filtered);
+  }, [proposalSearch, proposals, newOrder.proposalNumber]);
 
   const handleSelectProposal = (p) => {
+    const kpSum = formatAmount(p.grandTotal || 0);
     setNewOrder({ 
       ...newOrder, 
       proposalId: p._id, 
       proposalNumber: p.kpNumber,
-      amount: formatAmount(p.grandTotal || 0) // Pre-fill amount if KP selected
+      kpAmount: kpSum,
+      amount: kpSum,
+      discount: '0',
+      kpFiles: p.kpFiles || [],
+      designFiles: p.designFiles || []
     });
     setProposalSearch(p.kpNumber);
     setProposalSuggestions([]);
@@ -410,7 +523,8 @@ const Orders = () => {
   };
 
   const filteredOrders = allOrders.filter(o => {
-    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === user.id);
+    const currentUserId = user?.id || user?._id;
+    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
     const matchesSearch = `${o.selectedCustomer?.firstName} ${o.selectedCustomer?.lastName} ${o.uniqueId}`.toLowerCase().includes(searchTerm.toLowerCase());
     const isArchived = o.status === 'yopildi';
     
@@ -440,6 +554,7 @@ const Orders = () => {
   const handleDragStart = (e, orderId) => { e.dataTransfer.setData('orderId', orderId); e.target.style.opacity = '0.5'; };
   const handleDragEnd = (e) => { e.target.style.opacity = '1'; };
   const handleDragOver = (e) => { e.preventDefault(); };
+
   const handleDrop = async (e, stageId) => {
     const orderId = e.dataTransfer.getData('orderId');
     const order = allOrders.find(o => o._id === orderId || o.id === Number(orderId));
@@ -455,6 +570,7 @@ const Orders = () => {
     try {
       const res = await api.put(`/orders/${order._id || orderId}`, { 
         status: stageId, 
+        statusUpdatedAt: new Date().toISOString(),
         timeline: [...(order.timeline || []), log] 
       });
       setAllOrders(allOrders.map(o => o._id === (order._id || orderId) ? res.data : o));
@@ -463,11 +579,49 @@ const Orders = () => {
     }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!commentText.trim()) return;
-    const log = { type: 'comment', text: commentText, time: new Date().toISOString(), user: user.name };
-    setNewOrder({ ...newOrder, timeline: [...(newOrder.timeline || []), log] });
+    const log = { 
+      type: inputType === 'comment' ? 'comment' : 'task', 
+      text: inputType === 'comment' ? commentText : `Vazifa: ${commentText} (Muddat: ${new Date(taskDueDate).toLocaleString('uz-UZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })})`, 
+      time: new Date().toISOString(), 
+      user: user.name 
+    };
+    
+    if (editingId) {
+      try {
+        const res = await api.post(`/orders/${editingId}/log`, { 
+          text: log.text, 
+          type: log.type 
+        });
+
+        // Agar vazifa bo'lsa, markaziy vazifalar tizimiga ham qo'shish
+        if (inputType === 'task') {
+          const payload = {
+            title: commentText,
+            dueDate: taskDueDate,
+            status: 'jarayonda',
+            assigneeId: user.id || user._id,
+            assigneeName: user.name,
+            orderId: editingId,
+            orderUniqueId: res.data.uniqueId,
+            priority: 'orta'
+          };
+          await api.post('/tasks', payload);
+          loadOrderTasks(editingId); // Refresh local task list
+        }
+
+        setAllOrders(allOrders.map(o => o._id === editingId ? res.data : o));
+        setNewOrder(res.data);
+      } catch (err) {
+        console.error("Comment/Task error", err);
+        alert("Xatolik yuz berdi!");
+      }
+    } else {
+      setNewOrder({ ...newOrder, timeline: [...(newOrder.timeline || []), log] });
+    }
     setCommentText('');
+    setInputType('comment');
   };
 
   const handleCommentKeyDown = (e) => {
@@ -491,6 +645,8 @@ const Orders = () => {
       ...newOrder, 
       amount: finalAmount, 
       currency: 'UZS', 
+      showroomPhone: user.showroomPhone || '',
+      managerPhone: user.phone || '',
       timeline: [...(newOrder.timeline || []), log] 
     };
 
@@ -515,12 +671,37 @@ const Orders = () => {
     }
   };
 
+  const handleContextMenu = (e, orderId, isLocked) => {
+    e.preventDefault();
+    setContextMenu({
+      isOpen: true,
+      x: e.clientX,
+      y: e.clientY,
+      orderId,
+      isLocked
+    });
+  };
+
+  const confirmDelete = async (reason) => {
+    if (!deleteModal.orderId) return;
+    try {
+      const order = allOrders.find(o => o._id === deleteModal.orderId);
+      const log = { type: 'system', text: `Buyurtma o'chirildi. Sabab: ${reason}`, time: new Date().toISOString(), user: user.name };
+      
+      await api.delete(`/orders/${deleteModal.orderId}`, { data: { reason, log } });
+      setAllOrders(allOrders.filter(o => o._id !== deleteModal.orderId));
+      setDeleteModal({ isOpen: false, orderId: null, reason: '' });
+    } catch (err) {
+      console.error("Delete error", err);
+      alert("O'chirishda xatolik yuz berdi!");
+    }
+  };
+
   if (!user) return <div style={{ padding: '40px', textAlign: 'center' }}>Yuklanmoqda...</div>;
   const isOrderLocked = editingId && LOCKED_STAGES.includes(newOrder.status);
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '20px', height: 'calc(100vh - 80px)', overflow: 'hidden' }}>
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {currentView === 'archive' && (
@@ -580,7 +761,6 @@ const Orders = () => {
         </div>
       </div>
 
-      {/* Kanban Board / Archive View */}
       <div className="no-scrollbar" style={{ flex: 1, display: 'flex', gap: '24px', overflowX: 'auto', paddingBottom: '30px' }}>
         {currentView === 'archive' ? (
           <div style={{ flex: 1, padding: '0 20px' }}>
@@ -610,8 +790,11 @@ const Orders = () => {
                           <td style={{ padding: '15px', fontWeight: '800' }}>{Number(o.amount).toLocaleString()} UZS</td>
                           <td style={{ padding: '15px', color: 'var(--text-secondary)' }}>
                             {(() => {
+                              if (o.closedAt) return o.closedAt.split('T')[0];
                               const archLog = o.timeline?.find(l => l?.text?.includes("Arxivlandi"));
-                              return archLog?.time ? archLog.time.split('T')[0] : '—';
+                              if (archLog?.time) return archLog.time.split('T')[0];
+                              const lastLog = o.timeline?.[o.timeline.length - 1];
+                              return lastLog?.time ? lastLog.time.split('T')[0] : (o.updatedAt ? o.updatedAt.split('T')[0] : '—');
                             })()}
                           </td>
                           <td style={{ padding: '15px' }}>
@@ -628,7 +811,8 @@ const Orders = () => {
         ) : (
           STAGES.map(stage => {
             const stageOrders = allOrders.filter(o => {
-              const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === user.id);
+              const currentUserId = user?.id || user?._id;
+              const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
               const matchesSearch = `${o.selectedCustomer?.firstName} ${o.selectedCustomer?.lastName} ${o.uniqueId}`.toLowerCase().includes(searchTerm.toLowerCase());
               if (!(matchesUser && matchesSearch && o.status !== 'yopildi')) return false;
 
@@ -643,7 +827,11 @@ const Orders = () => {
                   currentStatus = 'tayyor';
               }
               return currentStatus === stage.id;
-            }).sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)); 
+            }).sort((a,b) => {
+              const timeA = a.statusUpdatedAt || a.createdAt;
+              const timeB = b.statusUpdatedAt || b.createdAt;
+              return new Date(timeB) - new Date(timeA);
+            }); 
             const totalAmount = stageOrders.reduce((sum, o) => sum + Number(o.amount || 0), 0);
             return (
               <div key={stage.id} onDragOver={handleDragOver} onDrop={e => handleDrop(e, stage.id)} style={{ minWidth: '320px', width: '320px', display: 'flex', flexDirection: 'column' }}>
@@ -667,91 +855,41 @@ const Orders = () => {
                         draggable={!isLocked} 
                         onDragStart={(e) => handleDragStart(e, order._id)} 
                         onDragEnd={handleDragEnd} 
+                        onContextMenu={(e) => handleContextMenu(e, order._id, isLocked)}
                         style={{ background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '20px', marginBottom: '16px', position: 'relative', cursor: isLocked ? 'default' : 'grab' }}
                         onClick={() => { setEditingId(order._id); setNewOrder(order); setIsOrderModalOpen(true); }}
                       >
                           <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: stage.color, borderRadius: '4px 0 0 4px' }} />
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '3px 8px', borderRadius: '6px' }}>{order.uniqueId}</span>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '3px 8px', borderRadius: '6px' }}>{order.uniqueId}</span>
+                            </div>
                             {isLocked && <div style={{ fontSize: '10px', background: 'rgba(212,175,55,0.1)', color: 'var(--accent-gold)', padding: '2px 8px', borderRadius: '6px' }}><Lock size={10} /> Locked</div>}
                           </div>
                           <h4 style={{ fontSize: '16px', fontWeight: '800', marginBottom: '6px' }}>{order.selectedCustomer?.firstName} {order.selectedCustomer?.lastName}</h4>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}><Phone size={14} /> {order.selectedCustomer?.phone}</div>
                           
-                          {order.assignedPmName && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', fontSize: '12px', color: '#3b82f6', fontWeight: '800', background: 'rgba(59,130,246,0.1)', padding: '4px 10px', borderRadius: '8px', width: 'fit-content' }}>
-                              <Briefcase size={12} /> PM: {order.assignedPmName}
+                          <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                              <MapPin size={10} /> <span style={{ fontWeight: '700' }}>Manzil:</span>
                             </div>
-                          )}
-
-                          {stage.id === 'bajarildi' && !order.smCompletionApproved && (
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const isFinal = order.adminCompletionApproved;
-                                const updated = allOrders.map(o => {
-                                  if (o.id === order.id) {
-                                    const log = { type: 'system', text: isFinal ? "Buyurtma SM va Admin tomonidan tasdiqlandi. Arxivlandi." : "Buyurtma SM tomonidan tasdiqlandi (yakunlash)", time: new Date().toISOString(), user: user.name };
-                                    return { 
-                                      ...o, 
-                                      smCompletionApproved: true, 
-                                      status: isFinal ? 'yopildi' : o.status,
-                                      timeline: [...(o.timeline || []), log]
-                                    };
-                                  }
-                                  return o;
-                                });
-                                setAllOrders(updated);
-                                localStorage.setItem('erp_orders', JSON.stringify(updated));
-                                alert(isFinal ? "Buyurtma to'liq yopildi va arxivga o'tkazildi!" : "Sizning tasdig'ingiz qabul qilindi. Admin tasdig'i kutilmoqda.");
-                              }}
-                              style={{ width: '100%', marginBottom: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid #10b981', color: '#10b981', padding: '10px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                            >
-                              <CheckSquare size={14} /> Yakunlashni Tasdiqlash
-                            </button>
-                          )}
-
-                          {stage.id === 'bajarildi' && order.smCompletionApproved && !order.adminCompletionApproved && (
-                            <div style={{ marginBottom: '12px', background: 'rgba(16,185,129,0.05)', color: '#10b981', padding: '8px', borderRadius: '10px', fontSize: '11px', textAlign: 'center', border: '1px dashed #10b981' }}>
-                              Siz tasdiqladingiz. Admin kutilmoqda...
+                            <p style={{ fontSize: '12px', fontWeight: '600', color: '#e2e8f0', lineHeight: '1.4' }}>{order.selectedCustomer?.address || '—'}</p>
+                            
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '2px' }}>
+                              <Calendar size={10} /> <span style={{ fontWeight: '700' }}>Qabul:</span> <span style={{ color: '#e2e8f0' }}>{order.orderDate}</span>
                             </div>
-                          )}
+                          </div>
 
-                          {(() => {
-                            const status = getDeliveryStatus(order.deliveryDate);
-                            return (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '15px' }}>
-                                {/* Address & Order Date Visibility */}
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                                    <MapPin size={10} /> <span style={{ fontWeight: '700' }}>Manzil:</span>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
+                              {order.checklist && Object.entries(CHECKLIST_LABELS).map(([key, label]) => {
+                                if (!order.checklist[key]) return null;
+                                return (
+                                  <div key={key} title={label} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(16,185,129,0.2)' }}>
+                                    <Check size={10} strokeWidth={3} /> {label}
                                   </div>
-                                  <p style={{ fontSize: '12px', fontWeight: '600', color: '#e2e8f0', lineHeight: '1.4' }}>{order.selectedCustomer?.address || '—'}</p>
-                                  
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', marginBottom: '2px' }}>
-                                    <Calendar size={10} /> <span style={{ fontWeight: '700' }}>Qabul:</span> <span style={{ color: '#e2e8f0' }}>{order.orderDate}</span>
-                                  </div>
-                                </div>
-
-                                <div style={{ 
-                                  display: 'flex', 
-                                  flexDirection: 'column', 
-                                  gap: '4px', 
-                                  padding: '12px 16px', 
-                                  background: status.bg, 
-                                  border: `1px solid ${status.color}33`, 
-                                  borderRadius: '14px' 
-                                }}>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: status.color, fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                    <Clock size={12} /> {status.label} (Topshirish)
-                                  </div>
-                                  <div style={{ fontSize: '20px', fontWeight: '900', color: status.color }}>
-                                    {status.text}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })()}
+                                );
+                              })}
+                          </div>
                        <div style={{ background: 'rgba(0,0,0,0.3)', padding: '15px', borderRadius: '16px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                              <div><p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase' }}>Summa</p><p style={{ fontSize: '16px', fontWeight: '900', color: 'white' }}>{Number(order.amount).toLocaleString()} UZS</p></div>
@@ -771,7 +909,6 @@ const Orders = () => {
         )}
       </div>
 
-      {/* AmoCRM Style Modal */}
       {isOrderModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2000 }}>
           <div className="premium-card" style={{ width: '96vw', height: '94vh', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -783,7 +920,6 @@ const Orders = () => {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>
                     Menejer: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.managerName || user.name}</span> • 
                     Showroom: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.showroom || user.showroom}</span>
-                    {newOrder.assignedPmName && <span style={{ color: '#3b82f6' }}> • PM: {newOrder.assignedPmName}</span>}
                   </p>
                 </div>
               </div>
@@ -820,44 +956,43 @@ const Orders = () => {
                                    <div style={{ fontWeight: '800' }}>{c.firstName} {c.lastName}</div>
                                    <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{c.phone}</div>
                                  </div>
-                                 <div style={{ fontSize: '10px', color: 'var(--accent-gold)', opacity: 0.5 }}>{c.address.substring(0, 20)}...</div>
                                </div>
                              </div>
                            ))}
                          </div>
                        )}
                      </div>
-                    {newOrder.selectedCustomer && (<div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-color)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}><div><Lbl>Telefon</Lbl><p style={{ fontWeight: '700' }}>{newOrder.selectedCustomer.phone}</p></div><div><Lbl>Manzil</Lbl><p style={{ fontWeight: '700' }}>{newOrder.selectedCustomer.address}</p></div></div>)}
-                  </div>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}><FileText size={18} color="var(--accent-gold)" /><h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Hujjatlar va Fayllar</h4></div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                       <div onClick={() => setFileManager({ isOpen: true, type: 'kp', files: newOrder.kpFiles || [], orderId: editingId })} className="clickable-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileCheck size={22} /></div>
-                          <div><h5 style={{ fontSize: '14px', fontWeight: '800' }}>KP Fayllari</h5><p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{newOrder.kpFiles?.length || 0} ta fayl</p></div>
-                       </div>
-                       <div onClick={() => setFileManager({ isOpen: true, type: 'design', files: newOrder.designFiles || [], orderId: editingId })} className="clickable-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                          <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><FileIcon size={22} /></div>
-                          <div><h5 style={{ fontSize: '14px', fontWeight: '800' }}>Dizayn Fayllari</h5><p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{newOrder.designFiles?.length || 0} ta fayl</p></div>
-                       </div>
-                    </div>
-                  </div>
+                      {newOrder.selectedCustomer && (
+                        <div style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '14px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}><Phone size={18} /></div>
+                            <div>
+                              <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Telefon raqami:</p>
+                              <p style={{ fontSize: '15px', fontWeight: '800', color: 'white' }}>{newOrder.selectedCustomer.phone}</p>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}><MapPin size={18} /></div>
+                            <div>
+                              <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '700' }}>Manzil:</p>
+                              <p style={{ fontSize: '14px', fontWeight: '700', color: 'white' }}>{newOrder.selectedCustomer.address || 'Manzil belgilanmagan'}</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}><Building size={18} color="var(--accent-gold)" /><h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Obyekt va Moliyaviy</h4></div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                      <div style={{ position: 'relative', marginBottom: '24px' }}>
+                        <Lbl>KP Raqami Bo'yicha Qidirish</Lbl>
                         <div style={{ position: 'relative' }}>
-                          <Lbl>Tijorat Taklifi (KP) biriktirish</Lbl>
-                          <IconInput 
-                            icon={FileText} 
-                            value={proposalSearch} 
-                            onChange={e => !isOrderLocked && setProposalSearch(e.target.value)}
-                            placeholder="KP raqami..."
-                            style={{ height: '54px' }}
-                            readOnly={isOrderLocked}
-                          />
+                          <IconInput
+                            icon={Search}
+                             value={proposalSearch} 
+                             onChange={e => !isOrderLocked && setProposalSearch(e.target.value)}
+                             placeholder="KP raqami..."
+                             style={{ height: '54px' }}
+                             readOnly={isOrderLocked}
+                           />
                           {proposalSuggestions.length > 0 && !isOrderLocked && (
                             <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                               {proposalSuggestions.map(p => (
@@ -869,9 +1004,96 @@ const Orders = () => {
                             </div>
                           )}
                         </div>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                          <Lbl>KP Summasi</Lbl>
+                          <input 
+                            name="kpAmount" 
+                            value={newOrder.kpAmount} 
+                            onChange={e => {
+                              if (isOrderLocked) return;
+                              const val = e.target.value;
+                              const kpVal = Number(val.replace(/\s/g, '')) || 0;
+                              const disc = Number(newOrder.discount) || 0;
+                              const final = kpVal - (kpVal * disc / 100);
+                              setNewOrder({
+                                ...newOrder, 
+                                kpAmount: formatAmount(val),
+                                amount: formatAmount(Math.round(final))
+                              });
+                            }} 
+                            placeholder="0" 
+                            autoComplete="off" 
+                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white', fontSize: '14px' }} 
+                            readOnly={isOrderLocked} 
+                          />
+                          <span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '800' }}>so'm</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '24px' }}>
                         <div>
+                          <Lbl>Skidka (%)</Lbl>
+                          <input 
+                            name="discount" 
+                            type="number"
+                            value={newOrder.discount} 
+                            onChange={e => {
+                              if (isOrderLocked) return;
+                              const disc = Number(e.target.value) || 0;
+                              const kpVal = Number(newOrder.kpAmount.replace(/\s/g, '')) || 0;
+                              const final = kpVal - (kpVal * disc / 100);
+                              setNewOrder({
+                                ...newOrder, 
+                                discount: e.target.value,
+                                amount: formatAmount(Math.round(final))
+                              });
+                            }} 
+                            placeholder="0" 
+                            autoComplete="off" 
+                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 15px', color: 'white', fontSize: '14px' }} 
+                            readOnly={isOrderLocked} 
+                          />
+                        </div>
+                        <div style={{ position: 'relative' }}>
                           <Lbl>Shartnoma Summasi</Lbl>
-                          <IconInput icon={DollarSign} name="amount" value={newOrder.amount} onChange={e => !isOrderLocked && setNewOrder({...newOrder, amount: formatAmount(e.target.value)})} placeholder="0" style={{ height: '54px' }} readOnly={isOrderLocked} />
+                          <input 
+                            name="amount" 
+                            value={newOrder.amount} 
+                            onChange={e => {
+                              if (isOrderLocked) return;
+                              const val = e.target.value;
+                              const finalVal = Number(val.replace(/\s/g, '')) || 0;
+                              const kpVal = Number(newOrder.kpAmount.replace(/\s/g, '')) || 0;
+                              let calculatedDisc = newOrder.discount;
+                              if (kpVal > 0) {
+                                calculatedDisc = (((kpVal - finalVal) / kpVal) * 100).toFixed(1);
+                              }
+                              setNewOrder({
+                                ...newOrder, 
+                                amount: formatAmount(val),
+                                discount: calculatedDisc
+                              });
+                            }} 
+                            placeholder="0" 
+                            autoComplete="off" 
+                            style={{ width: '100%', height: '54px', background: 'rgba(16,185,129,0.05)', border: '1px solid #10b981', borderRadius: '12px', padding: '0 60px 0 15px', color: '#10b981', fontSize: '16px', fontWeight: '900' }} 
+                            readOnly={isOrderLocked} 
+                          />
+                          <span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(16,185,129,0.4)', fontSize: '12px', fontWeight: '800' }}>so'm</span>
+                        </div>
+                      </div>
+                      <div>
+                        <Lbl>Ishlab chiqarish summasi</Lbl>
+                        <div style={{ position: 'relative' }}>
+                          <input 
+                            name="productionAmount" 
+                            value={newOrder.productionAmount} 
+                            readOnly
+                            placeholder="PM tomonidan kiritiladi" 
+                            autoComplete="off" 
+                            style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white', fontSize: '14px', opacity: 0.7 }} 
+                          />
+                          <span style={{ position: 'absolute', right: '15px', top: '18px', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '800' }}>so'm</span>
                         </div>
                       </div>
                       <div>
@@ -885,6 +1107,39 @@ const Orders = () => {
                               style={{ height: '54px', borderRadius: '12px', background: newOrder.propertyType === type.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${newOrder.propertyType === type.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: newOrder.propertyType === type.value ? 'var(--accent-gold)' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: '700' }}
                             >
                               <span>{type.icon}</span> {type.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <Lbl>Tasdiqlatish (Checklist)</Lbl>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                          {Object.entries(CHECKLIST_LABELS).map(([key, label]) => (
+                            <button 
+                              key={key} 
+                              type="button" 
+                              onClick={() => !isOrderLocked && setNewOrder({
+                                ...newOrder, 
+                                checklist: { ...newOrder.checklist, [key]: !newOrder.checklist?.[key] }
+                              })} 
+                              style={{ 
+                                height: '48px', 
+                                borderRadius: '12px', 
+                                background: newOrder.checklist?.[key] ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)', 
+                                border: `1px solid ${newOrder.checklist?.[key] ? '#10b981' : 'var(--border-color)'}`, 
+                                color: newOrder.checklist?.[key] ? '#10b981' : 'var(--text-secondary)',
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                padding: '0 15px',
+                                gap: '10px', 
+                                fontSize: '13px', 
+                                fontWeight: '700',
+                                transition: '0.2s'
+                              }}
+                            >
+                              {newOrder.checklist?.[key] ? <CheckSquare size={16} /> : <div style={{ width: '16px', height: '16px', border: '1.5px solid currentColor', borderRadius: '4px' }} />}
+                              {label}
                             </button>
                           ))}
                         </div>
@@ -913,61 +1168,99 @@ const Orders = () => {
                           />
                         </div>
                       </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                        <div>
-                          <Lbl>Summa</Lbl>
-                          <input 
-                            value={formatAmount(newOrder.amount)} 
-                            onChange={e => !isOrderLocked && setNewOrder({...newOrder, amount: e.target.value.replace(/\D/g,'')})} 
-                            placeholder="0" 
-                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', fontSize: '18px', fontWeight: '900' }} 
-                            readOnly={isOrderLocked} 
-                          />
-                        </div>
-                        <div>
-                          <Lbl>Valyuta</Lbl>
-                          <select 
-                            value={newOrder.currency} 
-                            onChange={e => !isOrderLocked && setNewOrder({...newOrder, currency: e.target.value})} 
-                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 10px', fontWeight: '700' }} 
-                            disabled={isOrderLocked}
-                          >
-                            <option value="UZS">UZS</option>
-                            <option value="USD">USD</option>
-                          </select>
-                        </div>
-                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
               <div style={{ background: '#0f0f1b', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}><History size={20} color="var(--accent-gold)" /><h4 style={{ fontSize: '15px', fontWeight: '900' }}>Xarakatlar Tarixi</h4></div>
-                <div style={{ flex: 1, padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {(newOrder.timeline || []).map((item, idx) => (
-                    <div key={idx} style={{ position: 'relative', paddingLeft: '40px' }}>
-                        {idx !== newOrder.timeline.length - 1 && <div style={{ position: 'absolute', left: '10px', top: '24px', bottom: '-24px', width: '1px', background: 'rgba(255,255,255,0.05)' }} />}
-                        <div style={{ position: 'absolute', left: '0', top: '4px', width: '21px', height: '21px', borderRadius: '50%', background: item.type === 'comment' ? 'var(--accent-gold)' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.type === 'comment' ? 'black' : 'var(--text-secondary)' }}>{item.type === 'comment' ? <MessageSquare size={10} /> : <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'currentColor' }} />}</div>
-                        {item.type === 'comment' ? (<div style={{ background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.1)', borderRadius: '16px', padding: '16px 20px' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}><span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--accent-gold)' }}>{item.user}</span><span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{new Date(item.time).toLocaleTimeString()}</span></div><p style={{ fontSize: '15px', color: '#fff', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{item.text}</p></div>) : (<div style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}><span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(item.time).toLocaleTimeString()}</span><p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}><span style={{ fontWeight: '700' }}>{item.user}</span>: {item.text}</p></div>)}
-                    </div>
-                  ))}
-                  <div ref={timelineEndRef} />
+                <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <History size={20} color="var(--accent-gold)" />
+                  <h4 style={{ fontSize: '15px', fontWeight: '900', textTransform: 'uppercase' }}>XARAKATLAR TARIXI</h4>
                 </div>
-                <div style={{ padding: '32px 40px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ position: 'relative' }}>
-                    <textarea 
-                      value={commentText} 
-                      onChange={e => !isOrderLocked && setCommentText(e.target.value)} 
-                      onKeyDown={handleCommentKeyDown} 
-                      placeholder={isOrderLocked ? "Kuzatuv rejimida izoh qoldirib bo'lmaydi" : "Izoh qoldiring..."} 
-                      style={{ width: '100%', height: '100px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '16px', padding: '20px', color: 'white', resize: 'none', opacity: isOrderLocked ? 0.5 : 1 }} 
-                      readOnly={isOrderLocked}
-                    />
-                    {!isOrderLocked && (
-                      <button onClick={handleAddComment} style={{ position: 'absolute', right: '15px', bottom: '15px', height: '44px', padding: '0 24px', borderRadius: '12px', background: 'var(--accent-gold)', color: 'black', fontWeight: '900', border: 'none' }}>
-                        <Send size={16} /> Yuborish
-                      </button>
+                
+                <div style={{ flex: 1, overflowY: 'auto', padding: '40px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1 }}>
+                    {modalTab === 'timeline' && (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', flex: 1 }}>
+                          {(newOrder.timeline || []).map((item, idx) => (
+                            <div key={idx} style={{ position: 'relative', paddingLeft: '40px' }}>
+                                {idx !== (newOrder.timeline?.length || 0) - 1 && <div style={{ position: 'absolute', left: '10px', top: '24px', bottom: '-24px', width: '1px', background: 'rgba(255,255,255,0.05)' }} />}
+                                <div style={{ position: 'absolute', left: '0', top: '4px', width: '21px', height: '21px', borderRadius: '50%', background: item.type === 'comment' ? 'var(--accent-gold)' : (item.type === 'task' ? '#3b82f6' : 'rgba(255,255,255,0.05)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: (item.type === 'comment' || item.type === 'task') ? 'black' : 'var(--text-secondary)' }}>
+                                  {item.type === 'comment' ? <MessageSquare size={10} /> : (item.type === 'task' ? <CheckSquare size={10} /> : <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'currentColor' }} />)}
+                                </div>
+                                {item.type === 'comment' || item.type === 'task' ? (
+                                  <div style={{ background: item.type === 'task' ? 'rgba(59,130,246,0.05)' : 'rgba(251,191,36,0.05)', border: `1px solid ${item.type === 'task' ? 'rgba(59,130,246,0.1)' : 'rgba(251,191,36,0.1)'}`, borderRadius: '16px', padding: '16px 20px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                      <span style={{ fontSize: '13px', fontWeight: '900', color: item.type === 'task' ? '#3b82f6' : 'var(--accent-gold)' }}>{item.user} {item.type === 'task' ? '(Vazifa)' : ''}</span>
+                                      <span style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{new Date(item.time).toLocaleTimeString()}</span>
+                                    </div>
+                                    <p style={{ fontSize: '15px', color: '#fff', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>{item.text}</p>
+                                  </div>
+                                ) : (
+                                  <div style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>
+                                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(item.time).toLocaleTimeString()}</span>
+                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}><span style={{ fontWeight: '700' }}>{item.user}</span>: {item.text}</p>
+                                  </div>
+                                )}
+                            </div>
+                          ))}
+                          <div ref={timelineEndRef} />
+                        </div>
+                        
+                        <div style={{ padding: '24px 32px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', marginTop: '20px', borderRadius: '24px', display: 'flex', gap: '20px', position: 'relative' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '20px' }}>
+                            <button 
+                              type="button"
+                              onClick={() => setInputType('comment')}
+                              title="Izoh qoldirish"
+                              style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'comment' ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: inputType === 'comment' ? 'black' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
+                            >
+                              <MessageSquare size={20} />
+                            </button>
+                            <button 
+                              type="button"
+                              onClick={() => setInputType('task')}
+                              title="Vazifa yaratish"
+                              style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'task' ? '#3b82f6' : 'rgba(255,255,255,0.03)', color: inputType === 'task' ? 'white' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
+                            >
+                              <CheckSquare size={20} />
+                            </button>
+                          </div>
+
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            {inputType === 'task' && (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(59,130,246,0.05)', padding: '10px 16px', borderRadius: '12px', border: '1px solid rgba(59,130,246,0.1)' }}>
+                                <Calendar size={16} color="#3b82f6" />
+                                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '800' }}>VAZIFA MUDDATINI BELGILANG:</span>
+                                <input 
+                                  type="datetime-local"
+                                  value={taskDueDate}
+                                  onChange={e => setTaskDueDate(e.target.value)}
+                                  style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', outline: 'none', fontWeight: '700' }}
+                                />
+                              </div>
+                            )}
+                            <div style={{ position: 'relative' }}>
+                              <textarea 
+                                value={commentText} 
+                                onChange={e => newOrder.status !== 'yopildi' && setCommentText(e.target.value)} 
+                                onKeyDown={handleCommentKeyDown} 
+                                placeholder={newOrder.status === 'yopildi' ? "Arxivlangan buyurtmaga izoh yozib bo'lmaydi" : inputType === 'task' ? "Vazifa (eslatma) matnini yozing..." : "Izoh qoldiring..."} 
+                                style={{ width: '100%', height: '120px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '20px', padding: '20px', color: 'white', fontSize: '15px', resize: 'none', outline: 'none' }} 
+                                readOnly={newOrder.status === 'yopildi'}
+                              />
+                              {newOrder.status !== 'yopildi' && (
+                                <button 
+                                  type="button"
+                                  onClick={handleAddComment} 
+                                  style={{ position: 'absolute', right: '15px', bottom: '15px', height: '48px', padding: '0 24px', borderRadius: '14px', background: inputType === 'task' ? '#3b82f6' : 'var(--accent-gold)', color: inputType === 'task' ? 'white' : 'black', fontWeight: '900', border: 'none', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.2)' }}
+                                >
+                                  {inputType === 'task' ? <CheckSquare size={18} /> : <Send size={18} />} Yuborish
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
@@ -1000,6 +1293,121 @@ const Orders = () => {
             setFileManager({ ...fileManager, files: updatedFiles });
           }} 
         />
+      )}
+
+      {contextMenu.isOpen && (
+        <div 
+          style={{ 
+            position: 'fixed', 
+            top: contextMenu.y, 
+            left: contextMenu.x, 
+            zIndex: 9999, 
+            background: '#1a1a2e', 
+            border: '1px solid var(--border-color)', 
+            borderRadius: '12px', 
+            padding: '8px', 
+            boxShadow: '0 20px 50px rgba(0,0,0,0.9)', 
+            minWidth: '220px' 
+          }}
+          onMouseLeave={() => setContextMenu({ ...contextMenu, isOpen: false })}
+        >
+          <button 
+            onClick={() => {
+              if (contextMenu.isLocked) return alert("Ushbu bosqichdagi buyurtmani o'chirib bo'lmaydi.");
+              setDeleteModal({ isOpen: true, orderId: contextMenu.orderId, reason: '' });
+              setContextMenu({ ...contextMenu, isOpen: false });
+            }}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              textAlign: 'left', 
+              background: 'rgba(239, 68, 68, 0.1)', 
+              border: '1px solid rgba(239, 68, 68, 0.2)', 
+              borderRadius: '8px',
+              color: '#ef4444', 
+              fontSize: '13px', 
+              cursor: 'pointer', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '10px',
+              fontWeight: '800',
+              marginBottom: contextMenu.isLocked ? '0' : '8px'
+            }}
+          >
+            <Trash2 size={16} /> Buyurtmani o'chirish
+          </button>
+
+          {!contextMenu.isLocked && (
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '8px', marginTop: '4px' }}>
+              <div style={{ padding: '8px 12px', fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>Bosqichga o'tkazish</div>
+              {DEAL_STAGES.map(s => (
+                <button 
+                  key={s.id}
+                  onClick={async () => {
+                    const orderId = contextMenu.orderId;
+                    const order = allOrders.find(o => o._id === orderId || o.id === orderId);
+                    if (!order) return;
+                    
+                    const log = { type: 'stage', text: `Bosqich o'zgardi (Menyu): ${s.title}`, time: new Date().toISOString(), user: user.name };
+                    try {
+                      const res = await api.put(`/orders/${order._id}`, { 
+                        status: s.id, 
+                        statusUpdatedAt: new Date().toISOString(),
+                        timeline: [...(order.timeline || []), log] 
+                      });
+                      setAllOrders(allOrders.map(o => o._id === order._id ? res.data : o));
+                      setContextMenu({ ...contextMenu, isOpen: false });
+                    } catch (err) {
+                      console.error("Move error", err);
+                    }
+                  }}
+                  style={{ width: '100%', padding: '10px 12px', textAlign: 'left', background: 'transparent', border: 'none', color: 'white', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(251,191,36,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                >
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: s.color }} />
+                  {s.title}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {deleteModal.isOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 6000 }}>
+          <div className="premium-card" style={{ width: '450px', padding: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '12px', textAlign: 'center' }}>Buyurtmani o'chirish</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', marginBottom: '24px' }}>O'chirish sababini tanlang:</p>
+            
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {[
+                "Mijoz rad etdi",
+                "Narxi qimmatlik qildi",
+                "Muddat to'g'ri kelmadi",
+                "Boshqa joydan sotib oldi",
+                "Xato kiritilgan"
+              ].map(reason => (
+                <button 
+                  key={reason}
+                  onClick={() => confirmDelete(reason)}
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', textAlign: 'left', cursor: 'pointer', transition: '0.2s', fontSize: '14px', fontWeight: '600' }}
+                  onMouseEnter={e => { e.target.style.background = 'rgba(251,191,36,0.1)'; e.target.style.borderColor = 'var(--accent-gold)'; }}
+                  onMouseLeave={e => { e.target.style.background = 'rgba(255,255,255,0.03)'; e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                >
+                  {reason}
+                </button>
+              ))}
+            </div>
+
+            <button 
+              onClick={() => setDeleteModal({ isOpen: false, orderId: null, reason: '' })}
+              style={{ width: '100%', marginTop: '20px', padding: '14px', borderRadius: '12px', background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700' }}
+            >
+              Bekor qilish
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

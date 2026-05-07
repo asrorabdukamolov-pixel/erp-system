@@ -419,7 +419,9 @@ const Proposals = () => {
   const filteredProposals = proposals.filter(p => {
     const matchesSearch = `${p.kpNumber} ${p.customer?.firstName} ${p.customer?.lastName}`.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesTab = activeTab === 'all' || p.status === activeTab;
-    return matchesSearch && matchesTab;
+    // Secondary filter for managers
+    const matchesManager = (user.role === 'sotuv_manager' || user.role === 'proekt_manager') ? p.managerId === user.id : true;
+    return matchesSearch && matchesTab && matchesManager;
   });
 
   const stats = {

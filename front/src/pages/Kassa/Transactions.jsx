@@ -3,6 +3,7 @@ import {
   Search, Clock, Trash2, X, RotateCcw, FileText, 
   Wallet, TrendingUp, TrendingDown, Calendar, CreditCard, Banknote, Landmark, ArrowLeft, Package, Briefcase, Users, ArrowRight, ShoppingCart, Eye, User, ChevronDown, ListFilter
 } from 'lucide-react';
+import api from '../../utils/api';
 
 const KassaTransactions = () => {
   const [transactions, setTransactions] = useState([]);
@@ -25,26 +26,32 @@ const KassaTransactions = () => {
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  const loadTransactions = () => {
+  const loadTransactions = async () => {
     try {
-      const all = JSON.parse(localStorage.getItem('erp_transactions') || '[]');
-      setTransactions(all.sort((a, b) => new Date(b.date) - new Date(a.date)));
-    } catch { setTransactions([]); }
+      const res = await api.get('/transactions');
+      setTransactions(res.data.sort((a, b) => new Date(b.date) - new Date(a.date)));
+    } catch (err) { 
+      console.error("Tranzaksiyalarni yuklashda xato:", err);
+      setTransactions([]); 
+    }
   };
 
-  const loadDeletedTransactions = () => {
+  const loadDeletedTransactions = async () => {
     try {
-      const all = JSON.parse(localStorage.getItem('erp_trash_transactions') || '[]');
-      setDeletedTransactions(all.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
-    } catch { setDeletedTransactions([]); }
+      const res = await api.get('/transactions/trash/all');
+      setDeletedTransactions(res.data.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt)));
+    } catch (err) { 
+      console.error("O'chirilganlarni yuklashda xato:", err);
+      setDeletedTransactions([]); 
+    }
   };
 
   const handleContextMenu = (e, tx) => {
     const txDate = new Date(tx.date).toDateString();
     const today = new Date().toDateString();
-    if (txDate !== today) return; 
+    // Allowed for all transactions now as per user request
     e.preventDefault();
-    setContextMenu({ x: e.pageX, y: e.pageY, txId: tx.id });
+    setContextMenu({ x: e.pageX, y: e.pageY, txId: tx.id || tx._id });
   };
 
   const startDelete = () => {
@@ -54,32 +61,31 @@ const KassaTransactions = () => {
     setContextMenu(null);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!deleteReason.trim()) { alert("Sababni yozishingiz shart."); return; }
-    const txToDelete = transactions.find(t => t.id === selectedTxId);
-    if (!txToDelete) return;
-    const newActive = transactions.filter(t => t.id !== selectedTxId);
-    localStorage.setItem('erp_transactions', JSON.stringify(newActive));
-    setTransactions(newActive);
-    const deletedTx = { ...txToDelete, deletedAt: new Date().toISOString(), deleteReason: deleteReason.trim(), deletedBy: 'Kassir' };
-    const newTrash = [deletedTx, ...deletedTransactions];
-    localStorage.setItem('erp_trash_transactions', JSON.stringify(newTrash));
-    setDeletedTransactions(newTrash);
-    setIsDeleteModalOpen(false);
-    setSelectedTxId(null);
+    try {
+      await api.delete(`/transactions/${selectedTxId}`, { data: { reason: deleteReason.trim() } });
+      alert("Tranzaksiya savatga tashlandi");
+      setIsDeleteModalOpen(false);
+      setSelectedTxId(null);
+      loadTransactions();
+      loadDeletedTransactions();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert("O'chirishda xatolik: " + (err.response?.data?.msg || err.message));
+    }
   };
 
-  const handleRestore = (txId) => {
-    const txToRestore = deletedTransactions.find(t => t.id === txId);
-    if (!txToRestore) return;
-    const newTrash = deletedTransactions.filter(t => t.id !== txId);
-    localStorage.setItem('erp_trash_transactions', JSON.stringify(newTrash));
-    setDeletedTransactions(newTrash);
-    const { deletedAt, deleteReason, deletedBy, ...originalData } = txToRestore;
-    const newActive = [originalData, ...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
-    localStorage.setItem('erp_transactions', JSON.stringify(newActive));
-    setTransactions(newActive);
-    if (newTrash.length === 0) setShowTrashModal(false);
+  const handleRestore = async (txId) => {
+    try {
+      await api.post(`/transactions/${txId}/restore`);
+      alert("Tranzaksiya tiklandi");
+      loadTransactions();
+      loadDeletedTransactions();
+    } catch (err) {
+      console.error("Restore error:", err);
+      alert("Tiklashda xatolik: " + (err.response?.data?.msg || err.message));
+    }
   };
 
   const [activeTab, setActiveTab] = useState('manual'); // 'all' | 'manual' | 'requests'
@@ -146,7 +152,7 @@ const KassaTransactions = () => {
             <tbody>
               {filteredTxs.length === 0 ? (<tr><td colSpan="7" style={{ padding: '100px', textAlign: 'center' }}>Ma'lumotlar yo'q.</td></tr>) : (
                 filteredTxs.map(t => (
-                  <tr key={t.id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'context-menu' }}>
+                  <tr key={t._id || t.id} onContextMenu={(e) => handleContextMenu(e, t)} style={{ borderBottom: '1px solid var(--border-color)', cursor: 'context-menu' }}>
                     <td style={{ padding: '16px', fontSize: '13px' }}>{new Date(t.date).toLocaleDateString()} {new Date(t.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</td>
                     <td style={{ padding: '16px' }}><span style={{ fontSize: '10px', fontWeight: '800', padding: '4px 8px', borderRadius: '4px', background: t.type === 'income' ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)', color: t.type === 'income' ? '#10b981' : '#ef4444' }}>{t.type === 'income' ? 'KIRIM' : 'CHIQIM'}</span></td>
                     <td style={{ padding: '16px' }}>
@@ -213,7 +219,7 @@ const KassaTransactions = () => {
                 <tbody>
                   {deletedTransactions.length === 0 ? (<tr><td colSpan="5" style={{ padding: '80px', textAlign: 'center' }}>Karzina bo'sh.</td></tr>) : (
                     deletedTransactions.map(t => (
-                      <tr key={t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <tr key={t._id || t.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '14px', fontSize: '11px' }}>{new Date(t.deletedAt).toLocaleString()}</td>
                         <td style={{ padding: '14px' }}>
                           <div style={{ fontWeight: '700', fontSize: '13px' }}>{t.category}</div>
@@ -224,7 +230,7 @@ const KassaTransactions = () => {
                           <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{t.type?.toUpperCase()}</div>
                         </td>
                         <td style={{ padding: '14px' }}><div style={{ fontSize: '12px', background: 'rgba(239,68,68,0.05)', padding: '8px', borderRadius: '8px', color: '#ef4444' }}>{t.deleteReason}</div></td>
-                        <td style={{ padding: '14px' }}><button onClick={() => handleRestore(t.id)} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', cursor: 'pointer' }}><RotateCcw size={14} /> Tiklash</button></td>
+                        <td style={{ padding: '14px' }}><button onClick={() => handleRestore(t._id || t.id)} style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', cursor: 'pointer' }}><RotateCcw size={14} /> Tiklash</button></td>
                       </tr>
                     ))
                   )}

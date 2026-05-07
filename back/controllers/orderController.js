@@ -76,6 +76,9 @@ exports.updateOrder = async (req, res) => {
 
         if (req.body.status === 'tasdiqlandi' && order.proposalId) {
             await db.collection('proposals').doc(order.proposalId).update({ status: 'sold' });
+        } else if (req.body.status === 'active' && order.proposalId) {
+            // If moved back to active deal stages
+            await db.collection('proposals').doc(order.proposalId).update({ status: 'active' });
         }
 
         await orderRef.update(updateData);
@@ -112,6 +115,12 @@ exports.deleteOrder = async (req, res) => {
         };
 
         await orderRef.update(updateData);
+        
+        // Also mark linked proposal as lost
+        if (order.proposalId) {
+            await db.collection('proposals').doc(order.proposalId).update({ status: 'lost' });
+        }
+
         res.json({ msg: 'Buyurtma o\'chirildi' });
     } catch (err) {
         console.error("DeleteOrder Error:", err.message);
@@ -184,6 +193,12 @@ exports.restoreOrder = async (req, res) => {
         };
 
         await orderRef.update(updateData);
+
+        // Also restore linked proposal status to active
+        if (order.proposalId) {
+            await db.collection('proposals').doc(order.proposalId).update({ status: 'active' });
+        }
+
         const updated = await orderRef.get();
         res.json(formatDoc(updated));
     } catch (err) {

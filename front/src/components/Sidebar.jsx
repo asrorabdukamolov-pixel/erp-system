@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import api from '../utils/api';
 import { 
   LayoutDashboard, 
@@ -19,12 +20,17 @@ import {
   User,
   Wallet,
   History,
-  Building2
+  Building2,
+  Factory,
+  Truck,
+  CheckSquare,
+  Send
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
+  const { newCount } = useNotifications();
   const navigate = useNavigate();
   const [settings, setSettings] = React.useState(null);
 
@@ -42,13 +48,14 @@ const Sidebar = () => {
 
   const superAdminLinks = [
     { name: 'Bosh sahifa', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
+    { name: 'Bo\'limlar', path: '/super-admin/departments', icon: <Users size={20} /> },
+    { name: 'Xarajat Markazlari', path: '/super-admin/cost-centers', icon: <BarChart3 size={20} /> },
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
+    { name: 'Fabrika', path: '/super-admin/fabrika', icon: <Factory size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
-    { name: 'Tijorat taklifi identikasi', path: '/super-admin/partners', icon: <Handshake size={20} /> },
     { name: 'Yetkazib beruvchilar', path: '/super-admin/suppliers', icon: <Building2 size={20} /> },
-    { name: 'Ma\'lumotlar Migratsiyasi', path: '/super-admin/migration', icon: <History size={20} /> },
-    { name: 'Kompaniya Ma\'lumotlari', path: '/super-admin/company-settings', icon: <Building2 size={20} /> },
+    { name: 'Vazifalar', path: '/super-admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },
   ];
 
@@ -57,9 +64,9 @@ const Sidebar = () => {
     { name: 'Savdo bo\'limi', path: '/showroom-admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Xarid bo\'limi', path: '/showroom-admin/purchases', icon: <Package size={20} /> },
     { name: 'Moliya', path: '/showroom-admin/finance', icon: <Wallet size={20} /> },
-    { name: 'Mijozlar', path: '/showroom-admin/customers', icon: <UserPlus size={20} /> },
     { name: 'Xodimlar', path: '/showroom-admin/staff', icon: <Users size={20} /> },
     { name: 'Yetkazib beruvchilar', path: '/showroom-admin/suppliers', icon: <Building2 size={20} /> },
+    { name: 'Vazifalar', path: '/showroom-admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Karzina', path: '/showroom-admin/trash', icon: <Trash2 size={20} /> },
     { name: 'Sozlamalar', path: '/showroom-admin/settings', icon: <Settings size={20} /> },
   ];
@@ -74,6 +81,7 @@ const Sidebar = () => {
     { name: 'Sotuvlar', path: '/sotuv-manager/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Tijorat Takliflari', path: '/sotuv-manager/proposals', icon: <FileText size={20} /> },
     { name: 'Finans', path: '/sotuv-manager/finance', icon: <Wallet size={20} /> },
+    { name: 'Vazifalar', path: '/sotuv-manager/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Buyurtmalar Arxivi', path: '/sotuv-manager/archive', icon: <History size={20} /> },
     { name: 'Karzina', path: '/sotuv-manager/trash', icon: <Trash2 size={20} /> },
     { name: 'Shaxsiy Bo\'lim', path: '/sotuv-manager/profile', icon: <User size={20} /> },
@@ -84,9 +92,23 @@ const Sidebar = () => {
     { name: 'Xarid bo\'limi', path: '/proekt-manager/purchases', icon: <Package size={20} /> },
     { name: 'Tijorat Takliflari', path: '/proekt-manager/proposals', icon: <FileText size={20} /> },
     { name: 'Finans', path: '/proekt-manager/finance', icon: <Wallet size={20} /> },
+    { name: 'Vazifalar', path: '/proekt-manager/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Buyurtmalar Arxivi', path: '/proekt-manager/archive', icon: <History size={20} /> },
     { name: 'Karzina', path: '/proekt-manager/trash', icon: <Trash2 size={20} /> },
     { name: 'Shaxsiy Bo\'lim', path: '/proekt-manager/profile', icon: <User size={20} /> },
+  ];
+  
+  const fabrikaLinks = [
+    { name: 'Dashboard', path: '/fabrika', icon: <LayoutDashboard size={20} /> },
+    { name: 'Buyurtmalar', path: '/fabrika/orders', icon: <ClipboardList size={20} /> },
+    { name: 'Moliya', path: '/fabrika/finance', icon: <Wallet size={20} /> },
+    { name: 'Xodimlar', path: '/fabrika/staff', icon: <Users size={20} /> },
+    { name: 'Sklad', path: '/fabrika/inventory', icon: <Package size={20} /> },
+    { name: 'Xarid bo\'limi', path: '/fabrika/purchases', icon: <ShoppingCart size={20} /> },
+    { name: 'Ombor', path: '/fabrika/warehouse', icon: <Building2 size={20} /> },
+    { name: 'Logistika', path: '/fabrika/logistics', icon: <Truck size={20} /> },
+    { name: 'Sozlamalar', path: '/fabrika/settings', icon: <Settings size={20} /> },
+    { name: 'Karzina', path: '/fabrika/trash', icon: <Trash2 size={20} /> },
   ];
 
   // Logic to determine which links to show
@@ -96,6 +118,7 @@ const Sidebar = () => {
   else if (user?.role === 'sotuv_manager') links = salesManagerLinks;
   else if (user?.role === 'proekt_manager') links = projectManagerLinks;
   else if (user?.role === 'kassa') links = kassaLinks;
+  else if (user?.role === 'fabrika') links = fabrikaLinks;
   else links = [{ name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> }];
 
   const handleLogout = () => {
@@ -127,7 +150,7 @@ const Sidebar = () => {
           flexShrink: 0
         }}>
           <img 
-            src={settings?.companyLogo || logo} 
+            src={settings?.companyLogo || settings?.kpLogo || logo} 
             alt="Logo" 
             style={{ width: '100%', height: '100%', objectFit: 'contain', pointerEvents: 'none' }} 
           />
@@ -173,6 +196,7 @@ const Sidebar = () => {
           <NavLink
             key={link.path}
             to={link.path}
+            end={link.path.endsWith('admin') || link.path === '/' || link.path.endsWith('dashboard')}
             style={({ isActive }) => ({
               display: 'flex',
               alignItems: 'center',
@@ -189,12 +213,48 @@ const Sidebar = () => {
           >
             {link.icon}
             <span>{link.name}</span>
+            {link.name === 'Vazifalar' && newCount > 0 && (
+              <span style={{ 
+                marginLeft: 'auto', 
+                background: '#ef4444', 
+                color: 'white', 
+                fontSize: '10px', 
+                fontWeight: '900', 
+                padding: '2px 8px', 
+                borderRadius: '10px' 
+              }}>{newCount}</span>
+            )}
           </NavLink>
         ))}
       </nav>
 
       <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
 
+
+        {user && !user.telegramChatId && (
+          <a 
+            href={`https://t.me/ERP_vazifa_bot?start=${user.id || user._id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              padding: '14px 16px', 
+              borderRadius: '12px',
+              color: '#3b82f6',
+              background: 'rgba(59, 130, 246, 0.05)',
+              width: '100%',
+              textDecoration: 'none',
+              marginBottom: '12px',
+              fontSize: '13px',
+              fontWeight: '600'
+            }}
+          >
+            <Send size={18} />
+            <span>Telegramni ulash</span>
+          </a>
+        )}
 
         <button 
           onClick={handleLogout}

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import KPImageTool from './KPImageTool';
 
 // PARTNERS array moved inside the component to be dynamic
 
@@ -149,15 +150,55 @@ const KPModal = ({ onClose, editData = null }) => {
     }
   };
 
-  // Items helpers
+  const [croppingFile, setCroppingFile] = useState(null);
+  const [croppingItemId, setCroppingItemId] = useState(null);
+
   const addItem    = () => setItems(p => [...p, emptyItem()]);
   const removeItem = id => setItems(p => p.filter(i => i.id !== id));
   const updateItem = (id, field, value) => setItems(p => p.map(i => i.id === id ? { ...i, [field]: value } : i));
+  
   const handleItemImage = (id, file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => updateItem(id, 'image', e.target.result);
-    reader.readAsDataURL(file);
+    setCroppingItemId(id);
+    setCroppingFile(file);
+  };
+
+  const dataURLtoBlob = (dataurl) => {
+    let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+  };
+
+  const handleSnipConfirm = async (dataUrl) => {
+    try {
+      // 1. Convert base64 to blob
+      const blob = dataURLtoBlob(dataUrl);
+      const file = new File([blob], "snip.png", { type: "image/png" });
+
+      // 2. Upload to server
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      // Update UI to show loading state if needed (optional)
+      updateItem(croppingItemId, 'image', 'loading...'); 
+
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      // 3. Save URL instead of base64
+      updateItem(croppingItemId, 'image', res.data.url);
+    } catch (err) {
+      console.error("Image upload error:", err);
+      alert("Rasmni yuklashda xatolik yuz berdi");
+      updateItem(croppingItemId, 'image', ''); 
+    } finally {
+      setCroppingFile(null);
+      setCroppingItemId(null);
+    }
   };
 
   const togglePartner = id => setSelectedPartners(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
@@ -221,10 +262,41 @@ const KPModal = ({ onClose, editData = null }) => {
     }
   };
 
+  // ── Rasmni base64 ga o'tkazish (CORS muammosini hal qilish uchun) ───────
+  const toBase64 = (url) => {
+    return new Promise((resolve) => {
+      if (!url || url.startsWith('data:')) { resolve(url || ''); return; }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) { resolve(url); }
+      };
+      img.onerror = () => resolve(url);
+      img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+    });
+  };
+
   // ── PDF chop etish (Professional Design V3.2) ───────────────────────────
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const activePartners = partnersList.filter(p => selectedPartners.includes(p._id));
     const basisText     = getBasisText();
+
+    // Barcha rasmlarni base64 ga konvertatsiya qilamiz (PDF da ko'rinishi uchun)
+    const logoUrl = companySettings.kpLogo || companySettings.companyLogo || '';
+    const logoBase64 = logoUrl ? await toBase64(logoUrl) : '';
+
+    const partnersWithBase64 = await Promise.all(
+      activePartners.map(async (p) => ({
+        ...p,
+        logoBase64: (p.logo && !p.logo.startsWith('<svg')) ? await toBase64(p.logo) : (p.logo || '')
+      }))
+    );
 
     const printContent = `<!DOCTYPE html>
 <html>
@@ -413,12 +485,14 @@ const KPModal = ({ onClose, editData = null }) => {
       border-top: 2.5px solid #999; 
       display: flex; 
       justify-content: space-between; 
-      align-items: baseline;
+      align-items: flex-start;
       color: #999;
       font-size: 12px;
     }
-    .footer-logo { color: #111; font-weight: 950; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; }
-    .footer-details { text-align: right; }
+    .footer-left { display: flex; flex-direction: column; gap: 4px; }
+    .footer-logo { color: #111; font-weight: 950; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .footer-phone { color: #111; font-size: 14px; font-weight: 800; }
+    .footer-details { text-align: right; margin-top: 5px; }
 
     @media print {
       @page { margin: 1.2cm; size: A4; }
@@ -433,7 +507,7 @@ const KPModal = ({ onClose, editData = null }) => {
 <body>
   <div class="hdr">
     <div class="logo-container">
-      ${companySettings.kpLogo ? `<img src="${companySettings.kpLogo}" class="official-logo" />` : (companySettings.companyLogo ? `<img src="${companySettings.companyLogo}" class="official-logo" />` : '<div></div>')}
+      ${logoBase64 ? `<img src="${logoBase64}" class="official-logo" />` : '<div></div>'}
     </div>
     <div class="tt-badge-side">
       <div class="tt-badge">Tijorat Taklifi</div>
@@ -454,7 +528,7 @@ const KPModal = ({ onClose, editData = null }) => {
     <div class="info-card">
       <div class="card-title">Taklif Tayyorladi</div>
       <div class="manager-box">
-        ${user?.photo ? `<img src="${user.photo}" class="manager-photo" />` : '<div class="manager-placeholder">👤</div>'}
+        ${user?.photo ? `<img src="${user.photo}" class="manager-photo" />` : `<div class="manager-placeholder"><svg viewBox="0 0 24 24" width="22" height="22" stroke="#ccc" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>`}
         <div class="person-details">
           <div class="person-name" style="font-size:16px; margin-bottom:2px;">${user?.name || 'Menejer'}</div>
           <div style="font-size:11px; color:#999; text-transform:uppercase; font-weight:700;">${companySettings.companyName}</div>
@@ -465,12 +539,14 @@ const KPModal = ({ onClose, editData = null }) => {
   </div>
 
   <div class="partners-section">
-    ${activePartners.length > 0 ? `
+    ${partnersWithBase64.length > 0 ? `
     <div class="partners-label">Loyihadagi Hamkorlarimiz</div>
     <div class="partners-row">
-      ${activePartners.map(p => `
+      ${partnersWithBase64.map(p => `
         <div class="partner-logo-item">
-          ${p.logo.startsWith('<svg') ? p.logo.replace('<svg', '<svg style="height:22px;width:auto;"') : `<img src="${p.logo}" style="height:22px;object-fit:contain;" />`}
+          ${p.logoBase64.startsWith('<svg') 
+            ? p.logoBase64.replace('<svg', '<svg style="height:22px;width:auto;"') 
+            : (p.logoBase64 ? `<img src="${p.logoBase64}" style="height:22px;object-fit:contain;" />` : `<span style="font-size:11px;font-weight:700;">${p.name || ''}</span>`)}
         </div>
       `).join('')}
     </div>` : ''}
@@ -492,7 +568,7 @@ const KPModal = ({ onClose, editData = null }) => {
         <tr>
           <td>${idx + 1}</td>
           <td>
-            ${item.image ? `<img src="${item.image}" class="item-img" />` : '<div class="item-img" style="display:flex;align-items:center;justify-content:center;color:#ccc;font-size:24px;">🛋️</div>'}
+            ${item.image ? `<img src="${item.image}" class="item-img" />` : `<div class="item-img" style="display:flex;align-items:center;justify-content:center;background:#f9fafb;opacity:0.6;"><svg viewBox="0 0 24 24" width="32" height="32" stroke="#999" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"></path><path d="m3.3 7 8.7 5 8.7-5"></path><path d="M12 22V12"></path></svg></div>`}
           </td>
           <td class="item-info">
             <strong>${item.name}</strong>
@@ -545,7 +621,10 @@ const KPModal = ({ onClose, editData = null }) => {
   </div>
 
   <div class="footer">
-    <div class="footer-logo">${companySettings.companyName}</div>
+    <div class="footer-left">
+      <div class="footer-logo">${companySettings.companyName}</div>
+      <div class="footer-phone">${companySettings.companyPhone}</div>
+    </div>
     <div class="footer-details">
       ${companySettings.companyAddress} &middot; ${companySettings.telegram} &middot; ${companySettings.instagram}
     </div>
@@ -761,7 +840,7 @@ const KPModal = ({ onClose, editData = null }) => {
                     <div style={{ display:'flex', gap:'14px', marginBottom:'12px' }}>
                       <label style={{ width:'66px', height:'66px', borderRadius:'12px', background: item.image ? 'transparent' : 'rgba(255,255,255,0.05)', border:'2px dashed rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
                         {item.image ? <img src={item.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <Package size={22} color="rgba(255,255,255,0.3)"/>}
-                        <input type="file" accept="image/*" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>
+                        <input type="file" accept="image/*,.pdf" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>
                       </label>
                       <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'8px' }}>
                         <input value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} placeholder={`Mahsulot nomi (${idx + 1})`}
@@ -849,6 +928,14 @@ const KPModal = ({ onClose, editData = null }) => {
             <Printer size={18}/> Preview & Chop etish
           </button>
         </div>
+
+        {croppingFile && (
+          <KPImageTool 
+            file={croppingFile}
+            onConfirm={handleSnipConfirm}
+            onCancel={() => { setCroppingFile(null); setCroppingItemId(null); }}
+          />
+        )}
       </div>
     </div>
   );

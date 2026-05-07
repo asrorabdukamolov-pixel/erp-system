@@ -1,10 +1,12 @@
 import React, { useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { Bell, Search, User as UserIcon, RotateCw } from 'lucide-react';
 
 
 const Header = () => {
   const { user, updateUser } = useAuth();
+  const { newCount } = useNotifications();
   const fileInputRef = useRef(null);
 
   const handlePhotoUpload = (e) => {
@@ -80,16 +82,24 @@ const Header = () => {
 
           <button style={{ position: 'relative', background: 'transparent', color: 'var(--text-secondary)', border: 'none', cursor: 'pointer' }}>
             <Bell size={22} />
-            <span style={{ 
-              position: 'absolute', 
-              top: '2px', 
-              right: '2px', 
-              background: '#ef4444', 
-              width: '8px', 
-              height: '8px', 
-              borderRadius: '50%',
-              border: '2px solid #0f172a'
-            }}></span >
+            {newCount > 0 && (
+              <span style={{ 
+                position: 'absolute', 
+                top: '-5px', 
+                right: '-5px', 
+                background: '#ef4444', 
+                color: 'white',
+                fontSize: '10px',
+                fontWeight: '900',
+                width: '18px', 
+                height: '18px', 
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '2px solid #0f172a'
+              }}>{newCount}</span>
+            )}
           </button>
 
           <div style={{ height: '24px', width: '1px', background: 'var(--border-color)' }}></div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Store, Plus, Search, Edit2, Trash2, MapPin, User, ShieldAlert, X, Check, ArrowRight, ShieldCheck, Clock, Ban, Eye, EyeOff } from 'lucide-react';
+import { Store, Plus, Search, Edit2, Trash2, MapPin, User, ShieldAlert, X, Check, ArrowRight, ShieldCheck, Clock, Ban, Eye, EyeOff, Phone } from 'lucide-react';
 import api from '../../utils/api';
 
 const Showrooms = () => {
@@ -199,9 +199,15 @@ const Showrooms = () => {
                       </div>
                     </td>
                     <td style={{ padding: '20px 8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px' }}>
-                        <User size={14} color="var(--text-secondary)" />
-                        {s.adminName} {s.adminSurname}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <User size={14} color="var(--accent-gold)" />
+                          <span style={{ fontWeight: '600' }}>{s.adminName} {s.adminSurname}</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                          <Phone size={12} />
+                          {s.phone || 'Noma\'lum'}
+                        </div>
                       </div>
                     </td>
                     <td style={{ padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '14px' }}>

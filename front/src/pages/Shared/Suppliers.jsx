@@ -23,6 +23,7 @@ const Suppliers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterShowroom, setFilterShowroom] = useState('all');
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -37,12 +38,14 @@ const Suppliers = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        const [supRes, showRes] = await Promise.all([
+        const [supRes, showRes, purRes] = await Promise.all([
           api.get('/suppliers'),
-          user?.role === 'super' ? api.get('/showrooms') : Promise.resolve({ data: [] })
+          user?.role === 'super' ? api.get('/showrooms') : Promise.resolve({ data: [] }),
+          api.get('/purchases')
         ]);
         setSuppliers(supRes.data);
         setShowrooms(showRes.data);
+        setPurchases(purRes.data || []);
       } catch (err) {
         console.error("Suppliers load error", err);
       } finally {
@@ -243,6 +246,8 @@ const Suppliers = () => {
           </table>
         </div>
       </div>
+
+
 
       {isModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(15px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2000, padding: '20px' }}>

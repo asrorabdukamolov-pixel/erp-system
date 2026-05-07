@@ -55,43 +55,58 @@ const Partners = () => {
   const handleCompanyLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        alert('Rasm hajmi juda katta! Maksimal 1MB.');
+      if (file.size > 2 * 1024 * 1024) { 
+        alert('Rasm hajmi juda katta! Maksimal 2MB.');
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        setLogoSaving(true);
-        try {
-          const updated = { ...companySettings, kpLogo: reader.result };
-          await api.put('/settings', updated);
-          setCompanySettings(updated);
-          alert('Tijorat taklifi (KP) logotipi muvaffaqiyatli yangilandi!');
-        } catch (err) {
-          const errorMsg = err.response?.data?.message || err.response?.data?.msg || err.message;
-          alert('Xatolik: ' + errorMsg);
-        } finally {
-          setLogoSaving(false);
-        }
-      };
-      reader.readAsDataURL(file);
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      setLogoSaving(true);
+      try {
+        const uploadRes = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        const newLogoUrl = uploadRes.data.url;
+        const updated = { ...companySettings, kpLogo: newLogoUrl };
+        await api.put('/settings', updated);
+        setCompanySettings(updated);
+        alert('Tijorat taklifi (KP) logotipi muvaffaqiyatli yangilandi!');
+      } catch (err) {
+        console.error("Logo upload error", err);
+        const errorMsg = err.response?.data?.message || err.response?.data?.msg || err.message;
+        alert('Xatolik: ' + errorMsg);
+      } finally {
+        setLogoSaving(false);
+      }
     }
   };
 
-  const handleLogoUpload = (e) => {
+  const handleLogoUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 1024 * 1024) { // 1MB limit
-        alert('Rasm hajmi juda katta! Maksimal 1MB.');
+      if (file.size > 2 * 1024 * 1024) {
+        alert('Rasm hajmi juda katta! Maksimal 2MB.');
         return;
       }
-      const reader = new FileReader();
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
       setIsLogoLoading(true);
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, logo: reader.result }));
+      try {
+        const uploadRes = await api.post('/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setFormData(prev => ({ ...prev, logo: uploadRes.data.url }));
+      } catch (err) {
+        console.error("Partner logo upload error", err);
+        alert('Rasm yuklashda xatolik yuz berdi');
+      } finally {
         setIsLogoLoading(false);
-      };
-      reader.readAsDataURL(file);
+      }
     }
   };
 

@@ -77,9 +77,9 @@ const ShowroomDashboard = () => {
   }, [filters]);
 
   const managersList = useMemo(() => {
-     // This should also be an API call, but for now we can use orders or a separate user list
-     return [];
-  }, []);
+     if (!data || !data.salesPerformance) return [];
+     return data.salesPerformance.map(p => p.name);
+  }, [data]);
 
   if (!data) return <div style={{ padding: '100px', textAlign: 'center', color: 'var(--accent-gold)' }}>Analitika yuklanmoqda...</div>;
 
@@ -182,8 +182,9 @@ const ShowroomDashboard = () => {
         <SimpleKPICard title="Sof Foyda (Profit)" value={data.overview.grossProfit.toLocaleString() + " UZS"} status={data.overview.grossProfit > 0 ? 'success' : 'danger'} />
       </div>
 
-      {/* ROW 2: CHART (70%) & DEBTORS (30%) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '7.5fr 2.5fr', gap: '20px', marginBottom: '20px' }}>
+      {/* ROW 2: CASHFLOW (50%) & DEBTORS/CREDITORS (50%) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+        {/* Cashflow Chart */}
         <div className="premium-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '20px', fontWeight: '950' }}>Kirim vs Chiqim Dinamikasi (Cashflow)</h3>
@@ -192,7 +193,7 @@ const ShowroomDashboard = () => {
                  <span style={{ color: '#ef4444' }}>● CHIQIM</span>
               </div>
           </div>
-          <div style={{ flex: 1, minHeight: '320px' }}>
+          <div style={{ flex: 1, minHeight: '380px' }}>
             <ResponsiveContainer width="100%" height="100%">
                <AreaChart data={data.cashflowChart}>
                   <defs>
@@ -209,65 +210,65 @@ const ShowroomDashboard = () => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
           {/* Debitor */}
-          <div className="premium-card" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div className="premium-card" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '12px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}><Users color="#fbbf24" size={20} /> Debitor</h3>
-                <div style={{ fontSize: '26px', fontWeight: '950', color: '#ef4444', marginTop: '6px' }}>{data.debitor.total.toLocaleString()}</div>
+                <div style={{ fontSize: '24px', fontWeight: '950', color: '#ef4444', marginTop: '6px' }}>{data.debitor.total.toLocaleString()}</div>
              </div>
              <div style={{ overflowY: 'auto', flex: 1 }}>
-                <table style={{ width: '100%', fontSize: '15px' }}>
+                <table style={{ width: '100%', fontSize: '14px' }}>
                    <tbody>
                       {data.debitor.list.map((d, i) => (
                          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                            <td style={{ padding: '10px 0' }}>
-                               <div style={{ fontWeight: '800' }}>{d.name}</div>
+                            <td style={{ padding: '8px 0' }}>
+                               <div style={{ fontWeight: '800', fontSize: '13px' }}>{d.name}</div>
                             </td>
-                            <td style={{ textAlign: 'right', fontWeight: '900', color: '#ef4444' }}>{d.debt.toLocaleString()}</td>
+                            <td style={{ textAlign: 'right', fontWeight: '900', color: '#ef4444', fontSize: '13px' }}>{d.debt.toLocaleString()}</td>
                          </tr>
                       ))}
                    </tbody>
                 </table>
              </div>
           </div>
+
           {/* Kreditor */}
-          <div className="premium-card" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div className="premium-card" style={{ height: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
              <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', marginBottom: '12px' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase color="#8b5cf6" size={20} /> Kreditor</h3>
-                <div style={{ fontSize: '26px', fontWeight: '950', color: '#f59e0b', marginTop: '6px' }}>{data.kreditor.total.toLocaleString()}</div>
+                <div style={{ fontSize: '24px', fontWeight: '950', color: '#f59e0b', marginTop: '6px' }}>{data.kreditor.total.toLocaleString()}</div>
              </div>
              <div style={{ overflowY: 'auto', flex: 1 }}>
-                <table style={{ width: '100%', fontSize: '15px' }}>
+                <table style={{ width: '100%', fontSize: '14px' }}>
                    <tbody>
                       {data.kreditor.list.map((k, i) => (
                          <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                            <td style={{ padding: '10px 0' }}>
-                               <div style={{ fontWeight: '800' }}>{k.supplier}</div>
+                            <td style={{ padding: '8px 0' }}>
+                               <div style={{ fontWeight: '800', fontSize: '13px' }}>{k.supplier}</div>
                             </td>
-                            <td style={{ textAlign: 'right', fontWeight: '900', color: '#f59e0b' }}>{k.debt.toLocaleString()}</td>
+                            <td style={{ textAlign: 'right', fontWeight: '900', color: '#f59e0b', fontSize: '13px' }}>{k.debt.toLocaleString()}</td>
                          </tr>
                       ))}
                    </tbody>
                 </table>
              </div>
           </div>
-          </div>
         </div>
+      </div>
 
-      {/* ROW 3: EXPENSES & PERFORMANCE (0.8fr 1.2fr) */}
-      <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: '20px', marginBottom: '20px' }}>
-        <div className="premium-card" style={{ flex: 1.2, display: 'flex', flexDirection: 'column' }}>
+      {/* ROW 3: EXPENSES (50%) & ORDER STATS (50%) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+        <div className="premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
            <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '16px' }}>Xarajatlar Diagrammasi</h3>
-           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', height: '280px' }}>
+           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', height: '320px' }}>
              {/* Custom Vertical Legend (Left) */}
-             <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '350px', overflowY: 'auto' }}>
+             <div style={{ flex: 1.2, display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '320px', overflowY: 'auto' }}>
                 {[...data.expenseBreakdown].sort((a,b) => b.value - a.value).map((entry, index) => (
                   <div key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '10px 14px', borderRadius: '10px', borderLeft: `6px solid ${COLORS[index % COLORS.length]}` }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase' }}>{entry.name}</span>
-                       <span style={{ fontSize: '18px', fontWeight: '900' }}>{entry.value.toLocaleString()}</span>
+                       <span style={{ fontSize: '16px', fontWeight: '900' }}>{entry.value.toLocaleString()}</span>
                     </div>
                   </div>
                 ))}
@@ -278,11 +279,11 @@ const ShowroomDashboard = () => {
                   <PieChart>
                     <Pie 
                       data={[...data.expenseBreakdown].sort((a,b) => b.value - a.value)} 
-                      innerRadius={70} 
-                      outerRadius={110} 
+                      innerRadius={65} 
+                      outerRadius={100} 
                       paddingAngle={5} 
                       dataKey="value"
-                      cx="40%"
+                      cx="50%"
                     >
                       {[...data.expenseBreakdown].sort((a,b) => b.value - a.value).map((entry, index) => (
                         <Cell key={index} fill={COLORS[index % COLORS.length]} />
@@ -295,51 +296,29 @@ const ShowroomDashboard = () => {
            </div>
         </div>
 
-        <div className="premium-card" style={{ flex: 0.8 }}>
-           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '20px', fontWeight: '900' }}>Manager Performance</h3>
-              <div style={{ display: 'flex', gap: '15px', fontSize: '13px' }}>
-                 <span style={{ color: '#3b82f6' }}>● SAVDO</span>
-                 <span style={{ color: '#10b981' }}>● FOYDA</span>
+        <div className="premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+              <div>
+                <h3 style={{ fontSize: '20px', fontWeight: '900' }}>Buyurtmalar Statistikasi</h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Jami {data.overview.totalOrders} ta buyurtma</p>
+              </div>
+              <div style={{ background: 'rgba(251,191,36,0.1)', padding: '10px 20px', borderRadius: '14px', border: '1px solid rgba(251,191,36,0.2)', textAlign: 'right' }}>
+                 <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '800', textTransform: 'uppercase' }}>JAMI BUYURTMALAR</div>
+                 <div style={{ fontSize: '24px', fontWeight: '950', color: 'var(--accent-gold)' }}>{data.overview.totalOrders} <span style={{ fontSize: '14px' }}>ta</span></div>
               </div>
            </div>
            
-           <div style={{ height: '280px' }}>
-             <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.salesPerformance} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={15} tickLine={false} axisLine={false} />
-                  <YAxis stroke="var(--text-secondary)" fontSize={15} tickFormatter={(v) => v >= 1000000 ? (v/1000000).toFixed(0) + 'M' : v.toLocaleString()} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    contentStyle={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '18px' }}
-                    formatter={(value) => value.toLocaleString() + ' UZS'}
-                    cursor={false}
-                  />
-                  <Legend iconType="circle" />
-                  <Bar dataKey="sales" name="Savdo" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={40} />
-                  <Bar dataKey="profit" name="Foyda" fill="#10b981" radius={[5, 5, 0, 0]} barSize={40} />
-                </BarChart>
-             </ResponsiveContainer>
-           </div>
-        </div>
-      </div>
-
-      {/* ROW 4: ORDER STATISTICS PIE CHART */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '20px', marginBottom: '20px' }}>
-        <div className="premium-card" style={{ display: 'flex', flexDirection: 'column' }}>
-           <h3 style={{ fontSize: '20px', fontWeight: '900', marginBottom: '24px' }}>Buyurtmalar Statistikasi</h3>
-           <div style={{ display: 'flex', gap: '30px', alignItems: 'center', height: '280px' }}>
+           <div style={{ display: 'flex', gap: '30px', alignItems: 'center', height: '250px' }}>
              {/* Info Column */}
-             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {data.orderStats.map((item, idx) => (
-                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '14px 20px', borderRadius: '14px', borderLeft: `6px solid ${item.color}` }}>
+                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(255,255,255,0.02)', padding: '10px 16px', borderRadius: '12px', borderLeft: `5px solid ${item.color}` }}>
                     <div>
-                       <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase' }}>{item.name}</span>
-                       <div style={{ fontSize: '22px', fontWeight: '900' }}>{item.value} <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>ta</span></div>
+                       <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '700', textTransform: 'uppercase' }}>{item.name}</span>
+                       <div style={{ fontSize: '18px', fontWeight: '900' }}>{item.value} <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ta</span></div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                       <div style={{ fontSize: '20px', fontWeight: '950', color: item.color }}>{item.percentage}%</div>
-                       <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700' }}>ULUSH</div>
+                       <div style={{ fontSize: '16px', fontWeight: '950', color: item.color }}>{item.percentage}%</div>
                     </div>
                   </div>
                 ))}
@@ -351,8 +330,8 @@ const ShowroomDashboard = () => {
                   <PieChart>
                     <Pie 
                       data={data.orderStats} 
-                      innerRadius={75} 
-                      outerRadius={105} 
+                      innerRadius={65} 
+                      outerRadius={95} 
                       paddingAngle={5} 
                       dataKey="value"
                       stroke="none"
@@ -370,14 +349,71 @@ const ShowroomDashboard = () => {
              </div>
            </div>
         </div>
+      </div>
 
-        <div className="premium-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center', background: 'linear-gradient(135deg, rgba(251,191,36,0.05) 0%, rgba(0,0,0,0) 100%)' }}>
-           <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
-              <ShoppingCart size={40} />
+      {/* ROW 4: MANAGER PERFORMANCE (FULL WIDTH) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
+        <div className="premium-card">
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '900' }}>Manager Performance</h3>
+              <div style={{ display: 'flex', gap: '15px', fontSize: '13px' }}>
+                 <span style={{ color: '#3b82f6' }}>● SAVDO</span>
+                 <span style={{ color: '#ef4444' }}>● XARAJAT</span>
+                 <span style={{ color: '#10b981' }}>● FOYDA</span>
+              </div>
            </div>
-           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>Jami Buyurtmalar</p>
-           <h2 style={{ fontSize: '64px', fontWeight: '950', color: '#fff', letterSpacing: '-2px' }}>{data.overview.totalOrders} <span style={{ fontSize: '24px', color: 'var(--accent-gold)' }}>ta</span></h2>
-           <p style={{ color: 'var(--text-secondary)', fontSize: '13px', maxWidth: '200px', marginTop: '10px' }}>Tanlangan davrdagi barcha faol va o'chirilgan buyurtmalar.</p>
+           
+           <div style={{ height: '350px' }}>
+             <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.salesPerformance} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={15} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-secondary)" fontSize={15} tickFormatter={(v) => v >= 1000000 ? (v/1000000).toFixed(0) + 'M' : v.toLocaleString()} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '18px' }}
+                    formatter={(value) => value.toLocaleString() + ' UZS'}
+                    cursor={false}
+                  />
+                  <Legend iconType="circle" />
+                  <Bar dataKey="sales" name="Savdo" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={40} />
+                  <Bar dataKey="cost" name="Xarajat" fill="#ef4444" radius={[5, 5, 0, 0]} barSize={40} />
+                  <Bar dataKey="profit" name="Foyda" fill="#10b981" radius={[5, 5, 0, 0]} barSize={40} />
+                </BarChart>
+             </ResponsiveContainer>
+           </div>
+        </div>
+      </div>
+
+      {/* ROW 5: PM PERFORMANCE (FULL WIDTH) */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px', marginBottom: '20px' }}>
+        <div className="premium-card">
+           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '20px', fontWeight: '900' }}>Project Manager (PM) Performance</h3>
+              <div style={{ display: 'flex', gap: '15px', fontSize: '13px' }}>
+                 <span style={{ color: '#3b82f6' }}>● SAVDO</span>
+                 <span style={{ color: '#ef4444' }}>● XARAJAT</span>
+                 <span style={{ color: '#10b981' }}>● FOYDA</span>
+              </div>
+           </div>
+           
+           <div style={{ height: '350px' }}>
+             <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.pmPerformance} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                  <XAxis dataKey="name" stroke="var(--text-secondary)" fontSize={15} tickLine={false} axisLine={false} />
+                  <YAxis stroke="var(--text-secondary)" fontSize={15} tickFormatter={(v) => v >= 1000000 ? (v/1000000).toFixed(0) + 'M' : v.toLocaleString()} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    contentStyle={{ background: '#111', border: '1px solid var(--border-color)', borderRadius: '12px', fontSize: '18px' }}
+                    formatter={(value) => value.toLocaleString() + ' UZS'}
+                    cursor={false}
+                  />
+                  <Legend iconType="circle" />
+                  <Bar dataKey="sales" name="Savdo" fill="#3b82f6" radius={[5, 5, 0, 0]} barSize={40} />
+                  <Bar dataKey="cost" name="Xarajat" fill="#ef4444" radius={[5, 5, 0, 0]} barSize={40} />
+                  <Bar dataKey="profit" name="Foyda" fill="#10b981" radius={[5, 5, 0, 0]} barSize={40} />
+                </BarChart>
+             </ResponsiveContainer>
+           </div>
         </div>
       </div>
 

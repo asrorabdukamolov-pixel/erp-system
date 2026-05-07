@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const { getFirestore } = require('firebase-admin/firestore');
 require('dotenv').config();
 
 if (!admin.apps.length) {
@@ -28,7 +29,8 @@ if (!admin.apps.length) {
     }
 }
 
-const db = admin.firestore();
+// Target the 'default' database explicitly
+const db = getFirestore(admin.app(), 'default');
 
 const formatDoc = (doc) => {
     if (!doc.exists) return null;

@@ -42,12 +42,14 @@ const Finance = () => {
 
   const loadData = async () => {
     try {
-        const [reqRes, orderRes] = await Promise.all([
+        const [reqRes, orderRes, purRes] = await Promise.all([
             api.get('/requests'),
-            api.get('/orders')
+            api.get('/orders'),
+            api.get('/purchases')
         ]);
         setRequests(reqRes.data);
         setOrders(orderRes.data);
+        setPurchases(purRes.data);
     } catch (err) {
         console.error("Data load error", err);
     }
@@ -103,9 +105,9 @@ const Finance = () => {
   };
 
   const handleSelectPurchase = (p) => {
-    setSelectedPurchaseId(p.uniqueXaridId);
-    setPurchaseSearch(p.uniqueXaridId);
-    setAmount(p.totalAmount || '');
+    setSelectedPurchaseId(p.uniqueXaridId || p._id);
+    setPurchaseSearch(p.uniqueXaridId || p.itemName);
+    setAmount(p.totalAmount?.toString() || '');
     if (p.orderId) {
       setSelectedOrderId(p.orderId);
       setOrderSearch(p.orderId);
@@ -169,7 +171,7 @@ const Finance = () => {
     if (e) e.preventDefault();
     if (!amount || Number(amount) <= 0) return alert('Summani kiriting!');
     if (!neededDate) return alert('Sanani tanlang!');
-    const needsOrder = ['travel', 'food', 'product', 'installer'].includes(category);
+    const needsOrder = ['travel', 'food', 'product', 'installer', 'bonus'].includes(category);
     if (needsOrder && !selectedOrderId) return alert('Buyurtmani tanlang!');
 
     const categoryLabel = CATEGORIES.find(c => c.id === category).label;
@@ -301,19 +303,28 @@ const Finance = () => {
               {activeRequests.length === 0 ? (
                 <tr><td colSpan="7" style={{ padding: '100px', textAlign: 'center', color: 'var(--text-secondary)' }}>Hozircha faol so'rovlar yo'q.</td></tr>
               ) : (
-                activeRequests.map(req => (
-                  <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                activeRequests.map(req => {
+                  const orderObj = orders.find(o => o.productionId === req.orderId || o.uniqueId === req.orderId);
+                  const customerName = orderObj ? `${orderObj.selectedCustomer?.firstName || ''} ${orderObj.selectedCustomer?.lastName || ''}`.trim() : '';
+                  
+                  return (
+                  <tr key={req._id || req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '20px' }}>
-                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req.id}</p>
+                      <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req._id || req.id}</p>
                       <p style={{ fontSize: '14px', fontWeight: '700' }}>{req.category}</p>
                     </td>
                     <td style={{ padding: '20px' }}>
-                      {req.orderId && <div style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', marginBottom: '4px', display: 'inline-block' }}>📦 {req.orderId}</div>}
+                      {req.orderId && (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginBottom: '4px' }}>
+                           <div style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>📦 {req.orderId}</div>
+                           {customerName && <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>👤 {customerName}</div>}
+                        </div>
+                      )}
                       {req.purchaseId && <div style={{ fontSize: '11px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>🛒 {req.purchaseId}</div>}
                       {!req.orderId && !req.purchaseId && '—'}
                     </td>
                     <td style={{ padding: '20px', fontWeight: '900', fontSize: '15px' }}>
-                      {req.amount?.toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
+                      {((Number(req.amount) || 0) + (Number(req.paidTotal) || 0)).toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
                     </td>
                     <td style={{ padding: '20px', fontSize: '13px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
@@ -334,7 +345,8 @@ const Finance = () => {
                       )}
                     </td>
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>
@@ -369,18 +381,28 @@ const Finance = () => {
                   {archiveRequests.length === 0 ? (
                     <tr><td colSpan="6" style={{ padding: '100px', textAlign: 'center', color: 'var(--text-secondary)' }}>Arxivda ma'lumotlar yo'q.</td></tr>
                   ) : (
-                    archiveRequests.map(req => (
+                    archiveRequests.map(req => {
+                      const orderObj = orders.find(o => o.productionId === req.orderId || o.uniqueId === req.orderId);
+                      const customerName = orderObj ? `${orderObj.selectedCustomer?.firstName || ''} ${orderObj.selectedCustomer?.lastName || ''}`.trim() : '';
+
+                      return (
                       <tr key={req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                         <td style={{ padding: '20px' }}>
                           <p style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '800', marginBottom: '4px' }}>{req.id}</p>
                           <p style={{ fontSize: '14px', fontWeight: '700' }}>{req.category}</p>
                         </td>
                         <td style={{ padding: '20px' }}>
-                          {req.orderId && <div style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', marginBottom: '4px', display: 'inline-block' }}>📦 {req.orderId}</div>}
+                          {req.orderId && (
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '4px', marginBottom: '4px' }}>
+                               <div style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>📦 {req.orderId}</div>
+                               {customerName && <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>👤 {customerName}</div>}
+                            </div>
+                          )}
                           {req.purchaseId && <div style={{ fontSize: '11px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>🛒 {req.purchaseId}</div>}
+                          {!req.orderId && !req.purchaseId && '—'}
                         </td>
                         <td style={{ padding: '20px', fontWeight: '900', fontSize: '15px' }}>
-                          {req.amount?.toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
+                          {((Number(req.amount) || 0) + (Number(req.paidTotal) || 0)).toLocaleString()} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>UZS</span>
                         </td>
                         <td style={{ padding: '20px', fontSize: '13px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
@@ -393,7 +415,8 @@ const Finance = () => {
                           </div>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -471,17 +494,18 @@ const Finance = () => {
                     <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '14px', zIndex: 100, maxHeight: '200px', overflowY: 'auto', marginTop: '8px', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                       {filteredPurchases.map((p, index) => (
                         <div 
-                          key={p.id} 
+                          key={p._id || p.id} 
                           onClick={() => handleSelectPurchase(p)} 
+                          onMouseEnter={() => setSelectedIndex(index)}
                           style={{ 
                             padding: '14px 20px', 
                             cursor: 'pointer', 
                             borderBottom: '1px solid rgba(255,255,255,0.05)', 
                             transition: '0.2s',
-                            background: selectedPurchaseId === p.uniqueXaridId ? 'rgba(251,191,36,0.15)' : 'transparent'
+                            background: selectedIndex === index ? 'rgba(251,191,36,0.15)' : 'transparent'
                           }}
                         >
-                           <p style={{ fontWeight: '800', fontSize: '14px', color: 'white' }}>{p.uniqueXaridId}</p>
+                           <p style={{ fontWeight: '800', fontSize: '14px', color: 'white' }}>{p.uniqueXaridId || 'ID yo\'q'}</p>
                            <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{p.itemName}</p>
                         </div>
                       ))}
@@ -519,13 +543,13 @@ const Finance = () => {
                 <div>
                   <label style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Summa (UZS)</label>
                   <input 
-                    type="number" 
+                    type="text" 
                     ref={amountRef}
-                    value={amount} 
-                    onChange={e => setAmount(e.target.value)} 
+                    value={amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} 
+                    onChange={e => setAmount(e.target.value.replace(/\s/g, ''))} 
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        const needsOrder = ['travel', 'food', 'product', 'installer'].includes(category);
+                        const needsOrder = ['travel', 'food', 'product', 'installer', 'bonus'].includes(category);
                         if (needsOrder) searchRef.current?.focus();
                         else commentRef.current?.focus();
                       }
@@ -548,7 +572,7 @@ const Finance = () => {
                 </div>
               </div>
 
-              {['travel', 'food', 'product', 'installer'].includes(category) && (
+              {['travel', 'food', 'product', 'installer', 'bonus'].includes(category) && (
                 <div style={{ position: 'relative' }}>
                   <label style={{ fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Buyurtmani tanlang</label>
                   <div style={{ position: 'relative' }}>

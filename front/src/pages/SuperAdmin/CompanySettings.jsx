@@ -10,6 +10,7 @@ const CompanySettings = () => {
     companyName: 'EXPRESS MEBEL',
     companyPhone: '+998 88 737 54 43',
     companyLogo: '',
+    kpLogo: '',
     companyAddress: "Toshkent sh. Jomiy ko'chasi",
     instagram: 'instagram.com/express_mebel__uz',
     telegram: 't.me/expressmebel'
@@ -20,7 +21,7 @@ const CompanySettings = () => {
       try {
         const res = await api.get('/settings');
         if (res.data) {
-          setFormData(res.data);
+          setFormData(prev => ({ ...prev, ...res.data }));
         }
       } catch (err) {
         console.error("Settings fetch error", err);
@@ -48,18 +49,30 @@ const CompanySettings = () => {
     }
   };
 
-  const handleLogoUpload = (e, field) => {
+  const handleLogoUpload = async (e, field) => {
     const file = e.target.files[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // Increased to 2MB as some logos can be slightly larger
+      if (file.size > 2 * 1024 * 1024) { 
         setMessage({ type: 'error', text: 'Rasm hajmi juda katta! Maksimal 2MB.' });
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData({ ...formData, [field]: reader.result });
-      };
-      reader.readAsDataURL(file);
+      
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      
+      setSaving(true);
+      try {
+        const res = await api.post('/upload', formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setFormData(prev => ({ ...prev, [field]: res.data.url }));
+        setMessage({ type: 'success', text: 'Logo yuklandi. Saqlash tugmasini bosing.' });
+      } catch (err) {
+        console.error("Logo upload error", err);
+        setMessage({ type: 'error', text: 'Logo yuklashda xatolik yuz berdi.' });
+      } finally {
+        setSaving(false);
+      }
     }
   };
 

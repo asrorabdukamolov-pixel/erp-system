@@ -199,13 +199,14 @@ const SuperCustomerBase = () => {
                   <th style={{ padding: '14px 10px' }}>ID & Agent</th>
                   <th style={{ padding: '14px 10px' }}>Telefon</th>
                   <th style={{ padding: '14px 10px' }}>Firma</th>
+                  <th style={{ padding: '14px 10px' }}>Showroom</th>
                   <th style={{ padding: '14px 10px' }}>Sana</th>
                   <th style={{ padding: '14px 10px' }}>Amallar</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredAgents.length === 0 && (
-                  <tr><td colSpan={5} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
+                  <tr><td colSpan={6} style={{ padding: '48px', textAlign: 'center', color: 'var(--text-secondary)' }}>Agentlar topilmadi</td></tr>
                 )}
                 {filteredAgents.map(a => (
                   <tr key={a._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
@@ -222,6 +223,12 @@ const SuperCustomerBase = () => {
                     </td>
                     <td style={{ padding: '18px 10px', fontSize: '13px' }}>{a.phone}</td>
                     <td style={{ padding: '18px 10px' }}>{a.firm || '—'}</td>
+                    <td style={{ padding: '18px 10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px' }}>
+                        <Store size={14} color="var(--accent-gold)" />
+                        <span style={{ fontWeight: '600' }}>{a.showroom || '—'}</span>
+                      </div>
+                    </td>
                     <td style={{ padding: '18px 10px', fontSize: '12px', color: 'var(--text-secondary)' }}>{new Date(a.createdAt).toLocaleDateString()}</td>
                     <td style={{ padding: '18px 10px' }}>
                       <button 

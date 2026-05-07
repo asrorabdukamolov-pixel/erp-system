@@ -35,7 +35,7 @@ exports.createTransaction = async (req, res) => {
             status: 'active'
         };
 
-        if (type === 'income' && orderId) {
+        if (orderId) {
             const ordersRef = db.collection('orders');
             let orderSnapshot = await ordersRef.where('productionId', '==', orderId).get();
             if (orderSnapshot.empty) {
@@ -46,18 +46,34 @@ exports.createTransaction = async (req, res) => {
                 const orderDoc = orderSnapshot.docs[0];
                 const orderData = orderDoc.data();
                 
-                await orderDoc.ref.update({
-                    paidAmount: (orderData.paidAmount || 0) + Number(amountUzs),
-                    timeline: [
-                        ...(orderData.timeline || []),
-                        {
-                            type: 'system',
-                            text: `To'lov qabul qilindi: ${amountUzs.toLocaleString()} UZS. Kategoriya: ${category}`,
-                            user: req.user.name,
-                            time: new Date().toISOString()
-                        }
-                    ]
-                });
+                if (type === 'income') {
+                    await orderDoc.ref.update({
+                        paidAmount: (orderData.paidAmount || 0) + Number(amountUzs),
+                        timeline: [
+                            ...(orderData.timeline || []),
+                            {
+                                type: 'system',
+                                text: `To'lov qabul qilindi: ${amountUzs.toLocaleString()} UZS. Kategoriya: ${category}`,
+                                user: req.user.name,
+                                time: new Date().toISOString()
+                            }
+                        ]
+                    });
+                } else if (type === 'expense') {
+                    // Update order's total expense if needed, or just link it
+                    await orderDoc.ref.update({
+                        totalExpense: (orderData.totalExpense || 0) + Number(amountUzs),
+                        timeline: [
+                            ...(orderData.timeline || []),
+                            {
+                                type: 'system',
+                                text: `Xarajat yozildi: ${amountUzs.toLocaleString()} UZS. Kategoriya: ${category}`,
+                                user: req.user.name,
+                                time: new Date().toISOString()
+                            }
+                        ]
+                    });
+                }
                 newTransaction.orderRef = orderDoc.id;
             }
         }
@@ -180,6 +196,30 @@ exports.getDashboardStats = async (req, res) => {
         });
         const salesPerformance = Object.values(managerStats).sort((a, b) => b.sales - a.sales);
 
+        // Calculate detailed order profits
+        const orderProfits = orders.map(o => {
+            const oId = o.productionId || o.uniqueId;
+            // Get all transactions for this order (income or expense)
+            const orderTxs = transactions.filter(t => t.orderId === oId || t.orderRef === o.id);
+            const totalIn = orderTxs.filter(t => t.type === 'income').reduce((s, t) => s + (t.amountUzs || 0), 0);
+            const totalOut = orderTxs.filter(t => t.type === 'expense').reduce((s, t) => s + (t.amountUzs || 0), 0);
+            const totalAmount = Number(o.totalAmount || o.amount || 0);
+            const profit = totalAmount - totalOut;
+            const margin = totalAmount > 0 ? (profit / totalAmount) * 100 : 0;
+
+            return {
+                id: o.id,
+                order_number: oId,
+                customer: `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''}`.trim() || 'Mijoz',
+                manager: o.managerName || 'Noma\'lum',
+                date: o.createdAt || o.orderDate,
+                total_amount: totalAmount,
+                total_cost: totalOut,
+                profit: profit,
+                margin: margin
+            };
+        }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
         res.json({
             overview: {
                 totalSales,
@@ -195,7 +235,7 @@ exports.getDashboardStats = async (req, res) => {
             kreditor: { total: kreditorTotal, list: kreditorList },
             cashflowChart,
             salesPerformance,
-            orderProfits: []
+            orderProfits
         });
     } catch (err) {
         console.error("DashboardStats Error:", err.message);
