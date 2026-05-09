@@ -46,8 +46,28 @@ exports.createTask = async (req, res) => {
             return res.status(401).json({ msg: 'Foydalanuvchi aniqlanmadi, qayta kiring' });
         }
 
+        let updatedTitle = title;
+        let customerInfo = "";
+
+        // Fetch order details if linked to an order
+        if (orderId) {
+            try {
+                const orderDoc = await db.collection('orders').doc(orderId).get();
+                if (orderDoc.exists) {
+                    const orderData = orderDoc.data();
+                    const cust = orderData.selectedCustomer;
+                    if (cust) {
+                        customerInfo = `[Mijoz: ${cust.firstName} ${cust.lastName} | Tel: ${cust.phone}]`;
+                        updatedTitle = `${customerInfo} ${title}`;
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching order for task:", err.message);
+            }
+        }
+
         const newTask = {
-            title,
+            title: updatedTitle,
             description: description || '',
             assigneeId,
             assigneeName,
@@ -71,7 +91,18 @@ exports.createTask = async (req, res) => {
             if (userDoc.exists && userDoc.data().telegramChatId) {
                 const userData = userDoc.data();
                 const deadline = new Date(dueDate).toLocaleString('uz-UZ', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                const message = `📌 *Yangi vazifa!*\n\n📝 *Sarlavha:* ${title}\n📅 *Muddat:* ${deadline}\n👤 *Kimdan:* ${req.user.name}\n\nIltimos, ERP tizimiga kirib batafsil tanishib chiqing.`;
+                
+                let message = `📌 *Yangi vazifa!*\n\n`;
+                if (customerInfo) {
+                    message += `👤 *Mijoz:* ${customerInfo.replace('[', '').replace(']', '')}\n`;
+                }
+                message += `📝 *Sarlavha:* ${title}\n`;
+                if (orderUniqueId) {
+                    message += `🔢 *Buyurtma:* ${orderUniqueId}\n`;
+                }
+                message += `📅 *Muddat:* ${deadline}\n`;
+                message += `👤 *Kimdan:* ${req.user.name}\n\nIltimos, ERP tizimiga kirib batafsil tanishib chiqing.`;
+
                 await sendMessage(userData.telegramChatId, message);
             }
         } catch (tgErr) {

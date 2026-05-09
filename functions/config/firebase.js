@@ -3,6 +3,10 @@ const { getFirestore } = require('firebase-admin/firestore');
 require('dotenv').config();
 
 if (!admin.apps.length) {
+    const envProjectId = process.env.FIREBASE_PROJECT_ID || process.env.GCLOUD_PROJECT;
+    // Update to match newer Firebase bucket suffix seen in user's console
+    const bucketName = `${envProjectId}.firebasestorage.app`;
+    
     // If running in Firebase Functions environment, initialize without explicit credentials
     if (process.env.FIREBASE_CONFIG || process.env.FUNCTIONS_EMULATOR) {
         admin.initializeApp();
@@ -12,23 +16,30 @@ if (!admin.apps.length) {
             ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') 
             : undefined;
 
-        if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
+        if (envProjectId && process.env.FIREBASE_CLIENT_EMAIL && privateKey) {
             admin.initializeApp({
                 credential: admin.credential.cert({
-                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    projectId: envProjectId,
                     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
                     privateKey: privateKey
-                })
+                }),
+                projectId: envProjectId,
+                storageBucket: bucketName
             });
-            console.log("Firebase Admin initialized via Environment Variables.");
+            console.log(`Firebase Admin initialized via Environment Variables for project: ${envProjectId}`);
         } else {
             try {
                 // Fallback for local scripts
                 const serviceAccount = require('../../back/config/firebase-service-account.json');
+                const finalProjectId = envProjectId || serviceAccount.project_id;
+                const finalBucket = `${finalProjectId}.firebasestorage.app`;
+                
                 admin.initializeApp({
-                    credential: admin.credential.cert(serviceAccount)
+                    credential: admin.credential.cert(serviceAccount),
+                    projectId: finalProjectId,
+                    storageBucket: finalBucket
                 });
-                console.log("Firebase Admin initialized via JSON file.");
+                console.log(`Firebase Admin initialized via JSON file for project: ${finalProjectId}`);
             } catch (err) {
                 console.error("Firebase Initialization Error: No credentials found.");
             }

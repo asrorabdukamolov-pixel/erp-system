@@ -210,7 +210,7 @@ const Orders = () => {
   const [proposalSuggestions, setProposalSuggestions] = useState([]);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
-  const timelineEndRef = useRef(null);
+  const commentFileInputRef = useRef(null);
 
   const emptyOrder = { customerSearch: '', selectedCustomer: null, kpAmount: '', discount: '0', amount: '', currency: 'UZS', exchangeRate: '', kpFiles: [], designFiles: [], checklist: { design3d: false, construction: false, color: false, handle: false, materials: false }, durationDays: '', orderDate: new Date().toISOString().split('T')[0], deliveryDate: '', status: 'yangi', description: '', timeline: [], proposalId: null, proposalNumber: '', productionAmount: '' };
   const [newOrder, setNewOrder] = useState(emptyOrder);
@@ -260,6 +260,28 @@ const Orders = () => {
       try { const res = await api.post(`/orders/${editingId}/log`, { text: log.text, type: log.type }); if (inputType === 'task') { await api.post('/tasks', { title: commentText, dueDate: taskDueDate, assigneeId: user.id || user._id, assigneeName: user.name, orderId: editingId, orderUniqueId: res.data.uniqueId, priority: 'orta' }); loadOrderTasks(editingId); } setAllOrders(allOrders.map(o => o._id === editingId ? res.data : o)); setNewOrder(res.data); } catch (err) {}
     } else setNewOrder({ ...newOrder, timeline: [...(newOrder.timeline || []), log] });
     setCommentText(''); setInputType('comment');
+  };
+
+  const handleCommentFileChange = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0 || !editingId) return;
+
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await api.post('/upload', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        
+        // Add as a comment with a link
+        const fileLink = `[Fayl yuklandi: ${file.name}](${res.data.url})`;
+        const logRes = await api.post(`/orders/${editingId}/log`, { text: fileLink, type: 'comment' });
+        setAllOrders(allOrders.map(o => o._id === editingId ? logRes.data : o));
+        setNewOrder(logRes.data);
+      } catch (err) {
+        alert(`"${file.name}" faylini yuklashda xatolik yuz berdi.`);
+      }
+    }
+    e.target.value = '';
   };
 
   const handleCreateOrder = async (e) => {
@@ -360,7 +382,7 @@ const Orders = () => {
           <button onClick={() => setIsAgentModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
           <button onClick={() => setIsCustomerModalOpen(true)} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
           <button onClick={() => setIsKPModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}><FileText size={18} /> Tijorat Taklifi</button>
-          <button className="gold-btn" onClick={() => { setEditingId(null); setNewOrder(emptyOrder); setIsOrderModalOpen(true); }}><Plus size={20} /> Yangi Buyurtma</button>
+          <button className="gold-btn" onClick={() => { setEditingId(null); setNewOrder(emptyOrder); setProposalSearch(''); setIsOrderModalOpen(true); }}><Plus size={20} /> Yangi Buyurtma</button>
         </div>
       </div>
 
@@ -407,12 +429,22 @@ const Orders = () => {
                   }
 
                   return (
-                    <div key={order._id} draggable onDragStart={e => handleDragStart(e, order._id)} onContextMenu={(e) => handleContextMenu(e, order._id, order.pmStatus || 'yangi_buyurtma', order.assignedPmId)} onClick={() => { setEditingId(order._id); setNewOrder(order); setIsOrderModalOpen(true); }} style={{ background: '#1e213a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '20px', marginBottom: '16px', cursor: 'grab', position: 'relative', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
-                      <div style={{ position: 'absolute', top: '15px', left: 0, width: '3px', height: 'calc(100% - 30px)', background: stage.color, borderRadius: '0 4px 4px 0' }} />
+                    <div key={order._id} draggable onDragStart={e => handleDragStart(e, order._id)} onContextMenu={(e) => handleContextMenu(e, order._id, order.pmStatus || 'yangi_buyurtma', order.assignedPmId)} onClick={() => { 
+                      setEditingId(order._id); 
+                      setNewOrder({
+                        ...order,
+                        customerSearch: order.selectedCustomer ? `${order.selectedCustomer.firstName} ${order.selectedCustomer.lastName}` : ''
+                      }); 
+                      setProposalSearch(order.proposalNumber || '');
+                      setIsOrderModalOpen(true); 
+                    }} style={{ background: '#1e213a', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '16px', padding: '24px', marginBottom: '16px', cursor: 'grab', position: 'relative', transition: 'all 0.2s', boxShadow: '0 4px 20px rgba(0,0,0,0.2)' }}>
+                      <div style={{ position: 'absolute', top: '15px', left: 0, width: '4px', height: 'calc(100% - 30px)', background: stage.color, borderRadius: '0 4px 4px 0' }} />
                       
                       {/* Top Row: ID and Status */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <div style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>{order.uniqueId}</div>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>{order.uniqueId}</div>
+                        </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           {order.factoryDeadline && <div style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '4px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: '800' }}>F: {order.factoryDeadline}</div>}
                           <div style={{ background: deadlineStatus.bg, color: deadlineStatus.color, padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px', border: `1px solid ${deadlineStatus.color}22` }}>
@@ -477,10 +509,49 @@ const Orders = () => {
                         ))}
                       </div>
 
-                      {/* Sum Section */}
-                      <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '14px', padding: '16px' }}>
-                        <p style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: '800' }}>SUMMA</p>
-                        <p style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>{Number(order.amount).toLocaleString()} <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>UZS</span></p>
+                      {/* Completion Approvals Status */}
+                      {stage.id === 'bajarildi' && (
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+                          <div style={{ flex: 1, background: order.smCompletionApproved ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${order.smCompletionApproved ? '#22c55e' : 'rgba(255,255,255,0.1)'}`, padding: '8px', borderRadius: '10px', textAlign: 'center' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '2px', fontWeight: '800' }}>SM Tasdig'i</p>
+                            <p style={{ fontSize: '11px', fontWeight: '900', color: order.smCompletionApproved ? '#22c55e' : 'var(--text-secondary)' }}>
+                              {order.smCompletionApproved ? 'TASDIQLANDI' : 'KUTILMOQDA'}
+                            </p>
+                          </div>
+                          <div style={{ flex: 1, background: order.adminCompletionApproved ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${order.adminCompletionApproved ? '#22c55e' : 'rgba(255,255,255,0.1)'}`, padding: '8px', borderRadius: '10px', textAlign: 'center' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '2px', fontWeight: '800' }}>Admin Tasdig'i</p>
+                            <p style={{ fontSize: '11px', fontWeight: '900', color: order.adminCompletionApproved ? '#22c55e' : 'var(--text-secondary)' }}>
+                              {order.adminCompletionApproved ? 'TASDIQLANDI' : 'KUTILMOQDA'}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Footer: Managers Info */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '8px' }}>
+                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                               <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-gold)', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '900' }}>{order.managerName?.charAt(0) || 'S'}</div>
+                               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                 <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '800' }}>Sotuvchi:</span>
+                                 <span style={{ fontSize: '12px', fontWeight: '900', color: 'white' }}>{order.managerName}</span>
+                               </div>
+                            </div>
+                            {order.assignedPmName && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Briefcase size={14} /></div>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                      <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', fontWeight: '800' }}>PM mas'ul:</span>
+                                      <span style={{ fontSize: '12px', fontWeight: '900', color: '#3b82f6' }}>{order.assignedPmName}</span>
+                                    </div>
+                                </div>
+                            )}
+                         </div>
+                         
+                         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '12px 20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'right' }}>
+                            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '4px', fontWeight: '800' }}>Summa</span>
+                            <span style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>{Number(order.amount).toLocaleString()} UZS</span>
+                         </div>
                       </div>
                     </div>
                   );
@@ -494,6 +565,19 @@ const Orders = () => {
       {isOrderModalOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
           <div className="premium-card" style={{ width: '96vw', height: '94vh', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {(() => {
+              const currentUserId = user.id || user._id;
+              const isCreator = !editingId || newOrder.managerId === currentUserId;
+              const isNewStage = !editingId || newOrder.pmStatus === 'yangi_buyurtma';
+              const isEditable = isCreator && isNewStage;
+
+              const isInProduction = ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.status) || 
+                                     ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.pmStatus);
+              const isBeforeProduction = !isInProduction;
+              const isFactoryApproved = newOrder.factoryStatus === 'accepted';
+
+              return (
+                <>
             {/* Header */}
             <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -503,29 +587,57 @@ const Orders = () => {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Menejer: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.managerName || user.name}</span> • Showroom: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.showroom || user.showroom}</span></p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}><button onClick={handleCreateOrder} className="gold-btn" style={{ height: '48px', padding: '0 32px' }}><Check size={20} /> Saqlash</button><button onClick={() => setIsOrderModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', color: 'white' }}><X size={24} /></button></div>
+              <div style={{ display: 'flex', gap: '12px' }}>
+                {(isEditable || isBeforeProduction) && (
+                  <button onClick={handleCreateOrder} className="gold-btn" style={{ height: '48px', padding: '0 32px' }}>
+                    <Check size={20} /> Saqlash
+                  </button>
+                )}
+                <button onClick={() => setIsOrderModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', color: 'white' }}>
+                  <X size={24} />
+                </button>
+              </div>
             </div>
             
             {/* Body */}
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '550px 1fr', overflow: 'hidden' }}>
               <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', padding: '40px', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                  {/* Dynamic Editability Logic */}
                   {(() => {
-                    const isNewStage = !editingId || newOrder.pmStatus === 'yangi_buyurtma';
-                    
                     return (
                       <>
+                        {/* Files Section */}
+                        <div style={{ marginBottom: '32px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                            <FileText size={18} color="var(--accent-gold)" />
+                            <h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Fayllar</h4>
+                          </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <button 
+                              onClick={() => setFileManager({ isOpen: true, type: 'kp', files: newOrder.kpFiles || [], orderId: editingId })}
+                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '13px', fontWeight: '700' }}
+                            >
+                              <FileCheck size={18} color="var(--accent-gold)" /> KP Fayllari ({newOrder.kpFiles?.length || 0})
+                            </button>
+                            <button 
+                              onClick={() => setFileManager({ isOpen: true, type: 'design', files: newOrder.designFiles || [], orderId: editingId })}
+                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '13px', fontWeight: '700' }}
+                            >
+                              <FileUp size={18} color="#3b82f6" /> Dizayn Fayllari ({newOrder.designFiles?.length || 0})
+                            </button>
+                          </div>
+                        </div>
+
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                           <User size={18} color="var(--accent-gold)" />
                           <h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>
-                            MIJOZ MA'LUMOTLARI {!isNewStage && "(FAQAT KO'RISH)"}
+                            MIJOZ MA'LUMOTLARI {!isEditable && "(FAQAT KO'RISH)"}
                           </h4>
                         </div>
                         
                         <div>
                           <Lbl>MIJOZNI TANLANG</Lbl>
-                          {isNewStage ? (
+                          {isEditable ? (
                             <div style={{ position: 'relative', marginBottom: newOrder.selectedCustomer ? '16px' : '0' }}>
                               <IconInput icon={Search} value={newOrder.customerSearch} onChange={e => setNewOrder({...newOrder, customerSearch: e.target.value})} placeholder="Ism yoki telefon..." autoComplete="off" style={{ height: '54px' }} />
                               {customerSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden' }}>{customerSuggestions.map((c, i) => <div key={c._id} onClick={() => handleSelectCustomer(c)} style={{ padding: '15px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', background: i === selectedIndex ? 'rgba(251,191,36,0.1)' : 'transparent' }}>{c.firstName} {c.lastName} | {c.phone}</div>)}</div>)}
@@ -559,41 +671,63 @@ const Orders = () => {
                           )}
                         </div>
 
-                        <div style={{ opacity: isNewStage ? 1 : 0.7, pointerEvents: isNewStage ? 'auto' : 'none' }}>
-                          <Lbl>KP RAQAMI {!isNewStage && "(FAQAT KO'RISH)"}</Lbl>
-                          <IconInput icon={Search} value={proposalSearch} onChange={e => setProposalSearch(e.target.value)} readOnly={!isNewStage} placeholder="KP raqami..." style={{ height: '54px' }} />
-                          {isNewStage && proposalSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden' }}>{proposalSuggestions.map(p => <div key={p._id} onClick={() => handleSelectProposal(p)} style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{p.kpNumber} | {p.customer?.firstName} | {p.grandTotal?.toLocaleString()} so'm</div>)}</div>)}
+                        <div style={{ opacity: isEditable ? 1 : 0.7, pointerEvents: isEditable ? 'auto' : 'none' }}>
+                          <Lbl>KP RAQAMI {!isEditable && "(FAQAT KO'RISH)"}</Lbl>
+                          <IconInput icon={Search} value={proposalSearch} onChange={e => setProposalSearch(e.target.value)} readOnly={!isEditable} placeholder="KP raqami..." style={{ height: '54px' }} />
+                          {isEditable && proposalSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden' }}>{proposalSuggestions.map(p => <div key={p._id} onClick={() => handleSelectProposal(p)} style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{p.kpNumber} | {p.customer?.firstName} | {p.grandTotal?.toLocaleString()} so'm</div>)}</div>)}
                         </div>
 
-                        <div style={{ position: 'relative', opacity: isNewStage ? 1 : 0.7, pointerEvents: isNewStage ? 'auto' : 'none' }}>
+                        <div style={{ position: 'relative', opacity: isEditable ? 1 : 0.7, pointerEvents: isEditable ? 'auto' : 'none' }}>
                           <Lbl>KP SUMMASI</Lbl>
-                          <input value={newOrder.kpAmount} readOnly={!isNewStage} onChange={e => isNewStage && setNewOrder({...newOrder, kpAmount: formatAmount(e.target.value)})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white' }} />
+                          <input value={newOrder.kpAmount} readOnly={!isEditable} onChange={e => isEditable && setNewOrder({...newOrder, kpAmount: formatAmount(e.target.value)})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white' }} />
                           <span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '800' }}>so'm</span>
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', opacity: isNewStage ? 1 : 0.7, pointerEvents: isNewStage ? 'auto' : 'none' }}>
-                          <div><Lbl>SKIDKA (%)</Lbl><input type="number" value={newOrder.discount} readOnly={!isNewStage} onChange={e => isNewStage && setNewOrder({...newOrder, discount: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 15px', color: 'white' }} /></div>
-                          <div style={{ position: 'relative' }}><Lbl>SHARTNOMA SUMMASI</Lbl><input value={newOrder.amount} readOnly={!isNewStage} onChange={e => isNewStage && setNewOrder({...newOrder, amount: formatAmount(e.target.value)})} style={{ width: '100%', height: '54px', background: 'rgba(16,185,129,0.05)', border: '1px solid #10b981', borderRadius: '12px', padding: '0 60px 0 15px', color: '#10b981', fontWeight: '900', fontSize: '16px' }} /><span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(16,185,129,0.4)', fontSize: '12px', fontWeight: '800' }}>so'm</span></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '20px', opacity: isEditable ? 1 : 0.7, pointerEvents: isEditable ? 'auto' : 'none' }}>
+                          <div><Lbl>SKIDKA (%)</Lbl><input type="number" value={newOrder.discount} readOnly={!isEditable} onChange={e => isEditable && setNewOrder({...newOrder, discount: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 15px', color: 'white' }} /></div>
+                          <div style={{ position: 'relative' }}><Lbl>SHARTNOMA SUMMASI</Lbl><input value={newOrder.amount} readOnly={!isEditable} onChange={e => isEditable && setNewOrder({...newOrder, amount: formatAmount(e.target.value)})} style={{ width: '100%', height: '54px', background: 'rgba(16,185,129,0.05)', border: '1px solid #10b981', borderRadius: '12px', padding: '0 60px 0 15px', color: '#10b981', fontWeight: '900', fontSize: '16px' }} /><span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(16,185,129,0.4)', fontSize: '12px', fontWeight: '800' }}>so'm</span></div>
                         </div>
 
-                        <div style={{ position: 'relative' }}>
-                          <Lbl>ISHLAB CHIQARISH SUMMASI</Lbl>
-                          <input value={newOrder.productionAmount} onChange={e => setNewOrder({...newOrder, productionAmount: formatAmount(e.target.value)})} placeholder="Ishlab chiqarish harajatlarini kiriting..." style={{ width: '100%', height: '54px', background: 'rgba(59,130,246,0.05)', border: '1px solid #3b82f6', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white' }} />
+                        <div style={{ position: 'relative', opacity: (isFactoryApproved || isInProduction) ? 0.7 : 1 }}>
+                          <Lbl>ISHLAB CHIQARISH SUMMASI {(isFactoryApproved || isInProduction) && "(BLOKLANGAN)"}</Lbl>
+                          <input 
+                            value={newOrder.productionAmount} 
+                            readOnly={isFactoryApproved || isInProduction}
+                            onChange={e => setNewOrder({...newOrder, productionAmount: formatAmount(e.target.value)})} 
+                            placeholder="Ishlab chiqarish harajatlarini kiriting..." 
+                            style={{ width: '100%', height: '54px', background: 'rgba(59,130,246,0.05)', border: '1px solid #3b82f6', borderRadius: '12px', padding: '0 60px 0 15px', color: 'white' }} 
+                          />
                           <span style={{ position: 'absolute', right: '15px', top: '42px', color: 'rgba(59,130,246,0.4)', fontSize: '12px', fontWeight: '800' }}>so'm</span>
                         </div>
 
-                        <div style={{ opacity: isNewStage ? 1 : 0.7, pointerEvents: isNewStage ? 'auto' : 'none' }}>
+                        <div style={{ opacity: isEditable ? 1 : 0.7, pointerEvents: isEditable ? 'auto' : 'none' }}>
                           <Lbl>OBYEKT TURI</Lbl>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                             {PROPERTY_TYPES.map(t => (
-                              <button key={t.value} onClick={() => isNewStage && setNewOrder({...newOrder, propertyType: t.value})} style={{ height: '54px', borderRadius: '12px', background: newOrder.propertyType === t.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${newOrder.propertyType === t.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: newOrder.propertyType === t.value ? 'var(--accent-gold)' : 'white', fontWeight: '700' }}>{t.label}</button>
+                              <button key={t.value} onClick={() => isEditable && setNewOrder({...newOrder, propertyType: t.value})} style={{ height: '54px', borderRadius: '12px', background: newOrder.propertyType === t.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${newOrder.propertyType === t.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: newOrder.propertyType === t.value ? 'var(--accent-gold)' : 'white', fontWeight: '700' }}>{t.label}</button>
                             ))}
                           </div>
                         </div>
 
-                        <div><Lbl>TASDIQLATISH (CHECKLIST)</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>{Object.entries(CHECKLIST_LABELS).map(([k, l]) => (<button key={k} onClick={() => setNewOrder({...newOrder, checklist: {...newOrder.checklist, [k]: !newOrder.checklist?.[k]}})} style={{ height: '48px', borderRadius: '12px', background: newOrder.checklist?.[k] ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${newOrder.checklist?.[k] ? '#10b981' : 'var(--border-color)'}`, color: newOrder.checklist?.[k] ? '#10b981' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }}>{newOrder.checklist?.[k] ? <CheckSquare size={16} /> : <div style={{ width: '16px', height: '16px', border: '1.5px solid currentColor', borderRadius: '4px' }} />}{l}</button>))}</div></div>
+                        <div style={{ opacity: isBeforeProduction ? 1 : 0.7, pointerEvents: isBeforeProduction ? 'auto' : 'none' }}>
+                          <Lbl>TASDIQLATISH (CHECKLIST) {!isBeforeProduction && "(BLOKLANGAN)"}</Lbl>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                            {Object.entries(CHECKLIST_LABELS).map(([k, l]) => (
+                              <button key={k} onClick={() => isBeforeProduction && setNewOrder({...newOrder, checklist: {...newOrder.checklist, [k]: !newOrder.checklist?.[k]}})} style={{ height: '48px', borderRadius: '12px', background: newOrder.checklist?.[k] ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${newOrder.checklist?.[k] ? '#10b981' : 'var(--border-color)'}`, color: newOrder.checklist?.[k] ? '#10b981' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }}>{newOrder.checklist?.[k] ? <CheckSquare size={16} /> : <div style={{ width: '16px', height: '16px', border: '1.5px solid currentColor', borderRadius: '4px' }} />}{l}</button>
+                            ))}
+                          </div>
+                        </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}><div><Lbl>QABUL SANASI</Lbl><input type="date" value={newOrder.orderDate} onChange={e => setNewOrder({...newOrder, orderDate: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div><div><Lbl>MUDDATI (KUN)</Lbl><input type="number" value={newOrder.durationDays} onChange={e => setNewOrder({...newOrder, durationDays: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', opacity: isBeforeProduction ? 1 : 0.7 }}>
+                          <div>
+                            <Lbl>QABUL SANASI</Lbl>
+                            <input type="date" value={newOrder.orderDate} readOnly={!isBeforeProduction} onChange={e => isBeforeProduction && setNewOrder({...newOrder, orderDate: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} />
+                          </div>
+                          <div>
+                            <Lbl>MUDDATI (KUN)</Lbl>
+                            <input type="number" value={newOrder.durationDays} readOnly={!isBeforeProduction} onChange={e => isBeforeProduction && setNewOrder({...newOrder, durationDays: e.target.value})} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} />
+                          </div>
+                        </div>
                       </>
                     );
                   })()}
@@ -603,7 +737,7 @@ const Orders = () => {
               <div style={{ background: '#0f0f1b', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <div style={{ padding: '24px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}><History size={20} color="var(--accent-gold)" /><h4 style={{ fontSize: '15px', fontWeight: '900', textTransform: 'uppercase' }}>XARAKATLAR TARIXI</h4></div>
                 <div style={{ flex: 1, padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {(newOrder.timeline || []).map((item, idx) => {
+                  {([...(newOrder.timeline || [])]).reverse().map((item, idx) => {
                     const isSystem = ['system', 'status', 'stage', 'factory_rejection'].includes(item.type);
                     
                     if (isSystem) {
@@ -627,31 +761,80 @@ const Orders = () => {
                           </span>
                           <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)' }}>{new Date(item.time).toLocaleTimeString()}</span>
                         </div>
-                        <p style={{ fontSize: '15px', color: '#e2e8f0', lineHeight: '1.6' }}>{item.text}</p>
+                        <p style={{ fontSize: '15px', color: '#e2e8f0', lineHeight: '1.6' }}>
+                          {(() => {
+                            const fileMatch = item.text.match(/\[(.*?)\]\((.*?)\)/);
+                            if (fileMatch) {
+                              const [full, name, url] = fileMatch;
+                              return (
+                                <button 
+                                  onClick={() => window.open(url, '_blank')}
+                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'rgba(251,191,36,0.1)', border: '1px solid var(--accent-gold)', borderRadius: '10px', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}
+                                >
+                                  <FileText size={16} /> {name}
+                                </button>
+                              );
+                            }
+                            return item.text;
+                          })()}
+                        </p>
                       </div>
                     );
                   })}
-                  <div ref={timelineEndRef} />
                 </div>
                 <div style={{ padding: '24px 32px', borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(255,255,255,0.02)', display: 'flex', gap: '20px' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderRight: '1px solid rgba(255,255,255,0.05)', paddingRight: '20px' }}>
-                    <button onClick={() => setInputType('comment')} style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'comment' ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: inputType === 'comment' ? 'black' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><MessageSquare size={20} /></button>
-                    <button onClick={() => setInputType('task')} style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'task' ? '#3b82f6' : 'rgba(255,255,255,0.03)', color: inputType === 'task' ? 'white' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><CheckSquare size={20} /></button>
+                    <button onClick={() => setInputType('comment')} style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'comment' ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: inputType === 'comment' ? 'black' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Izoh"><MessageSquare size={20} /></button>
+                    <button onClick={() => setInputType('task')} style={{ width: '48px', height: '48px', borderRadius: '14px', background: inputType === 'task' ? '#3b82f6' : 'rgba(255,255,255,0.03)', color: inputType === 'task' ? 'white' : 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Vazifa"><CheckSquare size={20} /></button>
+                    <input type="file" multiple ref={commentFileInputRef} onChange={handleCommentFileChange} style={{ display: 'none' }} />
+                    <button onClick={() => editingId ? commentFileInputRef.current.click() : alert("Fayl yuklash uchun avval buyurtmani saqlang.")} style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-secondary)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Fayl yuklash"><Upload size={20} /></button>
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                     {inputType === 'task' && <input type="datetime-local" value={taskDueDate} onChange={e => setTaskDueDate(e.target.value)} style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid #3b82f6', borderRadius: '10px', color: 'white', padding: '8px', fontSize: '12px' }} />}
                     <div style={{ position: 'relative' }}><textarea value={commentText} onChange={e => setCommentText(e.target.value)} placeholder={inputType === 'task' ? "Vazifa matni..." : "Izoh qoldiring..."} style={{ width: '100%', height: '100px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '15px', padding: '15px', color: 'white', resize: 'none' }} /><button onClick={handleAddComment} style={{ position: 'absolute', right: '10px', bottom: '10px', background: inputType === 'task' ? '#3b82f6' : 'var(--accent-gold)', color: inputType === 'task' ? 'white' : 'black', border: 'none', padding: '8px 15px', borderRadius: '10px', fontWeight: '800' }}>Yuborish</button></div>
                   </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
+            </>
+          );
+        })()}
+      </div>
+    </div>
+  )}
 
       {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} onSaved={loadData} />}
       {isAgentModalOpen && <AgentModal onClose={() => setIsAgentModalOpen(false)} onSaved={loadData} />}
       {isCustomerModalOpen && <CustomerModal onClose={() => setIsCustomerModalOpen(false)} onSaved={loadData} />}
+
+      {fileManager.isOpen && (
+        <FileManagerModal 
+          type={fileManager.type}
+          files={fileManager.files}
+          readOnly={false} // PM needs to be able to add/remove files too if needed
+          onClose={() => setFileManager({ ...fileManager, isOpen: false })}
+          onRemove={async (idx) => {
+            const newFiles = fileManager.files.filter((_, i) => i !== idx);
+            if (editingId) {
+              const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
+              await api.put(`/orders/${editingId}`, { [field]: newFiles });
+              setAllOrders(allOrders.map(o => o._id === editingId ? { ...o, [field]: newFiles } : o));
+              setNewOrder({ ...newOrder, [field]: newFiles });
+            }
+            setFileManager({ ...fileManager, files: newFiles });
+          }}
+          onAdd={async (uploaded) => {
+            const newFiles = [...fileManager.files, ...uploaded];
+            if (editingId) {
+              const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
+              await api.put(`/orders/${editingId}`, { [field]: newFiles });
+              setAllOrders(allOrders.map(o => o._id === editingId ? { ...o, [field]: newFiles } : o));
+              setNewOrder({ ...newOrder, [field]: newFiles });
+            }
+            setFileManager({ ...fileManager, files: newFiles });
+          }}
+        />
+      )}
 
       {contextMenu.isOpen && (
         <div 

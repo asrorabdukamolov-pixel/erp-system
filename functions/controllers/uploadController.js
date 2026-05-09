@@ -15,13 +15,15 @@ exports.uploadFile = (req, res) => {
             const { filename, encoding, mimeType } = info;
             originalName = filename;
             const fileExtension = path.extname(filename);
-            const newFilename = `uploads/${uuidv4()}${fileExtension}`;
+            const sanitizedName = filename.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const newFilename = `uploads/${Date.now()}_${sanitizedName}`;
             const fileRef = bucket.file(newFilename);
             const downloadToken = uuidv4();
 
             const writeStream = fileRef.createWriteStream({
                 metadata: {
                     contentType: mimeType,
+                    contentDisposition: `attachment; filename="${originalName}"`,
                     metadata: {
                         firebaseStorageDownloadTokens: downloadToken
                     }

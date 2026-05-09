@@ -40,6 +40,40 @@ app.use('/api/telegram', require('./routes/telegramRoutes'));
 app.use('/api/departments', require('./routes/departmentRoutes'));
 app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
 
+app.get('/api/setup', async (req, res) => {
+    try {
+        const costCenters = [
+            { code: 'PROD-001', name: 'Xom-ashyo (Material)', category: 'production', description: 'Mebel ishlab chiqarish uchun materiallar' },
+            { code: 'SELL-001', name: 'Marketing va Reklama', category: 'selling', description: 'SMM, Target va boshqa reklama xarajatlari' },
+            { code: 'FIN-002', name: 'Kredit Foizlari', category: 'financial', description: 'Bank kreditlari bo\'yicha to\'lanadigan foizlar' },
+            { code: 'PROD-002', name: 'Fabrika Ijarasi', category: 'production', description: 'Sex va fabrika binosi uchun ijara' },
+            { code: 'ADM-004', name: 'Ma\'muriy Ish haqi', category: 'admin', description: 'Ofis xodimlari va rahbariyat maoshi' },
+            { code: 'SELL-003', name: 'Logistika (Yetkazib berish)', category: 'selling', description: 'Mijozlarga yetkazib berish transport xarajatlari' },
+            { code: 'FIN-003', name: 'Valyuta Kursi Farqi', category: 'financial', description: 'Konvertatsiya va kurs o\'zgarishidan zararlar' },
+            { code: 'ADM-001', name: 'Ofis Ijarasi', category: 'admin', description: 'Markaziy ofis ijara to\'lovi' },
+            { code: 'SELL-002', name: 'Showroom Ijarasi', category: 'selling', description: 'Savdo do\'konlari uchun ijara to\'lovlari' },
+            { code: 'PROD-003', name: 'Kommunal (Fabrika)', category: 'production', description: 'Fabrika elektr, suv va gaz xarajatlari' },
+            { code: 'ADM-002', name: 'Ofis xarajatlari', category: 'admin', description: 'Kanselyariya, internet va xo\'jalik xarajatlari' },
+            { code: 'FIN-001', name: 'Bank xizmatlari', category: 'financial', description: 'Bank komissiyalari va o\'tkazma xizmatlari' },
+            { code: 'PROD-004', name: 'Usta ish haqi', category: 'production', description: 'Ishlab chiqarish ustalarining maoshlari' },
+            { code: 'SELL-004', name: 'Sotuv menejeri bonusi', category: 'selling', description: 'Sotuvdan beriladigan foizlar' }
+        ];
+
+        const batch = db.batch();
+        const existing = await db.collection('cost_centers').get();
+        if (existing.size > 0) return res.json({ msg: "Already seeded" });
+
+        for (const cc of costCenters) {
+            const docRef = db.collection('cost_centers').doc();
+            batch.set(docRef, { ...cc, createdAt: new Date().toISOString() });
+        }
+        await batch.commit();
+        res.json({ msg: "Success", count: costCenters.length });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // Export as Firebase Function
 exports.api = functions.https.onRequest(app);
 
