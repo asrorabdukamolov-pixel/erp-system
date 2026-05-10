@@ -32,6 +32,7 @@ import SuperAdminStaff from './pages/SuperAdmin/Staff';
 import DistributorDashboard from './pages/Fabrika/Distributor';
 import Suppliers from './pages/Shared/Suppliers';
 import Tasks from './pages/Shared/Tasks';
+import AIInsights from './pages/SuperAdmin/AIInsights';
 
 // Project Manager
 import ProjectOrders from './pages/ProjectManager/Orders';
@@ -125,6 +126,11 @@ const AppContent = () => {
       <Route path="/super-admin/settings" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><SuperSettings /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/super-admin/ai-insights" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><AIInsights /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/super-admin/tasks" element={
@@ -366,12 +372,15 @@ const AppContent = () => {
 
 
 
+import AIAssistant from './components/AIAssistant';
+
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <Router>
           <AppContent />
+          <AIAssistant />
         </Router>
       </NotificationProvider>
     </AuthProvider>

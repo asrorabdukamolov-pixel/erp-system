@@ -58,6 +58,7 @@ const Sidebar = () => {
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
     { name: 'Yetkazib beruvchilar', path: '/super-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Vazifalar', path: '/super-admin/tasks', icon: <CheckSquare size={20} /> },
+    { name: 'AI Monitoring', path: '/super-admin/ai-insights', icon: <BarChart3 size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },
   ];
 

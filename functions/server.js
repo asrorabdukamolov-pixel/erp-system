@@ -6,7 +6,8 @@ const { db } = require('./config/firebase');
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: '*' })); // Hamma so'rovlarga ruxsat beramiz
+app.get('/api/ping', (req, res) => res.send('pong')); // Test uchun ping
 app.use((req, res, next) => {
     console.log(`${req.method} ${req.url}`);
     next();
@@ -80,7 +81,7 @@ exports.api = functions.https.onRequest(app);
 
 // Keep listen for local development only
 if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 5005;
     app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT} with Firestore`);
     });
