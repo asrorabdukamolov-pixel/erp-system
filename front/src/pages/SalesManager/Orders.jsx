@@ -886,7 +886,7 @@ const Orders = () => {
                         onClick={() => { setEditingId(order._id); setNewOrder(order); setIsOrderModalOpen(true); }}
                       >
                           <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: stage.color, borderRadius: '4px 0 0 4px' }} />
-                          
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '4px 12px', borderRadius: '8px' }}>{order.uniqueId}</span>
                               {order.amoId && <span style={{ fontSize: '10px', fontWeight: '900', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', padding: '4px 12px', borderRadius: '8px' }}>AMO LEAD</span>}
