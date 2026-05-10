@@ -73,6 +73,23 @@ exports.updateOrder = async (req, res) => {
             updateData.factoryStatus = null;
         }
 
+        // Initialize production tracking if it doesn't exist
+        if (req.body.factoryStatus === 'accepted' && !order.productionPlan) {
+            updateData.productionStages = {
+                constructor: { status: 'pending', label: 'Konstruktor' },
+                distributor: { status: 'pending', label: 'Taqsimlovchi' },
+                warehouse: { status: 'pending', label: 'Xom-ashyo ombori' },
+                cutting: { status: 'pending', label: 'Raspil' },
+                edging: { status: 'pending', label: 'Kromka' },
+                drilling: { status: 'pending', label: 'Teshish' },
+                carpentry: { status: 'pending', label: 'Stolyarka' },
+                painting: { status: 'pending', label: 'Malyarka' },
+                qc: { status: 'pending', label: 'O\'TK' },
+                packaging: { status: 'pending', label: 'Upakovka' },
+                finished_warehouse: { status: 'pending', label: 'Tayyor mahsulot ombori' }
+            };
+        }
+
         if (req.body.status && req.body.status !== order.status) {
             updateData.timeline = [
                 ...(order.timeline || []),

@@ -39,6 +39,7 @@ app.use('/api/tasks', require('./routes/taskRoutes'));
 app.use('/api/telegram', require('./routes/telegramRoutes'));
 app.use('/api/departments', require('./routes/departmentRoutes'));
 app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
+app.use('/api/integrations', require('./routes/integrationRoutes'));
 
 app.get('/api/setup', async (req, res) => {
     try {

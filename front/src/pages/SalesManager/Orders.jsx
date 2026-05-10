@@ -13,6 +13,7 @@ import api from '../../utils/api';
 
 // --- Constants ---
 const DEAL_STAGES = [
+  { id: 'amocrm_lead', title: 'Call Center (Amo) 📞', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
   { id: 'yangi', title: 'Yangi mijoz ✨', color: '#fbbf24', bg: 'rgba(251,191,36,0.05)' },
   { id: 'uchrashuv', title: 'Uchrashuv 🤝', color: '#3b82f6', bg: 'rgba(59,130,246,0.05)' },
   { id: 'kp_yuborildi', title: 'KP yuborildi 📩', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
@@ -886,12 +887,19 @@ const Orders = () => {
                       >
                           <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: stage.color, borderRadius: '4px 0 0 4px' }} />
                           
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', gap: '6px' }}>
                               <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--accent-gold)', background: 'rgba(212,175,55,0.1)', padding: '4px 12px', borderRadius: '8px' }}>{order.uniqueId}</span>
+                              {order.amoId && <span style={{ fontSize: '10px', fontWeight: '900', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)', padding: '4px 12px', borderRadius: '8px' }}>AMO LEAD</span>}
                             </div>
                             {isLocked && <div style={{ fontSize: '10px', background: 'rgba(212,175,55,0.1)', color: 'var(--accent-gold)', padding: '4px 10px', borderRadius: '8px', fontWeight: '800' }}><Lock size={12} /> LOCKED</div>}
                           </div>
+
+                          {order.notes && order.status === 'amocrm_lead' && (
+                             <div style={{ background: 'rgba(139,92,246,0.05)', border: '1px dashed rgba(139,92,246,0.3)', borderRadius: '12px', padding: '12px', marginBottom: '16px' }}>
+                               <p style={{ fontSize: '10px', color: '#8b5cf6', textTransform: 'uppercase', fontWeight: '800', marginBottom: '4px' }}>Call-markaz izohi:</p>
+                               <p style={{ fontSize: '12px', color: 'white', fontStyle: 'italic', lineHeight: '1.4' }}>"{order.notes}"</p>
+                             </div>
+                          )}
 
                           <h4 style={{ fontSize: '18px', fontWeight: '900', marginBottom: '6px', color: 'white' }}>{order.selectedCustomer?.firstName} {order.selectedCustomer?.lastName}</h4>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '600' }}><Phone size={14} /> {order.selectedCustomer?.phone}</div>
@@ -1310,6 +1318,16 @@ const Orders = () => {
                                   return item.text;
                                 })()}
                               </p>
+                              {item.aiAnalysis && (
+                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', marginTop: '12px', border: '1px dashed rgba(139,92,246,0.4)' }}>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', fontSize: '11px', color: '#a855f7', fontWeight: '900', textTransform: 'uppercase' }}>
+                                    <Activity size={14} /> AI TAHLILI (DeepSales):
+                                  </div>
+                                  <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontStyle: 'italic', lineHeight: '1.5' }}>
+                                    {item.aiAnalysis}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           ) : (
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>

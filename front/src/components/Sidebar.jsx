@@ -25,7 +25,8 @@ import {
   Truck,
   CheckSquare,
   Send,
-  BarChart3
+  BarChart3,
+  Layers
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -53,6 +54,7 @@ const Sidebar = () => {
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
     { name: 'Fabrika', path: '/super-admin/fabrika', icon: <Factory size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
+    { name: 'Xodimlar', path: '/super-admin/staff', icon: <Users size={20} /> },
     { name: 'Barcha Buyurtmalar', path: '/super-admin/orders', icon: <ClipboardList size={20} /> },
     { name: 'Yetkazib beruvchilar', path: '/super-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Vazifalar', path: '/super-admin/tasks', icon: <CheckSquare size={20} /> },
@@ -110,6 +112,12 @@ const Sidebar = () => {
     { name: 'Sozlamalar', path: '/fabrika/settings', icon: <Settings size={20} /> },
     { name: 'Karzina', path: '/fabrika/trash', icon: <Trash2 size={20} /> },
   ];
+  
+  const distributorLinks = [
+    { name: 'Buyurtmalarni Tekshirish', path: '/fabrika/distributor', icon: <Layers size={20} /> },
+    { name: 'Xodimlar', path: '/super-admin/staff', icon: <Users size={20} /> },
+    { name: 'Vazifalar', path: '/shared/tasks', icon: <CheckSquare size={20} /> },
+  ];
 
   // Logic to determine which links to show
   let links = [];
@@ -119,6 +127,7 @@ const Sidebar = () => {
   else if (user?.role === 'proekt_manager') links = projectManagerLinks;
   else if (user?.role === 'kassa') links = kassaLinks;
   else if (user?.role === 'fabrika') links = fabrikaLinks;
+  else if (user?.role === 'distributor') links = distributorLinks;
   else links = [{ name: 'Dashboard', path: '/', icon: <LayoutDashboard size={20} /> }];
 
   const handleLogout = () => {

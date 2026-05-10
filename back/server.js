@@ -31,9 +31,9 @@ app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/proposals', require('./routes/proposalRoutes'));
 app.use('/api/settings', require('./routes/settingsRoutes'));
 app.use('/api/suppliers', require('./routes/supplierRoutes'));
-app.use('/api/cash-flow', require('./routes/cashFlowRoutes'));
-app.use('/api/expense-items', require('./routes/expenseItemsRoutes'));
-app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
+// app.use('/api/cash-flow', require('./routes/cashFlowRoutes'));
+// app.use('/api/expense-items', require('./routes/expenseItemsRoutes'));
+// app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
 
 // Serve Frontend Static Files
 app.use(express.static(path.join(__dirname, '../front/dist')));

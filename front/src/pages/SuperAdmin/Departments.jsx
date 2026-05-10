@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, Wallet, UserPlus, ShoppingCart, Target, Factory, ClipboardList, 
   Plus, Users, Search, Edit2, Trash2, Ban, X, Check, Eye, EyeOff, User, Phone,
-  Info, ArrowRight, ShieldAlert, Clock
+  Info, ArrowRight, ShieldAlert, Clock, Store
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -122,7 +122,7 @@ const Departments = () => {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
           <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Tizim Bo'limlari</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Kompaniya strukturasini va xodimlarni boshqarish.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Kompaniya strukturasi va xodimlarni boshqarish.</p>
         </div>
         <button className="gold-btn" onClick={() => handleOpenModal('add')}>
           <Plus size={20} />
@@ -302,6 +302,18 @@ const Departments = () => {
                     <option value="proekt_manager">Proekt Menejer (PM)</option>
                     <option value="kassa">Kassa / Hisobchi</option>
                     <option value="fabrika">Fabrika Menejeri</option>
+                    <option value="distributor">Taqsimlovchi</option>
+                    <option value="fabrika_worker">Fabrika Ishchisi (Umumiy)</option>
+                    <option value="constructor">Konstruktor</option>
+                    <option value="warehouse">Xoma-ashyo ombori</option>
+                    <option value="cutting">Raspil (Kesish)</option>
+                    <option value="edging">Kromka</option>
+                    <option value="drilling">Teshish (Pristritka)</option>
+                    <option value="carpentry">Stolyarka</option>
+                    <option value="painting">Malyarka</option>
+                    <option value="qc">O'TK (Sifat nazorati)</option>
+                    <option value="packaging">Upakovka</option>
+                    <option value="finished_warehouse">Tayyor mahsulot ombori</option>
                   </select>
                 </div>
                 <div>

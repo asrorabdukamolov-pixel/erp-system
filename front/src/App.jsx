@@ -28,6 +28,8 @@ import SalesTrash from './pages/SalesManager/Trash';
 import SalesFinance from './pages/SalesManager/Finance';
 import CompanySettings from './pages/SuperAdmin/CompanySettings';
 import SuperSettings from './pages/SuperAdmin/Settings';
+import SuperAdminStaff from './pages/SuperAdmin/Staff';
+import DistributorDashboard from './pages/Fabrika/Distributor';
 import Suppliers from './pages/Shared/Suppliers';
 import Tasks from './pages/Shared/Tasks';
 
@@ -105,6 +107,16 @@ const AppContent = () => {
       } />
       <Route path="/super-admin/partners" element={<Navigate to="/super-admin/settings" replace />} />
       <Route path="/super-admin/company-settings" element={<Navigate to="/super-admin/settings" replace />} />
+      <Route path="/super-admin/staff" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><SuperAdminStaff /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/fabrika/distributor" element={
+        <ProtectedRoute allowedRoles={['distributor', 'super']}>
+          <MainLayout><DistributorDashboard /></MainLayout>
+        </ProtectedRoute>
+      } />
       <Route path="/super-admin/suppliers" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><Suppliers /></MainLayout>
