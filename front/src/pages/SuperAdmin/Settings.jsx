@@ -3,6 +3,7 @@ import CostCenters from './CostCenters';
 import CashFlowSettings from './CashFlowSettings';
 import ExpenseItemsSettings from './ExpenseItemsSettings';
 import PnLCategoriesSettings from './PnLCategoriesSettings';
+import BankAccountsSettings from './BankAccountsSettings';
 import { Settings as SettingsIcon, BarChart3, Wallet } from 'lucide-react';
 
 const Settings = () => {
@@ -141,8 +142,9 @@ const Settings = () => {
                                         {activeFinanceSubTab === 'exp-items' && <ExpenseItemsSettings />}
                                         {activeFinanceSubTab === 'cost-centers' && <CostCenters />}
                                         {activeFinanceSubTab === 'pnl-cats' && <PnLCategoriesSettings />}
+                                        {activeFinanceSubTab === 'bank-accounts' && <BankAccountsSettings />}
                                         
-                                        {!['cf-items', 'exp-items', 'cost-centers', 'pnl-cats'].includes(activeFinanceSubTab) && (
+                                        {!['cf-items', 'exp-items', 'cost-centers', 'pnl-cats', 'bank-accounts'].includes(activeFinanceSubTab) && (
                                             <div className="premium-card" style={{ padding: '60px', textAlign: 'center' }}>
                                                 <h3 style={{ fontSize: '18px', fontWeight: '700' }}>
                                                     {activeFinanceSubTab.replace('-', ' ')}
