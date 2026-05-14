@@ -37,13 +37,15 @@ const BankAccountsSettings = () => {
             
             // Try to load extra data for dropdowns
             try {
-                const ccRes = await api.get('/cost-centers');
-                setCostCenters(ccRes.data);
+                const [ccRes, userRes] = await Promise.all([
+                    api.get('/cost-centers').catch(e => ({ data: [] })),
+                    api.get('/users').catch(e => ({ data: [] }))
+                ]);
                 
-                const userRes = await api.get('/users');
-                setStaff(userRes.data);
+                setCostCenters(Array.isArray(ccRes.data) ? ccRes.data : []);
+                setStaff(Array.isArray(userRes.data) ? userRes.data : []);
             } catch (e) {
-                console.log("Dropdown data load error", e);
+                console.error("Dropdown data load error", e);
             }
             
         } catch (err) {
@@ -272,9 +274,12 @@ const BankAccountsSettings = () => {
                                     <label>Xarajat markazi / ЦФО</label>
                                     <select value={formData.costCenter} onChange={e => setFormData({...formData, costCenter: e.target.value})}>
                                         <option value="">-- Танланг --</option>
-                                        {costCenters.filter(cc => cc.isActive).map(cc => (
+                                        {costCenters.filter(cc => cc.isActive !== false).map(cc => (
                                             <option key={cc._id || cc.id} value={cc.name}>{cc.code ? `${cc.code} - ` : ''}{cc.name}</option>
                                         ))}
+                                        {costCenters.length > 0 && costCenters.filter(cc => cc.isActive !== false).length === 0 && (
+                                            <option disabled>Фаол марказлар мавжуд эмас</option>
+                                        )}
                                     </select>
                                 </div>
                                 <div className="form-group">
