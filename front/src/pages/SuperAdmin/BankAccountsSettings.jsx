@@ -263,17 +263,19 @@ const BankAccountsSettings = () => {
                                 </div>
                                 <div className="form-group">
                                     <label>Mas'ul shaxs</label>
-                                    <input list="staff-list" value={formData.responsiblePerson} onChange={e => setFormData({...formData, responsiblePerson: e.target.value})} placeholder="Ism-sharif" />
-                                    <datalist id="staff-list">
-                                        {staff.map(u => <option key={u._id} value={u.name} />)}
-                                    </datalist>
+                                    <select value={formData.responsiblePerson} onChange={e => setFormData({...formData, responsiblePerson: e.target.value})}>
+                                        <option value="">-- Танланг --</option>
+                                        {staff.map(u => <option key={u._id || u.id} value={u.name}>{u.name} {u.surname || ''}</option>)}
+                                    </select>
                                 </div>
                                 <div className="form-group">
                                     <label>Xarajat markazi / ЦФО</label>
-                                    <input list="cc-list" value={formData.costCenter} onChange={e => setFormData({...formData, costCenter: e.target.value})} placeholder="ЦФО танланг" />
-                                    <datalist id="cc-list">
-                                        {costCenters.map(cc => <option key={cc._id} value={cc.name} />)}
-                                    </datalist>
+                                    <select value={formData.costCenter} onChange={e => setFormData({...formData, costCenter: e.target.value})}>
+                                        <option value="">-- Танланг --</option>
+                                        {costCenters.filter(cc => cc.isActive).map(cc => (
+                                            <option key={cc._id || cc.id} value={cc.name}>{cc.code ? `${cc.code} - ` : ''}{cc.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="form-group">
                                     <label>Status</label>
