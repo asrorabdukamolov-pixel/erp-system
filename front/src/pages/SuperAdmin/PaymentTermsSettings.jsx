@@ -23,7 +23,7 @@ const PaymentTermsSettings = () => {
         description: ''
     });
 
-    const types = ['Mijoz', 'Pоставщик', 'Universal'];
+    const types = ['Mijoz', 'Ta\'minotchi', 'Universal'];
     const models = ['Oldindan to\'lov', 'Bosqichma-bosqich', 'Отсрочка', 'Individual'];
 
     const loadData = async () => {

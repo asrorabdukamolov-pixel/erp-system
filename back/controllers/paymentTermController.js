@@ -85,7 +85,7 @@ exports.seed = async (req, res) => {
         {
             code: 'PT-003',
             name: '30 kunlik Отсрочка',
-            type: 'Pоставщик',
+            type: 'Ta\'minotchi',
             model: 'Отсрочка',
             prepaymentPercent: 0,
             intermediatePercent: 0,
