@@ -23,6 +23,7 @@ const TaxesSettings = () => {
         name: '',
         group: 'QQS / VAT',
         accountingType: 'Invoice-based',
+        accountingImpact: '',
         recoverable: false,
         pnlCategoryId: '',
         cashflowArticleId: '',
@@ -74,6 +75,7 @@ const TaxesSettings = () => {
                 name: '',
                 group: 'QQS / VAT',
                 accountingType: 'Invoice-based',
+                accountingImpact: '',
                 recoverable: false,
                 pnlCategoryId: '',
                 cashflowArticleId: '',
@@ -197,7 +199,8 @@ const TaxesSettings = () => {
                                 <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)' }}>
                                     <tr>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>KOD / NOMI</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>GURUH / HISOBLASH BAZASI</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>GURUH / BAZA</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>BUX. TA'SIRI</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>RECOVERABLE</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>P&L / CF</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>STATUS</th>
@@ -213,7 +216,10 @@ const TaxesSettings = () => {
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ fontSize: '13px', fontWeight: '600' }}>{type.group}</div>
-                                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{type.accountingType}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Baza: {type.accountingType}</div>
+                                            </td>
+                                            <td style={{ padding: '16px 24px' }}>
+                                                <div style={{ fontSize: '12px', fontWeight: '600' }}>{type.accountingImpact || '-'}</div>
                                             </td>
                                             <td style={{ padding: '16px 24px' }}>
                                                 {type.recoverable ? <Tag size={16} color="#10b981" /> : '-'}
@@ -316,6 +322,10 @@ const TaxesSettings = () => {
                                         <option value="Import-based">Import-based</option>
                                         <option value="Manual / Other">Manual / Other</option>
                                     </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Buxgalteriya ta’siri</label>
+                                    <input value={typeFormData.accountingImpact} onChange={e => setTypeFormData({...typeFormData, accountingImpact: e.target.value})} placeholder="Masalan: P&L Expense" />
                                 </div>
                                 <div className="form-group">
                                     <label>P&L Kategoriyasi</label>
