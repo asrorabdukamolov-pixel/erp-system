@@ -11,7 +11,8 @@ module.exports = function(req, res, next) {
 
     // Verify token
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const secret = process.env.JWT_SECRET || 'super_secret_key_antigravity_123';
+        const decoded = jwt.verify(token, secret);
         req.user = decoded.user;
         next();
     } catch (err) {

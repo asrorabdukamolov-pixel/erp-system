@@ -5,8 +5,11 @@
   "main": "back/server.js",
   "scripts": {
     "start": "node back/server.js",
+    "dev": "concurrently \"cd back && node server.js\" \"cd front && npm run dev\"",
     "build": "cd front && npm install && npm run build",
     "install-all": "npm install && cd back && npm install && cd ../front && npm install"
   },
-  "dependencies": {}
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
 }

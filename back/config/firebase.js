@@ -44,7 +44,7 @@ const saveLocalData = (data) => fs.writeFileSync(dbPath, JSON.stringify(data, nu
 // Target the 'default' database explicitly
 let db;
 try {
-    db = getFirestore(admin.app(), 'default');
+    db = getFirestore(admin.app());
 } catch (err) {
     console.warn("Fundamental Fix: Using local_db.json because Firebase key is missing.");
     db = {
