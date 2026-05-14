@@ -25,6 +25,7 @@ app.use('/api/pnl-categories', require('./routes/pnlCategoryRoutes'));
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
 app.use('/api/payment-terms', require('./routes/paymentTermRoutes'));
 app.use('/api/currencies', require('./routes/currencyRoutes'));
+app.use('/api/taxes', require('./routes/taxRoutes'));
 app.use('/api/stats', require('./routes/statsRoutes'));
 app.use('/api/purchases', require('./routes/purchaseRoutes'));
 app.use('/api/orders', require('./routes/orders'));
