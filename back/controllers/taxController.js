@@ -95,7 +95,7 @@ exports.seed = async (req, res) => {
         {
             code: 'VAT',
             name: 'QQS (НДС)',
-            group: 'Indirect Tax',
+            group: 'QQS / VAT',
             accountingType: 'Invoice-based',
             recoverable: true,
             pnlCategoryId: '',
@@ -106,13 +106,24 @@ exports.seed = async (req, res) => {
         {
             code: 'IT',
             name: 'Foyda solig\'i',
-            group: 'Direct Tax',
+            group: 'Foyda solig\'i',
             accountingType: 'Profit-based',
             recoverable: false,
             pnlCategoryId: '',
             cashflowArticleId: '',
             active: true,
             description: 'Daromad/Foyda solig\'i'
+        },
+        {
+            code: 'PAY',
+            name: 'Ijtimoiy soliq',
+            group: 'Ish haqi soliqlari',
+            accountingType: 'Payroll-based',
+            recoverable: false,
+            pnlCategoryId: '',
+            cashflowArticleId: '',
+            active: true,
+            description: 'Ish haqi fondidan olinadigan soliq'
         }
     ];
 

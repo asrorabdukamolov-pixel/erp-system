@@ -21,7 +21,7 @@ const TaxesSettings = () => {
     const [typeFormData, setTypeFormData] = useState({
         code: '',
         name: '',
-        group: 'Direct Tax',
+        group: 'QQS / VAT',
         accountingType: 'Invoice-based',
         recoverable: false,
         pnlCategoryId: '',
@@ -72,7 +72,7 @@ const TaxesSettings = () => {
             setTypeFormData({
                 code: '',
                 name: '',
-                group: 'Direct Tax',
+                group: 'QQS / VAT',
                 accountingType: 'Invoice-based',
                 recoverable: false,
                 pnlCategoryId: '',
@@ -197,7 +197,7 @@ const TaxesSettings = () => {
                                 <thead style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid var(--border-color)' }}>
                                     <tr>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>KOD / NOMI</th>
-                                        <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>GURUH / TUR</th>
+                                        <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>GURUH / HISOBLASH BAZASI</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>RECOVERABLE</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>P&L / CF</th>
                                         <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>STATUS</th>
@@ -297,17 +297,24 @@ const TaxesSettings = () => {
                                 <div className="form-group">
                                     <label>Soliq guruhi</label>
                                     <select value={typeFormData.group} onChange={e => setTypeFormData({...typeFormData, group: e.target.value})}>
-                                        <option value="Direct Tax">Direct Tax</option>
-                                        <option value="Indirect Tax">Indirect Tax</option>
-                                        <option value="Other">Other</option>
+                                        <option value="QQS / VAT">QQS / VAT</option>
+                                        <option value="Foyda solig'i">Foyda solig'i</option>
+                                        <option value="Ish haqi soliqlari">Ish haqi soliqlari</option>
+                                        <option value="Mol-mulk va yer soliqlari">Mol-mulk va yer soliqlari</option>
+                                        <option value="Bojxona va import soliqlari">Bojxona va import soliqlari</option>
+                                        <option value="Jarima va penya">Jarima va penya</option>
+                                        <option value="Boshqa soliqlar">Boshqa soliqlar</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Hisob-kitob turi</label>
+                                    <label>Hisoblash bazasi</label>
                                     <select value={typeFormData.accountingType} onChange={e => setTypeFormData({...typeFormData, accountingType: e.target.value})}>
                                         <option value="Invoice-based">Invoice-based</option>
-                                        <option value="Payment-based">Payment-based</option>
+                                        <option value="Payroll-based">Payroll-based</option>
                                         <option value="Profit-based">Profit-based</option>
+                                        <option value="Asset-based">Asset-based</option>
+                                        <option value="Import-based">Import-based</option>
+                                        <option value="Manual / Other">Manual / Other</option>
                                     </select>
                                 </div>
                                 <div className="form-group">
