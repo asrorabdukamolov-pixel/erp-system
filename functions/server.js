@@ -42,6 +42,27 @@ app.use('/api/departments', require('./routes/departmentRoutes'));
 app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
 app.use('/api/integrations', require('./routes/integrationRoutes'));
 
+// Generic Master Data Routes
+const genericController = require('./controllers/genericController');
+const auth = require('./middleware/auth');
+const masterDataCollections = [
+    'customer-types', 'lead-sources', 'sales-channels', 'kp-statuses', 'rejection-reasons',
+    'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
+    'warehouses', 'material-groups', 'materials', 'units', 'wh-op-types',
+    'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms',
+    'pnl-categories', 'bank-accounts', 'payment-terms', 'currencies', 'taxes',
+    'positions', 'expense-items', 'cash-flow', 'cost-centers-data'
+];
+
+masterDataCollections.forEach(col => {
+    const router = express.Router();
+    router.get('/', auth, genericController.getAll(col));
+    router.post('/', auth, genericController.create(col));
+    router.put('/:id', auth, genericController.update(col));
+    router.delete('/:id', auth, genericController.delete(col));
+    app.use(`/api/${col}`, router);
+});
+
 app.get('/api/setup', async (req, res) => {
     try {
         const costCenters = [
