@@ -42,6 +42,7 @@ app.use('/api/suppliers', require('./routes/supplierRoutes'));
 app.use('/api/cash-flow', require('./routes/cashFlowRoutes'));
 app.use('/api/expense-items', require('./routes/expenseItemsRoutes'));
 app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
+app.use('/api/integrations', require('./routes/integrationRoutes'));
 
 // Generic Master Data Routes
 const masterDataCollections = [
