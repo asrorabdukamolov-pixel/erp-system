@@ -10,10 +10,13 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
 
+    const isCustomerType = endpoint === '/customer-types';
+
     const [formData, setFormData] = useState({
         name: '',
         code: '',
-        description: ''
+        description: '',
+        legalStatus: 'yuridik'
     });
 
     const loadData = async () => {
@@ -38,13 +41,15 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
             setFormData({
                 name: item.name || '',
                 code: item.code || '',
-                description: item.description || ''
+                description: item.description || '',
+                legalStatus: item.legalStatus || 'yuridik'
             });
         } else {
             setFormData({
                 name: '',
                 code: '',
-                description: ''
+                description: '',
+                legalStatus: 'yuridik'
             });
         }
         setIsModalOpen(true);
@@ -119,6 +124,7 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
                             <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'left' }}>
                                 <th style={{ padding: '12px 8px' }}>KOD</th>
                                 <th style={{ padding: '12px 8px' }}>NOMI</th>
+                                {isCustomerType && <th style={{ padding: '12px 8px' }}>HUQUQIY MAQOMI</th>}
                                 <th style={{ padding: '12px 8px' }}>TAVSIF</th>
                                 <th style={{ padding: '12px 8px', textAlign: 'right' }}>AMALLAR</th>
                             </tr>
@@ -128,6 +134,11 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
                                 <tr key={item._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: '16px 8px', fontSize: '13px', fontWeight: '700', color: 'var(--accent-gold)' }}>{item.code || '-'}</td>
                                     <td style={{ padding: '16px 8px', fontSize: '14px', fontWeight: '600' }}>{item.name}</td>
+                                    {isCustomerType && (
+                                        <td style={{ padding: '16px 8px', fontSize: '13px' }}>
+                                            {item.legalStatus === 'jismoniy' ? 'Jismoniy shaxs' : 'Yuridik shaxs'}
+                                        </td>
+                                    )}
                                     <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{item.description || '-'}</td>
                                     <td style={{ padding: '16px 8px', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -162,15 +173,34 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
                         <form onSubmit={handleSave}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Nomi</label>
+                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                        {isCustomerType ? 'Mijoz nomi' : 'Nomi'}
+                                    </label>
                                     <input style={{ width: '100%' }} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Kodi (Ixtiyoriy)</label>
+                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                        {isCustomerType ? 'Mijoz kodi' : 'Kodi (Ixtiyoriy)'}
+                                    </label>
                                     <input style={{ width: '100%' }} value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} />
                                 </div>
+                                {isCustomerType && (
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Huquqiy maqomi</label>
+                                        <select 
+                                            style={{ width: '100%', height: '40px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', borderRadius: '8px', padding: '0 10px', outline: 'none' }}
+                                            value={formData.legalStatus}
+                                            onChange={e => setFormData({...formData, legalStatus: e.target.value})}
+                                        >
+                                            <option value="yuridik">Yuridik shaxs</option>
+                                            <option value="jismoniy">Jismoniy shaxs</option>
+                                        </select>
+                                    </div>
+                                )}
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Tavsif</label>
+                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                                        {isCustomerType ? 'Izoh' : 'Tavsif'}
+                                    </label>
                                     <textarea 
                                         style={{ width: '100%', height: '80px', padding: '10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: '#fff', fontSize: '13px', resize: 'none' }} 
                                         value={formData.description} 

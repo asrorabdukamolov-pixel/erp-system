@@ -226,32 +226,107 @@ const AgentModal = ({ onClose, onSaved }) => {
   );
 };
 
-const CustomerModal = ({ onClose, onSaved, user }) => {
-  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '+998 ', address: '', propertyType: 'kvartira', age: '', gender: 'erkak', source: '', selectedAgent: null });
-  const [agentSearch, setAgentSearch] = useState('');
-  const [agentSuggestions, setAgentSuggestions] = useState([]);
+const CustomerModal = ({ onClose, onSaved, user, initialType = 'B2C' }) => {
+  const [clientType, setClientType] = useState(initialType); // B2C, B2B, Agent
+  const [form, setForm] = useState({ 
+    firstName: '', 
+    lastName: '', 
+    phone: '+998 ', 
+    address: '', 
+    propertyType: 'hovli', 
+    source: '', 
+    companyName: '',
+    inn: '',
+    contactPerson: '',
+    legalAddress: '',
+    agentName: '',
+    agentType: '',
+    commissionTerms: '',
+    status: 'faol',
+    managerId: user?.id || user?._id || '',
+    managerName: user?.name || ''
+  });
+  const [leadSources, setLeadSources] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [customerTypes, setCustomerTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const handleChange = (e) => { const { name, value } = e.target; setForm({ ...form, [name]: name === 'phone' ? formatPhone(value) : value }); };
-  
-  useEffect(() => { 
-    const searchAgents = async () => {
-      if (form.source === 'agent' && agentSearch.length > 1) { 
-        try {
-          const res = await api.get('/customers', { params: { type: 'agent', search: agentSearch } });
-          setAgentSuggestions(res.data);
-        } catch (err) {
-          console.error("Search agents error", err);
-        }
-      } else setAgentSuggestions([]); 
-    };
-    searchAgents();
-  }, [agentSearch, form.source]);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [sourcesRes, usersRes, typesRes] = await Promise.all([
+          api.get('/lead-sources'),
+          api.get('/users'),
+          api.get('/customer-types')
+        ]);
+        setLeadSources(sourcesRes.data);
+        setManagers(usersRes.data);
+        setCustomerTypes(typesRes.data);
+      } catch (err) {
+        console.error("Fetch data error", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleChange = (e) => { 
+    const { name, value } = e.target; 
+    setForm({ ...form, [name]: name === 'phone' ? formatPhone(value) : value }); 
+  };
+  
   const handleSave = async (e) => { 
     e.preventDefault(); 
     setLoading(true);
     try {
-      await api.post('/customers', { ...form, type: 'customer' });
+      let payload = { clientType };
+      const selectedManager = managers.find(m => m._id === form.managerId);
+      const managerName = selectedManager ? `${selectedManager.name} ${selectedManager.surname}` : form.managerName;
+
+      const selectedTypeObj = customerTypes.find(t => t.name === clientType);
+      const isB2B = selectedTypeObj?.legalStatus?.toLowerCase().includes('yuridik');
+      const isAgent = clientType === 'Agent';
+
+      if (isAgent) {
+        payload = { 
+          ...payload, 
+          type: 'agent', 
+          agentName: form.agentName, 
+          phone: form.phone, 
+          agentType: form.agentType, 
+          commissionTerms: form.commissionTerms, 
+          status: form.status 
+        };
+      } else if (isB2B) {
+        payload = { 
+          ...payload, 
+          type: 'customer', 
+          subType: 'b2b', 
+          companyName: form.companyName, 
+          inn: form.inn, 
+          contactPerson: form.contactPerson, 
+          phone: form.phone, 
+          legalAddress: form.legalAddress, 
+          source: form.source, 
+          managerId: form.managerId, 
+          managerName 
+        };
+      } else {
+        // B2C and others (jismoniy)
+        payload = { 
+          ...payload, 
+          type: 'customer', 
+          firstName: form.firstName, 
+          lastName: form.lastName, 
+          phone: form.phone, 
+          address: form.address, 
+          propertyType: form.propertyType, 
+          source: form.source, 
+          managerId: form.managerId, 
+          managerName 
+        };
+      }
+
+      await api.post('/customers', payload);
       if (onSaved) onSaved(); 
       onClose(); 
     } catch (err) {
@@ -260,46 +335,132 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
     }
     setLoading(false);
   };
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }}>
-      <div className="premium-card" style={{ width: '1000px', padding: '48px', maxHeight: '92vh', overflowY: 'auto' }}>
-        <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '40px' }}>Yangi Mijoz Qo'shish</h3>
-        <form onSubmit={handleSave}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-              <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-              <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '24px' }}>
-              <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-              <div><Lbl>Yoshi</Lbl><input name="age" type="number" value={form.age} onChange={handleChange} autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-              <div><Lbl>Jinsi</Lbl><div style={{ display: 'flex', gap: '8px' }}>{['erkak', 'ayol'].map(g => (<button key={g} type="button" onClick={() => setForm({...form, gender: g})} style={{ flex: 1, height: '54px', borderRadius: '12px', background: form.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: g === form.gender ? 'black' : 'white', border: '1px solid var(--border-color)', fontWeight: '700' }}>{g}</button>))}</div></div>
-            </div>
-            <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
-            
-            <div>
-              <Lbl>Uy Turi</Lbl>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                {PROPERTY_TYPES.map(pt => (
-                  <button 
-                    key={pt.value} 
-                    type="button" 
-                    onClick={() => setForm({...form, propertyType: pt.value})} 
-                    style={{ height: '54px', borderRadius: '12px', background: form.propertyType === pt.value ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: pt.value === form.propertyType ? 'black' : 'white', border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '700' }}
-                  >
-                    {pt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div><Lbl>Platforma</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>{SOURCE_OPTIONS.map(opt => (<button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'white', fontSize: '12px', fontWeight: '800' }}>{opt.label}</button>))}</div></div>
-            {form.source === 'agent' && (
-              <div style={{ position: 'relative' }}>
-                <Lbl>Agent Qidirish</Lbl><IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismi..." autoComplete="off" style={{ height: '54px' }} />
-                {agentSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', zIndex: 100, border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>{agentSuggestions.map(a => <div key={a._id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{a.firstName} {a.lastName}</div>)}</div>)}
-              </div>
+      <div className="premium-card" style={{ width: '800px', padding: '48px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '32px', fontWeight: '900' }}>Yangi Mijoz Qo'shish</h3>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '50%', color: 'white' }}><X /></button>
+        </div>
+        
+        <div style={{ marginBottom: '32px' }}>
+          <Lbl>Mijoz Turi</Lbl>
+          <select 
+            value={clientType} 
+            onChange={(e) => setClientType(e.target.value)}
+            style={{ 
+              width: '100%', 
+              height: '54px', 
+              background: 'var(--secondary-bg)', 
+              border: '1px solid var(--border-color)', 
+              color: 'white', 
+              borderRadius: '12px', 
+              padding: '0 15px',
+              fontSize: '15px',
+              fontWeight: '600',
+              outline: 'none'
+            }}
+          >
+            {customerTypes.length > 0 ? (
+              customerTypes.map(t => <option key={t._id} value={t.name}>{t.name}</option>)
+            ) : (
+              <>
+                <option value="B2C">B2C</option>
+                <option value="B2B">B2B</option>
+                <option value="Agent">Agent</option>
+              </>
             )}
+          </select>
+        </div>
+
+        <form onSubmit={handleSave}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {(() => {
+              const selectedTypeObj = customerTypes.find(t => t.name === clientType);
+              const isB2B = selectedTypeObj?.legalStatus?.toLowerCase().includes('yuridik');
+              const isAgent = clientType === 'Agent';
+
+              if (isAgent) {
+                return (
+                  <>
+                    <div><Lbl>Agent nomi</Lbl><input name="agentName" value={form.agentName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Agent turi</Lbl><input name="agentType" value={form.agentType} onChange={handleChange} required placeholder="Masalan: Dizayner, Quruvchi" autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Komissiya sharti</Lbl><input name="commissionTerms" value={form.commissionTerms} onChange={handleChange} required placeholder="Masalan: 5% yoki 500 000" autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div>
+                       <Lbl>Status</Lbl>
+                       <select name="status" value={form.status} onChange={handleChange} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                         <option value="faol">Faol</option>
+                         <option value="bloklangan">Bloklangan</option>
+                       </select>
+                    </div>
+                  </>
+                );
+              }
+
+              if (isB2B) {
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                      <div><Lbl>Kompaniya nomi</Lbl><input name="companyName" value={form.companyName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                      <div><Lbl>INN / STIR</Lbl><input name="inn" value={form.inn} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    </div>
+                    <div><Lbl>Kontakt shaxs</Lbl><input name="contactPerson" value={form.contactPerson} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Yuridik manzil</Lbl><input name="legalAddress" value={form.legalAddress} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div>
+                      <Lbl>Mijoz manbasi</Lbl>
+                      <select name="source" value={form.source} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                        <option value="">Tanlang...</option>
+                        {leadSources.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <Lbl>Mas’ul savdo menejeri</Lbl>
+                      <select name="managerId" value={form.managerId} onChange={handleChange} required disabled={user?.role !== 'super'} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none', opacity: user?.role !== 'super' ? 0.7 : 1 }}>
+                        {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                      </select>
+                    </div>
+                  </>
+                );
+              }
+
+              // Default: B2C
+              return (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  </div>
+                  <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  <div>
+                    <Lbl>Uy Turi</Lbl>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                      {PROPERTY_TYPES.map(pt => (
+                        <button key={pt.value} type="button" onClick={() => setForm({...form, propertyType: pt.value})} style={{ height: '54px', borderRadius: '12px', background: form.propertyType === pt.value ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: pt.value === form.propertyType ? 'black' : 'white', border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '700' }}>{pt.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <Lbl>Mijoz manbasi</Lbl>
+                    <select name="source" value={form.source} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                      <option value="">Tanlang...</option>
+                      {leadSources.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <Lbl>Mas’ul savdo menejeri</Lbl>
+                    <select name="managerId" value={form.managerId} onChange={handleChange} required disabled={user?.role !== 'super'} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none', opacity: user?.role !== 'super' ? 0.7 : 1 }}>
+                      {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                    </select>
+                  </div>
+                </>
+              );
+            })()}
           </div>
+
           <div style={{ display: 'flex', gap: '16px', marginTop: '54px' }}>
             <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '60px' }} disabled={loading}>Bekor Qilish</button>
             <button type="submit" className="gold-btn" style={{ flex: 1, height: '60px', justifyContent: 'center' }} disabled={loading}>
@@ -311,6 +472,7 @@ const CustomerModal = ({ onClose, onSaved, user }) => {
     </div>
   );
 };
+
 
 // --- Main Component ---
 const Orders = () => {
@@ -338,11 +500,11 @@ const Orders = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   
+  const [customerModal, setCustomerModal] = useState({ isOpen: false, type: 'B2C' });
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
-  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
   const [isKPModalOpen, setIsKPModalOpen] = useState(false);
   const [fileManager, setFileManager] = useState({ isOpen: false, type: 'kp', files: [], orderId: null });
+
   const [editingId, setEditingId] = useState(null);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
@@ -551,7 +713,7 @@ const Orders = () => {
   const filteredOrders = allOrders.filter(o => {
     const currentUserId = user?.id || user?._id;
     const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
-    const matchesSearch = `${o.selectedCustomer?.firstName} ${o.selectedCustomer?.lastName} ${o.uniqueId}`.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''} ${o.selectedCustomer?.companyName || ''} ${o.selectedCustomer?.agentName || ''} ${o.uniqueId || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
     const isArchived = o.status === 'yopildi';
     
     if (currentView === 'archive') {
@@ -776,14 +938,15 @@ const Orders = () => {
           )}
           <div style={{ position: 'relative', width: '280px' }}><Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} /><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Qidirish..." style={{ width: '100%', paddingLeft: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', height: '44px', color: 'white' }} /></div>
            
-           {currentView !== 'archive' && (
+            {currentView !== 'archive' && (
              <>
-               <button onClick={() => setIsAgentModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
-               <button onClick={() => setIsCustomerModalOpen(true)} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
+               <button onClick={() => setCustomerModal({ isOpen: true, type: 'Agent' })} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
+               <button onClick={() => setCustomerModal({ isOpen: true, type: 'B2C' })} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
                <button onClick={() => setIsKPModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}><FileText size={18} /> Tijorat Taklifi</button>
                <button onClick={() => { setEditingId(null); setNewOrder(emptyOrder); setIsOrderModalOpen(true); }} className="gold-btn" style={{ height: '44px' }}><Plus size={20} /> Yangi Buyurtma</button>
              </>
-           )}
+            )}
+
         </div>
       </div>
 
@@ -839,7 +1002,7 @@ const Orders = () => {
             const stageOrders = allOrders.filter(o => {
               const currentUserId = user?.id || user?._id;
               const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
-              const matchesSearch = `${o.selectedCustomer?.firstName} ${o.selectedCustomer?.lastName} ${o.uniqueId}`.toLowerCase().includes(searchTerm.toLowerCase());
+              const matchesSearch = `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''} ${o.selectedCustomer?.companyName || ''} ${o.selectedCustomer?.agentName || ''} ${o.uniqueId || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
               if (!(matchesUser && matchesSearch && o.status !== 'yopildi')) return false;
 
               let currentStatus = o.status;
@@ -1410,9 +1573,19 @@ const Orders = () => {
     </div>
   )}
 
-      {isCustomerModalOpen && <CustomerModal onClose={() => setIsCustomerModalOpen(false)} onSaved={() => setCustomers(JSON.parse(localStorage.getItem('erp_customers')))} user={user} />}
-      {isAgentModalOpen && <AgentModal onClose={() => setIsAgentModalOpen(false)} onSaved={() => {}} />}
+      {customerModal.isOpen && (
+        <CustomerModal 
+          user={user} 
+          initialType={customerModal.type}
+          onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
+          onSaved={async () => {
+            const res = await api.get('/customers');
+            setCustomers(res.data);
+          }} 
+        />
+      )}
       {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} />}
+
       {fileManager.isOpen && (
         <FileManagerModal 
           type={fileManager.type} 
