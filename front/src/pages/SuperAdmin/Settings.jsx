@@ -10,20 +10,27 @@ import TaxesSettings from './TaxesSettings';
 import Departments from './Departments';
 import PositionsSettings from './PositionsSettings';
 import RolesPermissionsSettings from './RolesPermissionsSettings';
+import CompanySettings from './CompanySettings';
+import Partners from './Partners';
+import FactoryAccounts from './FactoryAccounts';
 import MasterDataList from '../../components/MasterDataList';
 import { 
     Settings as SettingsIcon, BarChart3, Wallet, Users, ShieldCheck, 
     Briefcase, ShoppingCart, Factory, Package, Building2, Layers,
     Tag, MessageSquare, ClipboardList, Ban, Box, GitBranch, Settings2,
     CheckCircle2, AlertTriangle, Database, Bookmark, Boxes, Ruler, 
-    ArrowRightLeft, UserCheck, FolderTree, FileQuestion, FileCheck, Truck
+    ArrowRightLeft, UserCheck, FolderTree, FileQuestion, FileCheck, Truck,
+    FileText, Key
 } from 'lucide-react';
 
 const Settings = () => {
-    const [activeTab, setActiveTab] = useState('master-data');
+    const [activeTab, setActiveTab] = useState('general');
     const [activeMasterDataTab, setActiveMasterDataTab] = useState('savdo');
     
-    // Sub-tabs states
+    // General Sub-tabs
+    const [activeGeneralSubTab, setActiveGeneralSubTab] = useState('company');
+
+    // Master Data Sub-tabs states
     const [activeFinanceSubTab, setActiveFinanceSubTab] = useState('cf-items');
     const [activeOrgSubTab, setActiveOrgSubTab] = useState('departments');
     const [activeSalesSubTab, setActiveSalesSubTab] = useState('customer-types');
@@ -83,6 +90,12 @@ const Settings = () => {
         { id: 'tashkiliy tuzilma', label: 'Tashkiliy tuzilma', icon: <Layers size={18} /> }
     ];
 
+    const generalCategories = [
+        { id: 'company', label: 'Kompaniya Ma\'lumotlari', icon: <Building2 size={18} /> },
+        { id: 'kp', label: 'Tijorat Taklifi Identikasi', icon: <FileText size={18} /> },
+        { id: 'accounts', label: 'Fabrika Akkauntlari', icon: <Key size={18} /> }
+    ];
+
     return (
         <div style={{ padding: '30px' }}>
             <div style={{ marginBottom: '40px' }}>
@@ -109,14 +122,28 @@ const Settings = () => {
             {/* Tab Content */}
             <div style={{ marginTop: '20px' }}>
                 {activeTab === 'general' && (
-                    <div className="premium-card" style={{ padding: '40px', textAlign: 'center' }}>
-                        <div style={{ color: 'var(--accent-gold)', marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-                            <SettingsIcon size={48} />
+                    <div>
+                        {/* Sub-tabs for General */}
+                        <div style={{ display: 'flex', gap: '8px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                            {generalCategories.map(cat => (
+                                <button 
+                                    key={cat.id}
+                                    onClick={() => setActiveGeneralSubTab(cat.id)}
+                                    style={subTabStyle(activeGeneralSubTab === cat.id)}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {cat.icon}
+                                        {cat.label}
+                                    </div>
+                                </button>
+                            ))}
                         </div>
-                        <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '12px' }}>Umumiy sozlamalar</h3>
-                        <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto' }}>
-                            Bu bo'limda tizimning asosiy parametrlari, kompaniya ma'lumotlari va boshqa texnik sozlamalar joylashadi.
-                        </p>
+
+                        <div className="fade-in">
+                            {activeGeneralSubTab === 'company' && <CompanySettings />}
+                            {activeGeneralSubTab === 'kp' && <Partners />}
+                            {activeGeneralSubTab === 'accounts' && <FactoryAccounts />}
+                        </div>
                     </div>
                 )}
                 
