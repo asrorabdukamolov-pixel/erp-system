@@ -110,7 +110,7 @@ const Settings = () => {
                                         {[
                                             { id: 'cf-items', label: 'Pul oqimi moddalari' },
                                             { id: 'exp-items', label: 'Xarajat moddalari' },
-                                            { id: 'cost-centers', label: 'Xarajat markazlari / ЦФО' },
+                                            { id: 'cost-centers', label: 'Xarajat markazlari / CFO' },
                                             { id: 'pnl-cats', label: 'P&L kategoriyalari' },
                                             { id: 'bank-accounts', label: 'Bank va kassalar' },
                                             { id: 'payment-terms', label: 'To‘lov shartlari' },

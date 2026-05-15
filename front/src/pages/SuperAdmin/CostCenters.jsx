@@ -181,7 +181,7 @@ const CostCenters = () => {
     <div style={{ paddingBottom: '40px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Xarajat Markazlari / ЦФО</h2>
+          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Xarajat Markazlari / CFO</h2>
           <p style={{ color: 'var(--text-secondary)' }}>Xarajatlarni guruhlar va mas'ullar bo'yicha professional boshqarish.</p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>

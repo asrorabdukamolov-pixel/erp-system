@@ -152,13 +152,13 @@ const TaxesSettings = () => {
         <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
-                    <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Soliq turlari ва ставкалари</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Тизимдаги барча солиқларни бошқариш.</p>
+                    <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Soliq turlari va stavkalari</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Tizimdagi barcha soliqlarni boshqarish.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     <button className="gold-btn" onClick={() => activeTab === 'types' ? handleOpenTypeModal('add') : handleOpenRateModal('add')}>
                         <Plus size={20} />
-                        {activeTab === 'types' ? 'Янги солиқ қўшиш' : 'Янги ставка қўшиш'}
+                        {activeTab === 'types' ? 'Yangi soliq qo\'shish' : 'Yangi stavka qo\'shish'}
                     </button>
                 </div>
             </div>
@@ -190,7 +190,7 @@ const TaxesSettings = () => {
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Юкланмоқда...</div>
+                <div style={{ textAlign: 'center', padding: '40px' }}>Yuklanmoqda...</div>
             ) : (
                 <div className="premium-card" style={{ padding: '0', overflow: 'hidden' }}>
                     {activeTab === 'types' ? (
@@ -330,14 +330,14 @@ const TaxesSettings = () => {
                                 <div className="form-group">
                                     <label>P&L Kategoriyasi</label>
                                     <select value={typeFormData.pnlCategoryId} onChange={e => setTypeFormData({...typeFormData, pnlCategoryId: e.target.value})}>
-                                        <option value="">-- Танланг --</option>
+                                        <option value="">-- Tanlang --</option>
                                         {pnlCategories.map(c => <option key={c._id || c.id} value={c.name}>{c.name}</option>)}
                                     </select>
                                 </div>
                                 <div className="form-group">
                                     <label>CF Moddasi</label>
                                     <select value={typeFormData.cashflowArticleId} onChange={e => setTypeFormData({...typeFormData, cashflowArticleId: e.target.value})}>
-                                        <option value="">-- Танланг --</option>
+                                        <option value="">-- Tanlang --</option>
                                         {cfArticles.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
                                     </select>
                                 </div>
@@ -378,7 +378,7 @@ const TaxesSettings = () => {
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>
                                     <label>Soliq turi</label>
                                     <select value={rateFormData.taxTypeId} onChange={e => setRateFormData({...rateFormData, taxTypeId: e.target.value})} required>
-                                        <option value="">-- Танланг --</option>
+                                        <option value="">-- Tanlang --</option>
                                         {taxTypes.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                                     </select>
                                 </div>
@@ -399,7 +399,7 @@ const TaxesSettings = () => {
                                     <input type="date" value={rateFormData.validFrom} onChange={e => setRateFormData({...rateFormData, validFrom: e.target.value})} required />
                                 </div>
                                 <div className="form-group">
-                                    <label>Amal qilish тугаши</label>
+                                    <label>Amal qilish tugashi</label>
                                     <input type="date" value={rateFormData.validTo} onChange={e => setRateFormData({...rateFormData, validTo: e.target.value})} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: 'span 2' }}>

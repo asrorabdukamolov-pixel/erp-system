@@ -24,7 +24,7 @@ const PaymentTermsSettings = () => {
     });
 
     const types = ['Mijoz', 'Ta\'minotchi', 'Universal'];
-    const models = ['Oldindan to\'lov', 'Bosqichma-bosqich', 'Отсрочка', 'Individual'];
+    const models = ['Oldindan to\'lov', 'Bosqichma-bosqich', 'Muddatli to\'lov', 'Individual'];
 
     const loadData = async () => {
         setLoading(true);
@@ -117,29 +117,29 @@ const PaymentTermsSettings = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
                     <h2 style={{ fontSize: '24px', fontWeight: '800' }}>To‘lov shartlari</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Mijozlar va yetkazib beruvchilar билан ҳисоб-китоб қоидалари.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Mijozlar va yetkazib beruvchilar bilan hisob-kitob qoidalari.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {terms.length === 0 && (
                         <button className="secondary-btn" onClick={handleSeed}>
                             <Database size={18} />
-                            Намуналарни юклаш
+                            Namunalarni yuklash
                         </button>
                     )}
                     <button className="gold-btn" onClick={() => handleOpenModal('add')}>
                         <Plus size={20} />
-                        Янги шарт қўшиш
+                        Yangi shart qo'shish
                     </button>
                 </div>
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Юкланмоқда...</div>
+                <div style={{ textAlign: 'center', padding: '40px' }}>Yuklanmoqda...</div>
             ) : terms.length === 0 ? (
                 <div className="premium-card" style={{ padding: '60px', textAlign: 'center' }}>
                     <CreditCard size={48} style={{ color: 'var(--accent-gold)', opacity: 0.5, margin: '0 auto 20px' }} />
-                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>To‘lov shartlari мавжуд эмас</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Илтимос, янги тўлов шартини қўшинг.</p>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>To‘lov shartlari mavjud emas</h3>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Iltimos, yangi to'lov shartini qo'shing.</p>
                 </div>
             ) : (
                 <div className="premium-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -273,7 +273,7 @@ const PaymentTermsSettings = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Отсрочка kuni</label>
+                                    <label>Muddatli to'lov kuni</label>
                                     <input type="number" value={formData.postponementDays} onChange={e => setFormData({...formData, postponementDays: parseInt(e.target.value) || 0})} placeholder="0" />
                                 </div>
                                 <div className="form-group">

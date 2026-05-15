@@ -131,30 +131,30 @@ const BankAccountsSettings = () => {
         <div className="fade-in">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
-                    <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Bank ва кассалар</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Тизимдаги барча пул ҳисоблари ва кассаларни бошқариш.</p>
+                    <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Bank va kassalar</h2>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Tizimdagi barcha pul hisoblari va kassalarni boshqarish.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {accounts.length === 0 && (
                         <button className="secondary-btn" onClick={handleSeed}>
                             <Database size={18} />
-                            Намуналарни юклаш
+                            Namunalarni yuklash
                         </button>
                     )}
                     <button className="gold-btn" onClick={() => handleOpenModal('add')}>
                         <Plus size={20} />
-                        Янги ҳисоб қўшиш
+                        Yangi hisob qo'shish
                     </button>
                 </div>
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Юкланмоқда...</div>
+                <div style={{ textAlign: 'center', padding: '40px' }}>Yuklanmoqda...</div>
             ) : accounts.length === 0 ? (
                 <div className="premium-card" style={{ padding: '60px', textAlign: 'center' }}>
                     <Wallet size={48} style={{ color: 'var(--accent-gold)', opacity: 0.5, margin: '0 auto 20px' }} />
-                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Ҳисоблар мавжуд эмас</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Илтимос, янги банк ҳисоби ёки касса қўшинг.</p>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Hisoblar mavjud emas</h3>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Iltimos, yangi bank hisobi yoki kassa qo'shing.</p>
                 </div>
             ) : (
                 <div className="premium-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -166,7 +166,7 @@ const BankAccountsSettings = () => {
                                     <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>TURI</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>VALYUTA</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>BANK / RAQAM</th>
-                                    <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>MAS'UL / ЦФО</th>
+                                    <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>MAS'UL / CFO</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)' }}>STATUS</th>
                                     <th style={{ padding: '16px 24px', fontSize: '12px', color: 'var(--text-secondary)', textAlign: 'right' }}>AMALLAR</th>
                                 </tr>
@@ -257,7 +257,7 @@ const BankAccountsSettings = () => {
                                 </div>
                                 <div className="form-group">
                                     <label>Bank nomi</label>
-                                    <input value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} placeholder="Bank nomi (bo'sh бўлиши мумкин)" />
+                                    <input value={formData.bankName} onChange={e => setFormData({...formData, bankName: e.target.value})} placeholder="Bank nomi (bo'sh bo'lishi mumkin)" />
                                 </div>
                                 <div className="form-group">
                                     <label>Hisob raqami</label>
@@ -266,19 +266,19 @@ const BankAccountsSettings = () => {
                                 <div className="form-group">
                                     <label>Mas'ul shaxs</label>
                                     <select value={formData.responsiblePerson} onChange={e => setFormData({...formData, responsiblePerson: e.target.value})}>
-                                        <option value="">-- Танланг --</option>
+                                        <option value="">-- Tanlang --</option>
                                         {staff.map(u => <option key={u._id || u.id} value={u.name}>{u.name} {u.surname || ''}</option>)}
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Xarajat markazi / ЦФО</label>
+                                    <label>Xarajat markazi / CFO</label>
                                     <select value={formData.costCenter} onChange={e => setFormData({...formData, costCenter: e.target.value})}>
-                                        <option value="">-- Танланг --</option>
+                                        <option value="">-- Tanlang --</option>
                                         {costCenters.filter(cc => cc.isActive !== false).map(cc => (
                                             <option key={cc._id || cc.id} value={cc.name}>{cc.code ? `${cc.code} - ` : ''}{cc.name}</option>
                                         ))}
                                         {costCenters.length > 0 && costCenters.filter(cc => cc.isActive !== false).length === 0 && (
-                                            <option disabled>Фаол марказлар мавжуд эмас</option>
+                                            <option disabled>Faol markazlar mavjud emas</option>
                                         )}
                                     </select>
                                 </div>

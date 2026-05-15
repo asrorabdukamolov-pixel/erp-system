@@ -281,7 +281,7 @@ const PnLCategoriesSettings = () => {
                                         value={formData.parentId}
                                         onChange={e => setFormData({...formData, parentId: e.target.value})}
                                     >
-                                        <option value="">-- Yuqori даражали --</option>
+                                        <option value="">-- Yuqori darajali --</option>
                                         {categories.filter(c => !c.parentId && c._id !== selectedCategory?._id).map(c => (
                                             <option key={c._id} value={c._id}>{c.code} - {c.name}</option>
                                         ))}

@@ -105,29 +105,29 @@ const CurrenciesSettings = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                 <div>
                     <h2 style={{ fontSize: '24px', fontWeight: '800' }}>Valyutalar</h2>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Тизимда ишлатиладиган пул бирликлари ва уларнинг созламалари.</p>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Tizimda ishlatiladigan pul birliklari va ularning sozlamalari.</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {currencies.length === 0 && (
                         <button className="secondary-btn" onClick={handleSeed}>
                             <Database size={18} />
-                            Намуналарни юклаш
+                            Namunalarni yuklash
                         </button>
                     )}
                     <button className="gold-btn" onClick={() => handleOpenModal('add')}>
                         <Plus size={20} />
-                        Янги валята қўшиш
+                        Yangi valyuta qo'shish
                     </button>
                 </div>
             </div>
 
             {loading ? (
-                <div style={{ textAlign: 'center', padding: '40px' }}>Юкланмоқда...</div>
+                <div style={{ textAlign: 'center', padding: '40px' }}>Yuklanmoqda...</div>
             ) : currencies.length === 0 ? (
                 <div className="premium-card" style={{ padding: '60px', textAlign: 'center' }}>
                     <Coins size={48} style={{ color: 'var(--accent-gold)', opacity: 0.5, margin: '0 auto 20px' }} />
-                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Valyutalar мавжуд эмас</h3>
-                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Илтимос, янги валята қўшинг.</p>
+                    <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Valyutalar mavjud emas</h3>
+                    <p style={{ color: 'var(--text-secondary)', marginTop: '10px' }}>Iltimos, yangi valyuta qo'shing.</p>
                 </div>
             ) : (
                 <div className="premium-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -245,7 +245,7 @@ const CurrenciesSettings = () => {
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <input type="checkbox" id="needsRate" checked={formData.needsRate} onChange={e => setFormData({...formData, needsRate: e.target.checked})} />
-                                        <label htmlFor="needsRate" style={{ cursor: 'pointer', fontSize: '13px' }}>Kurs керакми?</label>
+                                        <label htmlFor="needsRate" style={{ cursor: 'pointer', fontSize: '13px' }}>Kurs kerakmi?</label>
                                     </div>
                                 </div>
 
