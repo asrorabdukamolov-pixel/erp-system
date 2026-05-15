@@ -50,7 +50,6 @@ const Sidebar = () => {
 
   const superAdminLinks = [
     { name: 'Bosh sahifa', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
-    { name: 'Bo\'limlar', path: '/super-admin/departments', icon: <Users size={20} /> },
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
     { name: 'Fabrika', path: '/super-admin/fabrika', icon: <Factory size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
