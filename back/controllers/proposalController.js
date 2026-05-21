@@ -2,7 +2,7 @@ const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getProposals = async (req, res) => {
     try {
-        let queryRef = db.collection('proposals').where('status', '!=', 'trash');
+        let queryRef = db.collection('proposals');
         
         if (req.user.role !== 'super') {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
@@ -12,7 +12,11 @@ exports.getProposals = async (req, res) => {
         }
 
         const snapshot = await queryRef.get();
-        const proposals = formatQuery(snapshot);
+        let proposals = formatQuery(snapshot);
+        
+        // Filter out trashed proposals in memory to avoid the composite index requirement
+        proposals = proposals.filter(p => p.status !== 'trash');
+        
         proposals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(proposals);
     } catch (err) {

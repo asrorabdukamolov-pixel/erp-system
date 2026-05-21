@@ -2,14 +2,18 @@ const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getOrders = async (req, res) => {
     try {
-        let queryRef = db.collection('orders').where('status', '!=', 'trash');
+        let queryRef = db.collection('orders');
         
         if (req.user.role !== 'super') {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
 
         const snapshot = await queryRef.get();
-        const orders = formatQuery(snapshot);
+        let orders = formatQuery(snapshot);
+        
+        // Filter out trashed orders in memory to avoid the composite index requirement
+        orders = orders.filter(o => o.status !== 'trash');
+        
         orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(orders);
     } catch (err) {

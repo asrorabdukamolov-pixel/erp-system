@@ -71,7 +71,7 @@ const PnLCategoriesSettings = () => {
         e.preventDefault();
         
         try {
-            if (modalMode === 'add') {
+            if (modalMode === 'add' || modalMode === 'addSub') {
                 await api.post('/pnl-categories', formData);
             } else {
                 await api.put(`/pnl-categories/${selectedCategory._id}`, formData);
@@ -232,7 +232,9 @@ const PnLCategoriesSettings = () => {
                 }}>
                     <div className="premium-card" style={{ width: '450px', padding: '32px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h3 style={{ fontSize: '20px', fontWeight: '800' }}>{modalMode === 'add' ? 'Yangi P&L Kategoriyasi' : 'Tahrirlash'}</h3>
+                            <h3 style={{ fontSize: '20px', fontWeight: '800' }}>
+                                {modalMode === 'add' ? 'Yangi P&L Kategoriyasi' : modalMode === 'addSub' ? 'Yangi Sub-kategoriya' : 'Tahrirlash'}
+                            </h3>
                             <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent' }}><X size={24} /></button>
                         </div>
 

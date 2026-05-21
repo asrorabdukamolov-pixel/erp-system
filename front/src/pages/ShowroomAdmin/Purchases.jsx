@@ -69,11 +69,11 @@ const ShowroomPurchases = () => {
       
       if (user?.role === 'proekt_manager') {
         filtered = filtered.filter(o => 
-          o.assignedPmId === user.id || 
+          o.assignedPmId === (user.id || user._id) || 
           (o.assignedPmName || '').trim().toLowerCase() === (user.name || '').trim().toLowerCase()
         );
       } else if (user?.role === 'sotuv_manager') {
-        filtered = filtered.filter(o => o.managerId === user.id);
+        filtered = filtered.filter(o => o.managerId === (user.id || user._id));
       }
       setOrders(filtered);
     } catch (err) {

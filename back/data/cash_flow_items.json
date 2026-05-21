@@ -1,0 +1,234 @@
+[
+  {
+    "id": "nlj1Jx2cn75H7NwRCOD8",
+    "name": "Qarz mablag'lari olishdan tushum",
+    "type": "inflow",
+    "category": "financing",
+    "code": "CF-FIN-01"
+  },
+  {
+    "id": "4mLlbPvjBaYCLfeUoPsD",
+    "name": "Olingan qarzlar uchun to'lov",
+    "type": "outflow",
+    "category": "financing",
+    "code": "CF-FIN-02"
+  },
+  {
+    "id": "TZqSlsrfNev6lRzJgXmL",
+    "name": "Dividend to'lovlari",
+    "type": "outflow",
+    "category": "financing",
+    "code": "CF-FIN-03"
+  },
+  {
+    "id": "ceyrutTwXe9y1rOYNsrf",
+    "name": "Investorlardan tushum",
+    "category": "financing",
+    "type": "inflow",
+    "createdAt": "2026-05-21T11:55:14.898Z",
+    "code": "CF-FIN-04"
+  },
+  {
+    "id": "3z9u1snBIlDCsxBfgrg7",
+    "name": "Avtomashina sotib olish uchun to'lov",
+    "type": "outflow",
+    "category": "investing",
+    "code": "CF-INV-02"
+  },
+  {
+    "id": "U4BLzWINGQBRfiC418Js",
+    "name": "Kapital ta'mirlash uchun to'lov",
+    "type": "outflow",
+    "category": "investing",
+    "code": "CF-INV-03"
+  },
+  {
+    "id": "mHssPlSX7phJYbyl8CFb",
+    "name": "Ofis jihozlari sotib olish uchun to'lov",
+    "type": "outflow",
+    "category": "investing",
+    "code": "CF-INV-04"
+  },
+  {
+    "id": "or2yMxwSHpUYAAdUKhfv",
+    "name": "Boshqa asosiy vositalar uchun to'lov",
+    "type": "outflow",
+    "category": "investing",
+    "code": "CF-INV-05"
+  },
+  {
+    "id": "DMknaWPpm3xn2rIcITQP",
+    "name": "Savdodan tushum",
+    "type": "inflow",
+    "category": "operating",
+    "code": "CF-OP-01"
+  },
+  {
+    "id": "nYn1oRn2YRsYbCR1o3BB",
+    "name": "Debitor qarzdorliklardan tushum",
+    "type": "inflow",
+    "category": "operating",
+    "code": "CF-OP-02"
+  },
+  {
+    "id": "Y7UFS9ZjImpHlGRv6Tpt",
+    "name": "Mahsulot uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-03"
+  },
+  {
+    "id": "YbwZfKZcEkH6cs8pBeEc",
+    "name": "Xom ashyo uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-04"
+  },
+  {
+    "id": "ygykiGLAdAL9I22RgoG6",
+    "name": "QQS to'lovi",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-05"
+  },
+  {
+    "id": "8x4I4pzXBxcUcAM5mj66",
+    "name": "Terminal, yuk saqlash va ombor xarajati to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-06"
+  },
+  {
+    "id": "ehFGOWllk8mC4IZHDd85",
+    "name": "Transport xarajati to'lovi",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-07"
+  },
+  {
+    "id": "KuiqDRlBQWgTSacH37WL",
+    "name": "Marketing xarajati to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-08"
+  },
+  {
+    "id": "06JqOweB5Sl1xJPw9F0u",
+    "name": "Ombor ijarasi to'lovi",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-09"
+  },
+  {
+    "id": "v0aGwEjVQKa7KiCYvvR8",
+    "name": "Showroom ijara to'lovi",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-10"
+  },
+  {
+    "id": "18Eg6CrrYJgLoV2x8yOY",
+    "name": "Ish haqi va bog'liq soliqlar uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-11"
+  },
+  {
+    "id": "UvhnkE3HdTqoDEDscZHS",
+    "name": "Xodimlarni o'qitish uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-12"
+  },
+  {
+    "id": "WO6BL94lfW0DOfJ5N2ik",
+    "name": "Xizmat safari to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-13"
+  },
+  {
+    "id": "pO9WHHKeHGDasEQhukWH",
+    "name": "Foyda solig'i uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-14"
+  },
+  {
+    "id": "1otOnPZnce7mxgbgKq8n",
+    "name": "Boshqa ofis xarajati to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-15"
+  },
+  {
+    "id": "rWLkWxPXAYLGVg5PSbt6",
+    "name": "Boshqa sotish xarajati to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-16"
+  },
+  {
+    "id": "XTNon8nGMXKFipuO4mhy",
+    "name": "Professional xizmat to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-17"
+  },
+  {
+    "id": "ukYaUhLgK9VMWEhtxbeR",
+    "name": "Bank komissiyasi to'lovlari",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-18"
+  },
+  {
+    "id": "xVNIrRLU4WHtUbEF13xh",
+    "name": "Ovqat puli uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-19"
+  },
+  {
+    "id": "9t7OgGyffaIgOWIubE7m",
+    "name": "Boshqa soliq to'lovlari uchun",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-20"
+  },
+  {
+    "id": "6pmTwA5ES1Sa15xHAwP1",
+    "name": "Ish haqidan xodimlar uchun avans",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-21"
+  },
+  {
+    "id": "D1r0rttNm9VbC35UfVQK",
+    "name": "Ish haqi soliqlari uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-22"
+  },
+  {
+    "id": "VPRkzqXAKJ8VjEMl3zZ2",
+    "name": "Elektr, gaz va suv uchun to'lov",
+    "type": "outflow",
+    "category": "operating",
+    "code": "CF-OP-23"
+  },
+  {
+    "id": "BxDdNDccVpv6djf6iWlD",
+    "name": "Boshqa hisobraqamga o'tkazma",
+    "type": "outflow",
+    "category": "transfer",
+    "code": "CF-TR-01"
+  },
+  {
+    "id": "PknVRAkdxVOTbeEDth6D",
+    "name": "Boshqa hisobraqamdan o'tkazma",
+    "type": "inflow",
+    "category": "transfer",
+    "code": "CF-TR-02"
+  }
+]

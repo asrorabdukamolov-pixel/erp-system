@@ -63,7 +63,7 @@ const Finance = () => {
 
   // Suggestions logic remains same, but uses API-sourced orders
 
-  const myOrders = orders.filter(o => o.managerId === user.id);
+  const myOrders = orders.filter(o => o.managerId === (user.id || user._id));
   const filteredOrders = myOrders.filter(o => 
     o.uniqueId?.toLowerCase().includes(orderSearch.toLowerCase()) || 
     o.productionId?.toLowerCase().includes(orderSearch.toLowerCase()) ||
@@ -186,7 +186,7 @@ const Finance = () => {
     setShowOrderSuggest(false);
   };
 
-  const myRequests = requests.filter(r => r.userId === user.id);
+  const myRequests = requests.filter(r => r.userId === (user.id || user._id));
 
   const getStatusBadge = (status) => {
     switch (status) {

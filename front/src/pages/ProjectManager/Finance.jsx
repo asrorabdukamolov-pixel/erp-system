@@ -61,7 +61,7 @@ const Finance = () => {
   }, []);
 
   // PM filters orders assigned to them
-  const myOrders = orders.filter(o => o.assignedPmId === user.id || o.assignedPmName === user.name);
+  const myOrders = orders.filter(o => o.assignedPmId === (user.id || user._id) || o.assignedPmName === user.name);
   const filteredOrders = myOrders.filter(o => 
     o.uniqueId?.toLowerCase().includes(orderSearch.toLowerCase()) || 
     o.productionId?.toLowerCase().includes(orderSearch.toLowerCase()) ||

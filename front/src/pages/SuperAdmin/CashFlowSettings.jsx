@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, X, ArrowUpCircle, ArrowDownCircle, Briefcase, Landmark, Factory } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, ArrowUpCircle, ArrowDownCircle, Briefcase, Landmark, Factory, ArrowRightLeft } from 'lucide-react';
 import api from '../../utils/api';
 
 const CashFlowSettings = () => {
@@ -18,7 +18,8 @@ const CashFlowSettings = () => {
     const categories = [
         { value: 'operating', label: 'Operatsion faoliyat', icon: <Briefcase size={18} />, color: '#3b82f6' },
         { value: 'investing', label: 'Investitsiya faoliyati', icon: <Factory size={18} />, color: '#10b981' },
-        { value: 'financing', label: 'Moliyaviy faoliyat', icon: <Landmark size={18} />, color: '#8b5cf6' }
+        { value: 'financing', label: 'Moliyaviy faoliyat', icon: <Landmark size={18} />, color: '#8b5cf6' },
+        { value: 'transfer', label: 'O\'tkazmalar', icon: <ArrowRightLeft size={18} />, color: '#fbbf24' }
     ];
 
     const loadData = async () => {

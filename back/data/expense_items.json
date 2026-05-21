@@ -1,0 +1,1322 @@
+[
+  {
+    "id": "kR2pDbiuwiAz7IEhqLGS",
+    "code": "1000",
+    "name": "Bevosita ishlab chiqarish xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:16.629Z"
+  },
+  {
+    "id": "xYtDxUnmOJeTGXqtgOcG",
+    "code": "1010",
+    "name": "Xom ashyo va asosiy materiallar sarfi",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:24.163Z"
+  },
+  {
+    "id": "EnRzaGIt7SdW2x93f1Hr",
+    "code": "1020",
+    "name": "Furnitura sarfi",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:24.577Z"
+  },
+  {
+    "id": "7sS9AN4MiZbM1Ksqvl9r",
+    "code": "1030",
+    "name": "Qadoqlash materiallari sarfi",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:25.192Z"
+  },
+  {
+    "id": "CtgTtQ4tkHA64Elb6rfF",
+    "code": "1040",
+    "name": "Yordamchi materiallar sarfi",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:25.603Z"
+  },
+  {
+    "id": "t9cRdXvnPCkC5dXyJA4Z",
+    "code": "1050",
+    "name": "Ishlab chiqarish uchun mayda materiallar",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:26.129Z"
+  },
+  {
+    "id": "hTorvKxXmlnS9pgaEVwC",
+    "code": "1060",
+    "name": "Boshqa bevosita ishlab chiqarish materiallari",
+    "parentId": "kR2pDbiuwiAz7IEhqLGS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:26.539Z"
+  },
+  {
+    "id": "CEqSSlfODw7IPMSB4Tfh",
+    "code": "2000",
+    "name": "Bevosita mehnat xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:17.307Z"
+  },
+  {
+    "id": "q6MvV6zScN4Sg1AWCZYy",
+    "code": "2010",
+    "name": "Kesish ustalari ish haqi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:27.154Z"
+  },
+  {
+    "id": "2uoMovu66FmuikYWEajV",
+    "code": "2020",
+    "name": "Yig‘ish ustalari ish haqi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:27.563Z"
+  },
+  {
+    "id": "aVslC515eFGDlr4xeWbt",
+    "code": "2030",
+    "name": "Bo‘yash ustalari ish haqi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:28.163Z"
+  },
+  {
+    "id": "p3agp495Rkj4DsVLJzVH",
+    "code": "2040",
+    "name": "Qadoqlash ustalari ish haqi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:28.675Z"
+  },
+  {
+    "id": "22m8BmAzyb88pVTVIyWF",
+    "code": "2050",
+    "name": "Sex ishchilari ishbay to‘lovi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:29.186Z"
+  },
+  {
+    "id": "iqCmP0ULhUboQfkVoE6D",
+    "code": "2060",
+    "name": "Sex ishchilari oylik ish haqi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:29.706Z"
+  },
+  {
+    "id": "FjPdGG45w6FrECs4905A",
+    "code": "2070",
+    "name": "Qo‘shimcha ish vaqti to‘lovi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:30.327Z"
+  },
+  {
+    "id": "sPWYaJb31PkVqut7VzVG",
+    "code": "2080",
+    "name": "Ishlab chiqarish bonusi",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:30.737Z"
+  },
+  {
+    "id": "Kb2mHKLxeMnnSvmFztrI",
+    "code": "2090",
+    "name": "Boshqa bevosita mehnat xarajatlari",
+    "parentId": "CEqSSlfODw7IPMSB4Tfh",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:31.261Z"
+  },
+  {
+    "id": "8FWZaJsfj6ULHcz66Suk",
+    "code": "3000",
+    "name": "Tashqi xizmatlar xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:17.732Z"
+  },
+  {
+    "id": "3qFs0sTfvQekMoFbIdnu",
+    "code": "3010",
+    "name": "Tashqi kesish xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:31.745Z"
+  },
+  {
+    "id": "Yff6MAbeUDstWGjI2ybv",
+    "code": "3020",
+    "name": "CNC xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:32.260Z"
+  },
+  {
+    "id": "aCbUVcEwz9RV0qvuA846",
+    "code": "3030",
+    "name": "Lazer kesish xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:32.726Z"
+  },
+  {
+    "id": "aStGUvi70g6hqpmwLVje",
+    "code": "3040",
+    "name": "Tashqi bo‘yash xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:33.200Z"
+  },
+  {
+    "id": "otJOv9rDKZRntPAMemXT",
+    "code": "3050",
+    "name": "Metall konstruksiya xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:33.651Z"
+  },
+  {
+    "id": "SSTZc9dXkwSb8uEcfp7z",
+    "code": "3060",
+    "name": "Shisha ishlari xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:34.355Z"
+  },
+  {
+    "id": "hGBXPr2GY8MkZfKFWafz",
+    "code": "3070",
+    "name": "Dekorativ elementlar tayyorlash xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:34.649Z"
+  },
+  {
+    "id": "SBArFtJm0L41R4gQF8Bp",
+    "code": "3080",
+    "name": "Qoplama / upholstery xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:35.291Z"
+  },
+  {
+    "id": "o0w63GxFFtOwxvfwYIKB",
+    "code": "3090",
+    "name": "Tashqi transport xizmati",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:35.591Z"
+  },
+  {
+    "id": "PtNYCbSlvzpeJtuavyxb",
+    "code": "3100",
+    "name": "Boshqa tashqi xizmatlar",
+    "parentId": "8FWZaJsfj6ULHcz66Suk",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:36.215Z"
+  },
+  {
+    "id": "6tMcD3UdxxqtMlpzaFgP",
+    "code": "4000",
+    "name": "Bilvosita ishlab chiqarish xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:18.332Z"
+  },
+  {
+    "id": "PpeL42OKVD2ojzBYPu1y",
+    "code": "4010",
+    "name": "Elektr energiyasi",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:36.518Z"
+  },
+  {
+    "id": "TEyUx8hy8ZpK2nnclP61",
+    "code": "4020",
+    "name": "Gaz",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:37.161Z"
+  },
+  {
+    "id": "4BYfIJn6Buj6SKn9oyJi",
+    "code": "4030",
+    "name": "Suv",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:37.491Z"
+  },
+  {
+    "id": "zDhFvH1nf3QBjcIb3zBI",
+    "code": "4040",
+    "name": "Kompressor xarajatlari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:38.110Z"
+  },
+  {
+    "id": "ooIvNFgqCpRcc1hK9ohe",
+    "code": "4050",
+    "name": "Generator xarajatlari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:38.447Z"
+  },
+  {
+    "id": "R0Y85E9iOsuKiqUQQ76S",
+    "code": "4060",
+    "name": "Kesish disklari / pichoqlar",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:39.049Z"
+  },
+  {
+    "id": "av0hgS4D8eajn8rGL6Jd",
+    "code": "4070",
+    "name": "Frezalar",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:39.403Z"
+  },
+  {
+    "id": "mutunFPJDeeLOmGWSi7R",
+    "code": "4080",
+    "name": "Sverlolar",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:40.082Z"
+  },
+  {
+    "id": "yAvdafE6oXGpkSDplbGm",
+    "code": "4090",
+    "name": "Silliqlash materiallari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:40.375Z"
+  },
+  {
+    "id": "Q1N9k3sZnJ3Za8x6OZhA",
+    "code": "4100",
+    "name": "Stanok sarf materiallari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:41.003Z"
+  },
+  {
+    "id": "L6bIR8OEUpIEKHbMJCmW",
+    "code": "4110",
+    "name": "Moylash materiallari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:41.349Z"
+  },
+  {
+    "id": "XP81Ctt5WV1tpSfjA3iZ",
+    "code": "4120",
+    "name": "Sex ijarasi",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:41.956Z"
+  },
+  {
+    "id": "Um11FfROOCsCmf9AKsUU",
+    "code": "4130",
+    "name": "Sex kommunal xarajatlari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:42.282Z"
+  },
+  {
+    "id": "bFtlOGDFeot424hCkR4K",
+    "code": "4140",
+    "name": "Sex xo‘jalik xarajatlari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:42.878Z"
+  },
+  {
+    "id": "Ej882BPabB0It9vvAHXt",
+    "code": "4150",
+    "name": "Sex xavfsizlik vositalari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:43.320Z"
+  },
+  {
+    "id": "nV6S3xJ13KzbtHohd3Rk",
+    "code": "4160",
+    "name": "Boshqa bilvosita ishlab chiqarish xarajatlari",
+    "parentId": "6tMcD3UdxxqtMlpzaFgP",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:43.830Z"
+  },
+  {
+    "id": "5lrK7Kh3JXNJusFQFd3a",
+    "code": "5000",
+    "name": "Ta’mirlash va texnik xizmat xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:19.253Z"
+  },
+  {
+    "id": "OPVrUBblfvYlORHbr6B0",
+    "code": "5010",
+    "name": "Stanok ta’miri",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:44.416Z"
+  },
+  {
+    "id": "BO35AVbLBh1bifWEo6xJ",
+    "code": "5020",
+    "name": "Asbob-uskunalar ta’miri",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:45.204Z"
+  },
+  {
+    "id": "8ny3gl3OA3NFn84DklC3",
+    "code": "5030",
+    "name": "Ehtiyot qismlar",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:45.796Z"
+  },
+  {
+    "id": "VPGeDmckpqKHjrbqyhMQ",
+    "code": "5040",
+    "name": "Profilaktik xizmatlar",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:47.359Z"
+  },
+  {
+    "id": "Sa8oCYctoNwW6Uaa5J4T",
+    "code": "5050",
+    "name": "Kalibrovka",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:47.997Z"
+  },
+  {
+    "id": "mRhxQj2CE3V6lC6ynuYl",
+    "code": "5060",
+    "name": "Uskuna servis xizmati",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:48.621Z"
+  },
+  {
+    "id": "DH6GYPBmp6180bhWlr9G",
+    "code": "5070",
+    "name": "Texnik ko‘rik xarajatlari",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:48.994Z"
+  },
+  {
+    "id": "JPNuArQ8zdpooBJWsLTg",
+    "code": "5080",
+    "name": "Boshqa ta’mirlash va texnik xizmat xarajatlari",
+    "parentId": "5lrK7Kh3JXNJusFQFd3a",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:49.647Z"
+  },
+  {
+    "id": "rDES3AM1ugUTfWJTW9AT",
+    "code": "6000",
+    "name": "Yetkazib berish va logistika xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:19.538Z"
+  },
+  {
+    "id": "WIO5ML9WPCf4MC7oWRWu",
+    "code": "6010",
+    "name": "Yoqilg‘i",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:49.942Z"
+  },
+  {
+    "id": "BpMfMtH8qB1bBG9O8Vgi",
+    "code": "6020",
+    "name": "Yetkazib berish transport xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:50.629Z"
+  },
+  {
+    "id": "LIv3wLQiPzt0av5iUPG6",
+    "code": "6030",
+    "name": "Haydovchi ish haqi",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:51.048Z"
+  },
+  {
+    "id": "Tm5byLs9vlOx9fGV8o5L",
+    "code": "6040",
+    "name": "Avtomobil ijarasi",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:51.641Z"
+  },
+  {
+    "id": "uBRbkuro0kednq0nGkIX",
+    "code": "6050",
+    "name": "Avtomobil ta’miri",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:51.975Z"
+  },
+  {
+    "id": "efTlT0Ze1uipFITZZr77",
+    "code": "6060",
+    "name": "GPS xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:52.675Z"
+  },
+  {
+    "id": "Ehk0NBAYHsuCV8shL4o1",
+    "code": "6070",
+    "name": "Parking xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:53.427Z"
+  },
+  {
+    "id": "aJmAiWoqOxDJlHS0E9CD",
+    "code": "6080",
+    "name": "Yuk tashish xizmati",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:53.734Z"
+  },
+  {
+    "id": "pxC6ufTl7exNQDAKhL81",
+    "code": "6090",
+    "name": "Yuk ortish va tushirish xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:54.409Z"
+  },
+  {
+    "id": "UBPu3amCx1Lc68m2PCRY",
+    "code": "6100",
+    "name": "Shaharlararo yetkazib berish xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:54.781Z"
+  },
+  {
+    "id": "eN05r6xoggpFvlrg7yLP",
+    "code": "6110",
+    "name": "Boshqa logistika xarajatlari",
+    "parentId": "rDES3AM1ugUTfWJTW9AT",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:55.295Z"
+  },
+  {
+    "id": "ye67G5p9T3vuoBZ5ymSp",
+    "code": "7000",
+    "name": "Montaj xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:20.280Z"
+  },
+  {
+    "id": "N8gaL2o259lHspOvwPvR",
+    "code": "7010",
+    "name": "Montajchi ish haqi",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:55.579Z"
+  },
+  {
+    "id": "x0fATsbeVPk3OK1AqtGt",
+    "code": "7020",
+    "name": "Montaj sarf materiallari",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:55.942Z"
+  },
+  {
+    "id": "iGmxI2CAJfKXuW3b4eM8",
+    "code": "7030",
+    "name": "Montaj asbob-uskunalari",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:56.217Z"
+  },
+  {
+    "id": "QDOYVUFLIalErA46pqKd",
+    "code": "7040",
+    "name": "Sutkalik xarajatlar",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:56.471Z"
+  },
+  {
+    "id": "aXpyMivgNbwccMBNrbG3",
+    "code": "7050",
+    "name": "Lift xizmati",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:56.850Z"
+  },
+  {
+    "id": "otexGuHPmGth3OMb72NS",
+    "code": "7060",
+    "name": "Yuk ko‘taruvchi / loader xizmati",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:57.156Z"
+  },
+  {
+    "id": "AM87pXGvYqrRQS14uhYs",
+    "code": "7070",
+    "name": "Montaj transport xarajatlari",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:57.449Z"
+  },
+  {
+    "id": "dSNL1cTOEiKvXZBWqaF8",
+    "code": "7080",
+    "name": "Obyektdagi qo‘shimcha ishlar",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:57.826Z"
+  },
+  {
+    "id": "JofUAYdhHRalz79kg723",
+    "code": "7090",
+    "name": "Boshqa montaj xarajatlari",
+    "parentId": "ye67G5p9T3vuoBZ5ymSp",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:58.115Z"
+  },
+  {
+    "id": "wNJRrjHeFRGNTMnHFoeS",
+    "code": "8000",
+    "name": "Sotuvoldi xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:20.601Z"
+  },
+  {
+    "id": "0U9LcSNlTgd1oksEmPWh",
+    "code": "8010",
+    "name": "Zamеr xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:58.396Z"
+  },
+  {
+    "id": "jI1lCGq42SkrVBkwXFry",
+    "code": "8020",
+    "name": "Zamеr transport xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:58.690Z"
+  },
+  {
+    "id": "4AfaA1uY6EUhIByQBJRy",
+    "code": "8030",
+    "name": "Zamеrchi ish haqi",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:58.958Z"
+  },
+  {
+    "id": "uWO7TzlN8pTWhXNLepOn",
+    "code": "8040",
+    "name": "Dizayner vaqti xarajati",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:59.266Z"
+  },
+  {
+    "id": "a0oHN77KeEkHAByzhXIH",
+    "code": "8050",
+    "name": "KP tayyorlash xarajati",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:59.577Z"
+  },
+  {
+    "id": "7x0de7OkZcZwvF20ehuh",
+    "code": "8060",
+    "name": "Sales manager vaqti xarajati",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:02:59.888Z"
+  },
+  {
+    "id": "foFMNCg4pIrtoK5IlzAn",
+    "code": "8070",
+    "name": "Telefon va internet xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:00.200Z"
+  },
+  {
+    "id": "3QMobXMSY43Z8Ce2dLTc",
+    "code": "8080",
+    "name": "Yo‘qotilgan KP bo‘yicha xarajatlar",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:00.511Z"
+  },
+  {
+    "id": "At8mn64GMnA3F6MfvFEB",
+    "code": "8090",
+    "name": "Mijoz obyektiga chiqish xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:00.822Z"
+  },
+  {
+    "id": "M9yVyGYhhbKielnO0pY1",
+    "code": "8100",
+    "name": "Demo material xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:01.089Z"
+  },
+  {
+    "id": "gIwiVTL9DGwkTzwyzBdi",
+    "code": "8110",
+    "name": "Boshqa sotuvoldi xarajatlari",
+    "parentId": "wNJRrjHeFRGNTMnHFoeS",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:01.347Z"
+  },
+  {
+    "id": "nHZHUSKwcz1ph7zAT86y",
+    "code": "9000",
+    "name": "Sotuv va marketing xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:21.223Z"
+  },
+  {
+    "id": "yWoqjx5Zj38lCfsRste0",
+    "code": "9010",
+    "name": "Instagram reklama",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:01.672Z"
+  },
+  {
+    "id": "L4Oh2isVP2iGzat5q2kR",
+    "code": "9020",
+    "name": "Facebook reklama",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:01.924Z"
+  },
+  {
+    "id": "SrMJBtw4O3hRyPjgtPqe",
+    "code": "9030",
+    "name": "Telegram reklama",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:02.183Z"
+  },
+  {
+    "id": "iRPvzKEGjN8mG19YEMJL",
+    "code": "9040",
+    "name": "Target reklama",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:02.547Z"
+  },
+  {
+    "id": "czQo0vtpACweKDrrNyFp",
+    "code": "9050",
+    "name": "SMM xizmatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:02.906Z"
+  },
+  {
+    "id": "iQXbZGDcPA52kLkye70C",
+    "code": "9060",
+    "name": "Foto va video kontent xarajatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:03.180Z"
+  },
+  {
+    "id": "1xkfWRbbL7kdjZie4n26",
+    "code": "9070",
+    "name": "Banner va poligrafiya",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:03.450Z"
+  },
+  {
+    "id": "2bJ1P6mr44JwTBUO7gCY",
+    "code": "9080",
+    "name": "Showroom bezatish xarajatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:03.813Z"
+  },
+  {
+    "id": "dCVVWOhDfi8xTUuTUn9y",
+    "code": "9090",
+    "name": "Sotuv menejeri oylik ish haqi",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:04.105Z"
+  },
+  {
+    "id": "nuyvhwrQUi3aKAGNv92A",
+    "code": "9100",
+    "name": "Sotuv bonusi",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:04.429Z"
+  },
+  {
+    "id": "KDjfAvvSY9DEcoIuDwST",
+    "code": "9110",
+    "name": "Agent / sotuv komissiyasi",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:04.719Z"
+  },
+  {
+    "id": "NSHFwsrCEthBLA2n6jLS",
+    "code": "9120",
+    "name": "Mijozlarni kutib olish xarajatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:05.025Z"
+  },
+  {
+    "id": "KhTCTGZ47Qjq9A2swxNf",
+    "code": "9130",
+    "name": "Mijozlarga sovg‘alar",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:05.291Z"
+  },
+  {
+    "id": "83SlN47ZIDN9ZY4YiFmw",
+    "code": "9140",
+    "name": "Savdo aksiyalari xarajatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:05.543Z"
+  },
+  {
+    "id": "9uujQdhQuUtBt6FPspb1",
+    "code": "9150",
+    "name": "Boshqa sotuv va marketing xarajatlari",
+    "parentId": "nHZHUSKwcz1ph7zAT86y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:05.797Z"
+  },
+  {
+    "id": "qOuLIA8IUdSc2oNStU5Y",
+    "code": "10000",
+    "name": "Ma’muriy-boshqaruv xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:21.609Z"
+  },
+  {
+    "id": "KpZNXFy5Fyu7ETAorNwZ",
+    "code": "10010",
+    "name": "Ofis ijarasi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:06.059Z"
+  },
+  {
+    "id": "v099tphdxWXsiTuEpanl",
+    "code": "10020",
+    "name": "Ofis kommunal xarajatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:06.434Z"
+  },
+  {
+    "id": "DsUvVhc51ticTerviH1m",
+    "code": "10030",
+    "name": "Internet",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:06.748Z"
+  },
+  {
+    "id": "vxC23ZE2dcW7ebpkCI8g",
+    "code": "10040",
+    "name": "Kanselyariya xarajatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:07.032Z"
+  },
+  {
+    "id": "uPhzzhEMqy7LcaNZKhPl",
+    "code": "10050",
+    "name": "Printer va kartridj xarajatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:07.294Z"
+  },
+  {
+    "id": "y9HT5tbV2OKRqDxHNEcw",
+    "code": "10060",
+    "name": "Tozalash xizmati",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:07.567Z"
+  },
+  {
+    "id": "PrXEf0UaujlhENXZK44l",
+    "code": "10070",
+    "name": "Qo‘riqlash xizmati",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:07.872Z"
+  },
+  {
+    "id": "t37dqSl4npYGsY9N3pZa",
+    "code": "10080",
+    "name": "Direktor ish haqi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:08.178Z"
+  },
+  {
+    "id": "BSBEahEzT1eyo0j09SLW",
+    "code": "10090",
+    "name": "Moliya bo‘limi ish haqi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:08.498Z"
+  },
+  {
+    "id": "YsXLcQpkj9QsyalVzZJj",
+    "code": "10100",
+    "name": "Buxgalteriya ish haqi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:08.824Z"
+  },
+  {
+    "id": "OkLMf1SEQonYFTHbm82b",
+    "code": "10110",
+    "name": "HR ish haqi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:09.118Z"
+  },
+  {
+    "id": "kPHNKI2TTUSDTMgm2BZI",
+    "code": "10120",
+    "name": "Yurist ish haqi / yuridik xizmatlar",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:09.439Z"
+  },
+  {
+    "id": "mnWNxRQmZZCe0cwowbVe",
+    "code": "10130",
+    "name": "Ofis jihozlari xarajatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:09.699Z"
+  },
+  {
+    "id": "skrxEEkOboZXOJAt5659",
+    "code": "10140",
+    "name": "Boshqaruv xodimlari bonusi",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:09.962Z"
+  },
+  {
+    "id": "CYuKwJXYIbvnsJfao1kn",
+    "code": "10150",
+    "name": "Konsalting xizmatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:10.316Z"
+  },
+  {
+    "id": "brOYuez4cWAaIMq2TgDw",
+    "code": "10160",
+    "name": "Audit xizmatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:10.668Z"
+  },
+  {
+    "id": "PxMvAD0MxfrLJLLYkTo4",
+    "code": "10170",
+    "name": "Boshqa ma’muriy-boshqaruv xarajatlari",
+    "parentId": "qOuLIA8IUdSc2oNStU5Y",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:11.027Z"
+  },
+  {
+    "id": "WSxLOE7YfEus4OrDIujX",
+    "code": "11000",
+    "name": "IT va raqamli infratuzilma xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:22.189Z"
+  },
+  {
+    "id": "47Sf6bGPuOUENHy0ibiF",
+    "code": "11010",
+    "name": "ERP development",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:11.287Z"
+  },
+  {
+    "id": "TU2aGNJ9LEwmDfwCONfo",
+    "code": "11020",
+    "name": "Server / hosting",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:11.558Z"
+  },
+  {
+    "id": "4B1vYCAYTxlX9A282C4l",
+    "code": "11030",
+    "name": "Cloud xizmatlari",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:11.811Z"
+  },
+  {
+    "id": "jZ7FzgZk3uSiCZxPg7ns",
+    "code": "11040",
+    "name": "Domain xarajatlari",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:12.061Z"
+  },
+  {
+    "id": "WEHlYFMPyO2GDWtqv6jt",
+    "code": "11050",
+    "name": "Email service",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:12.314Z"
+  },
+  {
+    "id": "Xzdze2YOPFjQilhOUicU",
+    "code": "11060",
+    "name": "Software license xarajatlari",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:12.588Z"
+  },
+  {
+    "id": "CP92Exaw3de3YM3KFO9x",
+    "code": "11070",
+    "name": "Backup xarajatlari",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:12.855Z"
+  },
+  {
+    "id": "Lkg1NUzLAFxn2sFJUgLd",
+    "code": "11080",
+    "name": "IT support",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:13.122Z"
+  },
+  {
+    "id": "mNDGgyP5IgqJHGoy5atG",
+    "code": "11090",
+    "name": "Antivirus / cybersecurity",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:13.378Z"
+  },
+  {
+    "id": "uQtNhgMFMIpRx160x0Sd",
+    "code": "11100",
+    "name": "Kompyuter va texnika servisi",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:13.637Z"
+  },
+  {
+    "id": "RBCnTVBD7g91psPzu3Ar",
+    "code": "11110",
+    "name": "Boshqa IT xarajatlari",
+    "parentId": "WSxLOE7YfEus4OrDIujX",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:13.890Z"
+  },
+  {
+    "id": "9gCyKgepAxOgTXwq1KJo",
+    "code": "12000",
+    "name": "Moliyaviy xarajatlar",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:22.632Z"
+  },
+  {
+    "id": "JOHrgpUqmsbtKUvWHKVM",
+    "code": "12010",
+    "name": "Bank komissiyalari",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:14.156Z"
+  },
+  {
+    "id": "A5KStbZD5g9TtGvUi5UL",
+    "code": "12020",
+    "name": "POS terminal komissiyasi",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:14.409Z"
+  },
+  {
+    "id": "jb3aQ0UtLOxT0z5CwBVf",
+    "code": "12030",
+    "name": "Kredit foizlari",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:14.670Z"
+  },
+  {
+    "id": "3o0Nb30NuzwolFv6rY1C",
+    "code": "12040",
+    "name": "Leasing foizlari",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:14.935Z"
+  },
+  {
+    "id": "MKoTwx32Uv9YCkkKhhoq",
+    "code": "12050",
+    "name": "Valyuta kurs farqi bo‘yicha zarar",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:15.204Z"
+  },
+  {
+    "id": "Zco1meuu8Lkl1qisbxS7",
+    "code": "12060",
+    "name": "Plastik karta komissiyalari",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:15.464Z"
+  },
+  {
+    "id": "7vczOcOPsmUmaaG4gLOK",
+    "code": "12070",
+    "name": "Online payment komissiyalari",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:15.721Z"
+  },
+  {
+    "id": "ZbzwZejdyveEyuQQd9Aj",
+    "code": "12080",
+    "name": "Boshqa moliyaviy xarajatlar",
+    "parentId": "9gCyKgepAxOgTXwq1KJo",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:15.980Z"
+  },
+  {
+    "id": "pysscMOrUqWvjEoN77XV",
+    "code": "13000",
+    "name": "Soliq xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:23.148Z"
+  },
+  {
+    "id": "pXAiIOgwRkclFvSjtjnk",
+    "code": "13010",
+    "name": "Foyda solig‘i",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:16.234Z"
+  },
+  {
+    "id": "S2ChWtTUUwLYZ1PtN3yO",
+    "code": "13020",
+    "name": "Ijtimoiy soliq",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:16.487Z"
+  },
+  {
+    "id": "Pkf5iUw9wapKR7tD9wW4",
+    "code": "13030",
+    "name": "Mol-mulk solig‘i",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:16.746Z"
+  },
+  {
+    "id": "kKduMDshtBh4Tnu3B17G",
+    "code": "13040",
+    "name": "Yer solig‘i",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:17.002Z"
+  },
+  {
+    "id": "eThzmOziJRK8VUNgqCvl",
+    "code": "13050",
+    "name": "Suv resurslaridan foydalanganlik solig‘i",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:17.277Z"
+  },
+  {
+    "id": "pyRwkODWgHukW03Ftr35",
+    "code": "13060",
+    "name": "Davlat boji",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:17.622Z"
+  },
+  {
+    "id": "CSxarat5tCAEUvZRPa9R",
+    "code": "13070",
+    "name": "Boshqa soliq xarajatlari",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:17.929Z"
+  },
+  {
+    "id": "K4HY2CsondYxJLMWZJBF",
+    "code": "13080",
+    "name": "Penya va jarimalar",
+    "parentId": "pysscMOrUqWvjEoN77XV",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:18.251Z"
+  },
+  {
+    "id": "AzcMw4FQNaKLNZwXjd5H",
+    "code": "14000",
+    "name": "Sifat, yo‘qotish va hisobdan chiqarish xarajatlari",
+    "parentId": null,
+    "description": "",
+    "createdAt": "2026-05-21T12:02:23.561Z"
+  },
+  {
+    "id": "1FNO3Lco4mJYTQ9bQqbf",
+    "code": "14010",
+    "name": "Brak xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:18.559Z"
+  },
+  {
+    "id": "7liVGhI3VS9nQ0cfYbgi",
+    "code": "14020",
+    "name": "Qayta ishlash / rework xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:18.865Z"
+  },
+  {
+    "id": "vUAwrW52RU8h76B3VFkT",
+    "code": "14030",
+    "name": "Kafolat ta’miri xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:19.158Z"
+  },
+  {
+    "id": "lnAlnVnyTorkysPC1HPQ",
+    "code": "14040",
+    "name": "Mijoz reklamatsiyasi xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:19.480Z"
+  },
+  {
+    "id": "rv81DcJ68QpNZNfrn83r",
+    "code": "14050",
+    "name": "Almashtirish xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:19.874Z"
+  },
+  {
+    "id": "HxM3spplrXcOyPZTRIPy",
+    "code": "14060",
+    "name": "Ishlab chiqarish chiqindilari / scrap",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:20.283Z"
+  },
+  {
+    "id": "T1EsMDEFYW82F9CSJuMQ",
+    "code": "14070",
+    "name": "Inventarizatsiya kamomadi",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:20.563Z"
+  },
+  {
+    "id": "jlLOZQ9yFacbpn3MR6rj",
+    "code": "14080",
+    "name": "Shikastlangan materiallar",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:20.876Z"
+  },
+  {
+    "id": "41It3EZJqgPYoBMA9EiK",
+    "code": "14090",
+    "name": "Eskirgan materiallarni hisobdan chiqarish",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:21.180Z"
+  },
+  {
+    "id": "rv26GgSadQ072WswJUS0",
+    "code": "14100",
+    "name": "Yo‘qolgan materiallar",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:21.539Z"
+  },
+  {
+    "id": "N5yBsokVjs3driw3TtRa",
+    "code": "14110",
+    "name": "Sifat tekshiruvi xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:21.808Z"
+  },
+  {
+    "id": "7ub1dBMt0q6kSUIcbzRZ",
+    "code": "14120",
+    "name": "Boshqa yo‘qotish va hisobdan chiqarish xarajatlari",
+    "parentId": "AzcMw4FQNaKLNZwXjd5H",
+    "description": "",
+    "createdAt": "2026-05-21T12:03:22.137Z"
+  }
+]

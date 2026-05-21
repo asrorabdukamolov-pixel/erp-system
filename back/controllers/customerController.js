@@ -11,8 +11,10 @@ exports.getCustomers = async (req, res) => {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
 
-        const snapshot = await queryRef.orderBy('createdAt', 'desc').get();
-        res.json(formatQuery(snapshot));
+        const snapshot = await queryRef.get();
+        const customers = formatQuery(snapshot);
+        customers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        res.json(customers);
     } catch (err) {
         console.error("Get Customers Error:", err.message);
         res.status(500).json({ message: 'Mijozlarni yuklashda xatolik yuz berdi: ' + err.message });

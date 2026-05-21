@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  ShoppingCart, Plus, Search, FileUp, FileCheck, CheckSquare, Briefcase,
+  ShoppingCart, DollarSign, Plus, Search, FileUp, FileCheck, CheckSquare, Briefcase,
   Send, X, Check, MapPin, Phone, User, Users, ChevronDown, 
   Store, Smartphone, File as FileIcon, UserPlus, Calendar, Info,
   Edit, Trash2, Eye, Trash, ZoomIn, Clock, ArrowRight, MoreHorizontal,
@@ -508,6 +508,14 @@ const Orders = () => {
   const [editingId, setEditingId] = useState(null);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [expenseForm, setExpenseForm] = useState({
+    category: 'travel',
+    amount: '',
+    neededDate: new Date().toISOString().split('T')[0],
+    orderId: '',
+    comment: ''
+  });
 
   const emptyOrder = { 
     customerSearch: '', selectedCustomer: null, kpAmount: '', discount: '0', amount: '', currency: 'UZS', exchangeRate: localStorage.getItem('erp_last_rate') || '', 
@@ -885,6 +893,43 @@ const Orders = () => {
     }
   };
 
+  const handleSubmitExpense = async (e) => {
+    e.preventDefault();
+    if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
+      return alert('Summani kiriting!');
+    }
+    if (!expenseForm.neededDate) {
+      return alert('Sanani tanlang!');
+    }
+    if (!expenseForm.orderId) {
+      return alert('Buyurtmani tanlang!');
+    }
+
+    const payload = {
+      category: expenseForm.category === 'travel' ? "Yo'l xarajati uchun" : "Oziq-ovqat uchun",
+      orderId: expenseForm.orderId,
+      amount: Number(expenseForm.amount),
+      neededDate: expenseForm.neededDate,
+      comment: expenseForm.comment || ''
+    };
+
+    try {
+      await api.post('/requests', payload);
+      alert("Sotuvoldi xarajat arizasi muvaffaqiyatli yuborildi!");
+      setIsExpenseModalOpen(false);
+      setExpenseForm({
+        category: 'travel',
+        amount: '',
+        neededDate: new Date().toISOString().split('T')[0],
+        orderId: '',
+        comment: ''
+      });
+    } catch (err) {
+      console.error("Expense request error", err);
+      alert("Xatolik yuz berdi: " + (err.response?.data?.message || err.message));
+    }
+  };
+
   if (!user) return <div style={{ padding: '40px', textAlign: 'center' }}>Yuklanmoqda...</div>;
   const isOrderLocked = editingId && LOCKED_STAGES.includes(newOrder.status);
 
@@ -940,6 +985,7 @@ const Orders = () => {
            
             {currentView !== 'archive' && (
              <>
+               <button onClick={() => setIsExpenseModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}><DollarSign size={18} /> +Sotuvoldi xarajat arizasi</button>
                <button onClick={() => setCustomerModal({ isOpen: true, type: 'Agent' })} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
                <button onClick={() => setCustomerModal({ isOpen: true, type: 'B2C' })} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
                <button onClick={() => setIsKPModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}><FileText size={18} /> Tijorat Taklifi</button>
@@ -1574,15 +1620,25 @@ const Orders = () => {
   )}
 
       {customerModal.isOpen && (
-        <CustomerModal 
-          user={user} 
-          initialType={customerModal.type}
-          onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
-          onSaved={async () => {
-            const res = await api.get('/customers');
-            setCustomers(res.data);
-          }} 
-        />
+        customerModal.type === 'Agent' ? (
+          <AgentModal 
+            onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
+            onSaved={async () => {
+              const res = await api.get('/customers');
+              setCustomers(res.data);
+            }}
+          />
+        ) : (
+          <CustomerModal 
+            user={user} 
+            initialType={customerModal.type}
+            onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
+            onSaved={async () => {
+              const res = await api.get('/customers');
+              setCustomers(res.data);
+            }} 
+          />
+        )
       )}
       {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} />}
 
@@ -1727,6 +1783,203 @@ const Orders = () => {
             >
               Bekor qilish
             </button>
+          </div>
+        </div>
+      )}
+
+      {isExpenseModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 6000, padding: '20px' }}>
+          <div className="premium-card" style={{ width: '600px', maxWidth: '100%', padding: '40px', border: '1px solid rgba(251,191,36,0.2)', borderRadius: '24px', position: 'relative', background: 'var(--secondary-bg)' }}>
+            <button 
+              onClick={() => setIsExpenseModalOpen(false)} 
+              style={{ position: 'absolute', right: '24px', top: '24px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer' }}
+            >
+              <X size={18} />
+            </button>
+
+            <h3 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '8px', color: 'white' }}>Sotuvoldi xarajat arizasi</h3>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginBottom: '32px' }}>O'lchov ("zamer") yoki boshqa sotuvoldi tadbirlari uchun yo'l kira va ovqat puli so'rovi</p>
+
+            <form onSubmit={handleSubmitExpense} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Kategoriya</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setExpenseForm({...expenseForm, category: 'travel'})} 
+                    style={{ 
+                      padding: '16px', 
+                      borderRadius: '12px', 
+                      background: expenseForm.category === 'travel' ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)', 
+                      border: `1px solid ${expenseForm.category === 'travel' ? 'var(--accent-gold)' : 'var(--border-color)'}`, 
+                      color: expenseForm.category === 'travel' ? 'var(--accent-gold)' : 'white', 
+                      fontWeight: '700', 
+                      cursor: 'pointer',
+                      transition: '0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    🚗 Yo'l xarajati
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => setExpenseForm({...expenseForm, category: 'food'})} 
+                    style={{ 
+                      padding: '16px', 
+                      borderRadius: '12px', 
+                      background: expenseForm.category === 'food' ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)', 
+                      border: `1px solid ${expenseForm.category === 'food' ? 'var(--accent-gold)' : 'var(--border-color)'}`, 
+                      color: expenseForm.category === 'food' ? 'var(--accent-gold)' : 'white', 
+                      fontWeight: '700', 
+                      cursor: 'pointer',
+                      transition: '0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px'
+                    }}
+                  >
+                    🍔 Oziq-ovqat
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Buyurtmani (Mijozni) tanlang</label>
+                <select 
+                  value={expenseForm.orderId} 
+                  onChange={e => setExpenseForm({...expenseForm, orderId: e.target.value})} 
+                  required
+                  style={{ 
+                    width: '100%', 
+                    height: '50px', 
+                    background: '#1e293b', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '12px', 
+                    color: 'white', 
+                    padding: '0 16px', 
+                    fontSize: '15px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="" style={{ background: '#1e293b' }}>Tanlang...</option>
+                  {allOrders.filter(o => {
+                    const currentUserId = user?.id || user?._id;
+                    return (user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId)) && o.status !== 'yopildi';
+                  }).map(o => (
+                    <option key={o._id} value={o.productionId || o.uniqueId} style={{ background: '#1e293b' }}>
+                      {o.productionId || o.uniqueId} - {o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Qaysi kun uchun?</label>
+                  <input 
+                    type="date" 
+                    value={expenseForm.neededDate} 
+                    onChange={e => setExpenseForm({...expenseForm, neededDate: e.target.value})} 
+                    required
+                    style={{ 
+                      width: '100%', 
+                      height: '50px', 
+                      background: 'rgba(255,255,255,0.03)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '12px', 
+                      color: 'white', 
+                      padding: '0 16px', 
+                      fontSize: '15px',
+                      colorScheme: 'dark',
+                      outline: 'none'
+                    }} 
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Summa (UZS)</label>
+                  <input 
+                    type="text" 
+                    value={expenseForm.amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ")} 
+                    onChange={e => setExpenseForm({...expenseForm, amount: e.target.value.replace(/\s/g, '')})} 
+                    required 
+                    placeholder="0" 
+                    style={{ 
+                      width: '100%', 
+                      height: '50px', 
+                      background: 'rgba(255,255,255,0.03)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '12px', 
+                      color: 'white', 
+                      padding: '0 16px', 
+                      fontSize: '16px',
+                      fontWeight: '800',
+                      outline: 'none'
+                    }} 
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Izoh</label>
+                <textarea 
+                  value={expenseForm.comment} 
+                  onChange={e => setExpenseForm({...expenseForm, comment: e.target.value})} 
+                  placeholder="Batafsil ma'lumot (masalan: Zamer manzili, masofa)..." 
+                  style={{ 
+                    width: '100%', 
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '12px', 
+                    color: 'white', 
+                    padding: '16px', 
+                    fontSize: '15px',
+                    minHeight: '100px',
+                    resize: 'none',
+                    outline: 'none'
+                  }} 
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsExpenseModalOpen(false)} 
+                  style={{ 
+                    flex: 1, 
+                    padding: '16px', 
+                    borderRadius: '12px', 
+                    border: '1px solid var(--border-color)', 
+                    background: 'transparent', 
+                    color: 'white', 
+                    fontWeight: '700', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Bekor qilish
+                </button>
+                <button 
+                  type="submit" 
+                  style={{ 
+                    flex: 2, 
+                    padding: '16px', 
+                    borderRadius: '12px', 
+                    border: 'none', 
+                    background: 'var(--accent-gold)', 
+                    color: '#000', 
+                    fontWeight: '900', 
+                    fontSize: '16px', 
+                    cursor: 'pointer' 
+                  }}
+                >
+                  Ariza topshirish
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
