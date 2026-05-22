@@ -199,42 +199,42 @@ const AppContent = () => {
 
       {/* Sales Manager Routes */}
       <Route path="/sotuv-manager/orders" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><SalesOrders /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/archive" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><SalesOrders /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/tasks" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><Tasks /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/proposals" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><Proposals /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/trash" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><SalesTrash /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/finance" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><SalesFinance /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/inventory" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><PlaceholderPage title="Ombor" description="Mavjud mahsulotlar." /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/sotuv-manager/profile" element={
-        <ProtectedRoute allowedRoles={['sotuv_manager']}>
+        <ProtectedRoute allowedRoles={['sotuv_manager', 'sales_manager']}>
           <MainLayout><SalesProfile /></MainLayout>
         </ProtectedRoute>
       } />
@@ -362,8 +362,12 @@ const AppContent = () => {
           user.role === 'showroom' ? <Navigate to="/showroom-admin" /> : 
           user.role === 'kassa' ? <Navigate to="/kassa/dashboard" /> :
           user.role === 'fabrika' ? <Navigate to="/fabrika" /> :
+          (user.role === 'sotuv_manager' || user.role === 'sales_manager') ? <Navigate to="/sotuv-manager/orders" /> :
           <Navigate to={`/${user.role.replace('_', '-')}/orders`} />
         ) : <Navigate to="/login" />
+      } />
+      <Route path="/sales-manager/*" element={
+        <Navigate to="/sotuv-manager/orders" replace />
       } />
       <Route path="*" element={<PlaceholderPage title="404" description="Sahifa topilmadi." />} />
     </Routes>

@@ -7,7 +7,7 @@ exports.getProposals = async (req, res) => {
         if (req.user.role !== 'super') {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-        if (req.user.role === 'sotuv_manager' || req.user.role === 'proekt_manager') {
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'sales_manager' || req.user.role === 'proekt_manager') {
             queryRef = queryRef.where('managerId', '==', req.user.id);
         }
 
@@ -87,7 +87,7 @@ exports.getTrashedProposals = async (req, res) => {
         if (req.user.role !== 'super') {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-        if (req.user.role === 'sotuv_manager' || req.user.role === 'proekt_manager') {
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'sales_manager' || req.user.role === 'proekt_manager') {
             queryRef = queryRef.where('managerId', '==', req.user.id);
         }
 

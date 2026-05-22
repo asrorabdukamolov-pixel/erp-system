@@ -24,7 +24,7 @@ const Login = () => {
       if (role === 'super') navigate('/super-admin');
       else if (role === 'showroom') navigate('/showroom-admin');
       else if (role === 'kassa') navigate('/kassa/dashboard');
-      else if (role === 'sotuv_manager') navigate('/sotuv-manager/orders');
+      else if (role === 'sotuv_manager' || role === 'sales_manager') navigate('/sotuv-manager/orders');
       else if (role === 'proekt_manager') navigate('/proekt-manager/orders');
       else navigate('/');
     } else {

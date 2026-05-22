@@ -82,7 +82,7 @@ const Sidebar = () => {
   const salesManagerLinks = [
     { name: 'Sotuvlar', path: '/sotuv-manager/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Tijorat Takliflari', path: '/sotuv-manager/proposals', icon: <FileText size={20} /> },
-    { name: 'Finans', path: '/sotuv-manager/finance', icon: <Wallet size={20} /> },
+    { name: 'Arizalarim', path: '/sotuv-manager/finance', icon: <Wallet size={20} /> },
     { name: 'Vazifalar', path: '/sotuv-manager/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Buyurtmalar Arxivi', path: '/sotuv-manager/archive', icon: <History size={20} /> },
     { name: 'Karzina', path: '/sotuv-manager/trash', icon: <Trash2 size={20} /> },
@@ -123,7 +123,7 @@ const Sidebar = () => {
   let links = [];
   if (user?.role === 'super') links = superAdminLinks;
   else if (user?.role === 'showroom') links = showroomAdminLinks;
-  else if (user?.role === 'sotuv_manager') links = salesManagerLinks;
+  else if (user?.role === 'sotuv_manager' || user?.role === 'sales_manager') links = salesManagerLinks;
   else if (user?.role === 'proekt_manager') links = projectManagerLinks;
   else if (user?.role === 'kassa') links = kassaLinks;
   else if (user?.role === 'fabrika') links = fabrikaLinks;

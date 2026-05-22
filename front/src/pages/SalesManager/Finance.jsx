@@ -188,10 +188,23 @@ const Finance = () => {
 
   const myRequests = requests.filter(r => r.userId === (user.id || user._id));
 
+  const handleSendForApproval = async (id) => {
+    if (!window.confirm("Ushbu arizani tasdiqlashga yubormoqchimisiz?")) return;
+    try {
+      await api.put(`/requests/${id}`, { status: 'pending' });
+      setRequests(requests.map(r => r._id === id || r.id === id ? { ...r, status: 'pending' } : r));
+      alert("Ariza tasdiqlashga yuborildi!");
+    } catch (err) {
+      console.error("Send for approval error", err);
+      alert("Xatolik yuz berdi!");
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'approved': return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '11px', fontWeight: '800' }}>TASDIQLANDI</span>;
       case 'rejected': return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '800' }}>RAD ETILDI</span>;
+      case 'qoralama': return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(156,163,175,0.15)', color: '#9ca3af', fontSize: '11px', fontWeight: '800' }}>QORALAMA</span>;
       default: return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(251,191,36,0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>KUTILMOQDA</span>;
     }
   };
@@ -200,12 +213,9 @@ const Finance = () => {
     <div style={{ flex: 1, padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '32px', fontWeight: '900' }}>Moliya <span style={{ color: 'var(--accent-gold)' }}>Bo'limi</span></h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Xarajatlar uchun pul so'rash va so'rovlar tarixi.</p>
+          <h2 style={{ fontSize: '32px', fontWeight: '900' }}>Arizalarim</h2>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Xarajatlar uchun yuborilgan so'rovlar tarixi.</p>
         </div>
-        <button onClick={() => setIsModalOpen(true)} className="gold-btn" style={{ height: '48px', padding: '0 24px' }}>
-          <Plus size={20} /> Pul buyurtma berish
-        </button>
       </div>
 
       <div className="premium-card" style={{ padding: '0', overflow: 'hidden' }}>
@@ -244,7 +254,33 @@ const Finance = () => {
                     <td style={{ padding: '20px', fontSize: '13px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
                     </td>
-                    <td style={{ padding: '20px' }}>{getStatusBadge(req.status)}</td>
+                    <td style={{ padding: '20px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start' }}>
+                        {getStatusBadge(req.status)}
+                        {req.status === 'qoralama' && (
+                          <button 
+                            onClick={() => handleSendForApproval(req._id || req.id)}
+                            style={{ 
+                              background: 'rgba(251,191,36,0.1)', 
+                              border: '1px solid rgba(251,191,36,0.4)', 
+                              borderRadius: '8px', 
+                              padding: '4px 10px', 
+                              color: 'var(--accent-gold)', 
+                              fontSize: '11px', 
+                              fontWeight: '700', 
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              marginTop: '4px',
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            <Send size={12} /> Tasdiqlashga yuborish
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ padding: '20px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '200px' }}>
                         {req.comment && <div style={{ marginBottom: '4px' }}>📝 {req.comment}</div>}

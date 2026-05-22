@@ -508,9 +508,10 @@ const Orders = () => {
   const [editingId, setEditingId] = useState(null);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
+  const [expenseCategories, setExpenseCategories] = useState([]);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [expenseForm, setExpenseForm] = useState({
-    category: 'travel',
+    category: '',
     amount: '',
     neededDate: new Date().toISOString().split('T')[0],
     orderId: '',
@@ -580,7 +581,46 @@ const Orders = () => {
         setCustomers(customersRes.data);
         setProposals(proposalsRes.data);
       } catch (err) {
-        console.error("Data load error", err);
+        console.error("Core data load error", err);
+      }
+
+      try {
+        const expenseItemsRes = await api.get('/expense-items');
+        const items = expenseItemsRes.data || [];
+        
+        // Find the main parent item (must not have parentId, and matches code '8000' or 'sotuvoldi' name)
+        const mainItem = items.find(i => 
+          !i.parentId && 
+          (String(i.code).trim() === '8000' || (i.name && i.name.toLowerCase().includes('sotuvoldi')))
+        );
+
+        let categories = [];
+        if (mainItem) {
+          categories = items.filter(i => i.parentId === mainItem.id || i.parentId === mainItem._id);
+        }
+
+        // Fallback: if no categories are found via parent ID reference, find items with codes starting with '80' or '81'
+        if (categories.length === 0) {
+          categories = items.filter(i => 
+            i.parentId && 
+            (String(i.code).startsWith('80') || String(i.code).startsWith('81'))
+          );
+        }
+
+        // Ultimate fallback if still empty (e.g. database not seeded or empty)
+        if (categories.length === 0) {
+          categories = [
+            { id: 'exp_8010', code: '8010', name: "Zamer xarajatlari" },
+            { id: 'exp_8020', code: '8020', name: "Transport / Yo'l xarajatlari" },
+            { id: 'exp_8030', code: '8030', name: "Oziq-ovqat xarajatlari" },
+            { id: 'exp_8110', code: '8110', name: "Boshqa sotuvoldi xarajatlari" }
+          ];
+        }
+
+        categories.sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
+        setExpenseCategories(categories);
+      } catch (err) {
+        console.error("Expense items load error", err);
       }
     };
     loadData();
@@ -597,6 +637,12 @@ const Orders = () => {
       setTasks([]);
     }
   }, [editingId]);
+
+  useEffect(() => {
+    if (expenseCategories.length > 0 && !expenseForm.category) {
+      setExpenseForm(prev => ({ ...prev, category: expenseCategories[0].name }));
+    }
+  }, [expenseCategories, expenseForm.category]);
 
   const loadOrderTasks = async (orderId) => {
     try {
@@ -720,7 +766,7 @@ const Orders = () => {
 
   const filteredOrders = allOrders.filter(o => {
     const currentUserId = user?.id || user?._id;
-    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
+    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || ((user?.role === 'sotuv_manager' || user?.role === 'sales_manager') && o.managerId === currentUserId);
     const matchesSearch = `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''} ${o.selectedCustomer?.companyName || ''} ${o.selectedCustomer?.agentName || ''} ${o.uniqueId || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
     const isArchived = o.status === 'yopildi';
     
@@ -895,6 +941,9 @@ const Orders = () => {
 
   const handleSubmitExpense = async (e) => {
     e.preventDefault();
+    if (!expenseForm.category) {
+      return alert('Kategoriyani tanlang!');
+    }
     if (!expenseForm.amount || Number(expenseForm.amount) <= 0) {
       return alert('Summani kiriting!');
     }
@@ -906,19 +955,20 @@ const Orders = () => {
     }
 
     const payload = {
-      category: expenseForm.category === 'travel' ? "Yo'l xarajati uchun" : "Oziq-ovqat uchun",
+      category: expenseForm.category,
       orderId: expenseForm.orderId,
       amount: Number(expenseForm.amount),
       neededDate: expenseForm.neededDate,
-      comment: expenseForm.comment || ''
+      comment: expenseForm.comment || '',
+      status: 'qoralama'
     };
 
     try {
       await api.post('/requests', payload);
-      alert("Sotuvoldi xarajat arizasi muvaffaqiyatli yuborildi!");
+      alert("Sotuvoldi xarajat arizasi muvaffaqiyatli yaratildi (Qoralama)!");
       setIsExpenseModalOpen(false);
       setExpenseForm({
-        category: 'travel',
+        category: expenseCategories[0]?.name || '',
         amount: '',
         neededDate: new Date().toISOString().split('T')[0],
         orderId: '',
@@ -1047,7 +1097,7 @@ const Orders = () => {
           STAGES.map(stage => {
             const stageOrders = allOrders.filter(o => {
               const currentUserId = user?.id || user?._id;
-              const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId);
+              const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || ((user?.role === 'sotuv_manager' || user?.role === 'sales_manager') && o.managerId === currentUserId);
               const matchesSearch = `${o.selectedCustomer?.firstName || ''} ${o.selectedCustomer?.lastName || ''} ${o.selectedCustomer?.companyName || ''} ${o.selectedCustomer?.agentName || ''} ${o.uniqueId || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
               if (!(matchesUser && matchesSearch && o.status !== 'yopildi')) return false;
 
@@ -1803,48 +1853,30 @@ const Orders = () => {
             <form onSubmit={handleSubmitExpense} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '10px' }}>Kategoriya</label>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setExpenseForm({...expenseForm, category: 'travel'})} 
-                    style={{ 
-                      padding: '16px', 
-                      borderRadius: '12px', 
-                      background: expenseForm.category === 'travel' ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)', 
-                      border: `1px solid ${expenseForm.category === 'travel' ? 'var(--accent-gold)' : 'var(--border-color)'}`, 
-                      color: expenseForm.category === 'travel' ? 'var(--accent-gold)' : 'white', 
-                      fontWeight: '700', 
-                      cursor: 'pointer',
-                      transition: '0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '10px'
-                    }}
-                  >
-                    🚗 Yo'l xarajati
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setExpenseForm({...expenseForm, category: 'food'})} 
-                    style={{ 
-                      padding: '16px', 
-                      borderRadius: '12px', 
-                      background: expenseForm.category === 'food' ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.02)', 
-                      border: `1px solid ${expenseForm.category === 'food' ? 'var(--accent-gold)' : 'var(--border-color)'}`, 
-                      color: expenseForm.category === 'food' ? 'var(--accent-gold)' : 'white', 
-                      fontWeight: '700', 
-                      cursor: 'pointer',
-                      transition: '0.2s',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '10px'
-                    }}
-                  >
-                    🍔 Oziq-ovqat
-                  </button>
-                </div>
+                <select 
+                  value={expenseForm.category} 
+                  onChange={e => setExpenseForm({...expenseForm, category: e.target.value})} 
+                  required
+                  style={{ 
+                    width: '100%', 
+                    height: '50px', 
+                    background: '#1e293b', 
+                    border: '1px solid var(--border-color)', 
+                    borderRadius: '12px', 
+                    color: 'white', 
+                    padding: '0 16px', 
+                    fontSize: '15px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="" style={{ background: '#1e293b' }}>Tanlang...</option>
+                  {expenseCategories.map(cat => (
+                    <option key={cat.id} value={cat.name} style={{ background: '#1e293b' }}>
+                      {cat.code} - {cat.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -1869,7 +1901,7 @@ const Orders = () => {
                   <option value="" style={{ background: '#1e293b' }}>Tanlang...</option>
                   {allOrders.filter(o => {
                     const currentUserId = user?.id || user?._id;
-                    return (user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'sotuv_manager' && o.managerId === currentUserId)) && o.status !== 'yopildi';
+                    return (user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || ((user?.role === 'sotuv_manager' || user?.role === 'sales_manager') && o.managerId === currentUserId)) && o.status !== 'yopildi';
                   }).map(o => (
                     <option key={o._id} value={o.productionId || o.uniqueId} style={{ background: '#1e293b' }}>
                       {o.productionId || o.uniqueId} - {o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}

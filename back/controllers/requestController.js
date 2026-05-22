@@ -26,7 +26,7 @@ exports.createRequest = async (req, res) => {
             userId: req.user.id,
             userName: req.user.name,
             showroom: req.user.showroom || '',
-            status: 'pending',
+            status: req.body.status || 'pending',
             createdAt: new Date().toISOString()
         };
         const docRef = await db.collection('money_requests').add(newRequest);
