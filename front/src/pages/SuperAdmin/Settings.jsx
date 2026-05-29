@@ -13,6 +13,7 @@ import RolesPermissionsSettings from './RolesPermissionsSettings';
 import CompanySettings from './CompanySettings';
 import Partners from './Partners';
 import FactoryAccounts from './FactoryAccounts';
+import WarehousesSettings from './WarehousesSettings';
 import MasterDataList from '../../components/MasterDataList';
 import { 
     Settings as SettingsIcon, BarChart3, Wallet, Users, ShieldCheck, 
@@ -226,6 +227,7 @@ const Settings = () => {
                                     <div className="premium-card" style={{ padding: '15px', height: 'fit-content' }}>
                                         {[
                                             { id: 'warehouses', label: 'Omborlar', icon: <Database size={16} /> },
+                                            { id: 'warehouse-types', label: 'Ombor turlari', icon: <Layers size={16} /> },
                                             { id: 'material-groups', label: 'Material guruhlari', icon: <Bookmark size={16} /> },
                                             { id: 'materials', label: 'Materiallar', icon: <Boxes size={16} /> },
                                             { id: 'units', label: 'O‘lchov birliklari', icon: <Ruler size={16} /> },
@@ -237,7 +239,8 @@ const Settings = () => {
                                         ))}
                                     </div>
                                     <div>
-                                        {activeWarehouseSubTab === 'warehouses' && <MasterDataList title="Omborlar" endpoint="/warehouses" description="Tizimdagi jismoniy va virtual omborlar." icon={Database} />}
+                                        {activeWarehouseSubTab === 'warehouses' && <WarehousesSettings />}
+                                        {activeWarehouseSubTab === 'warehouse-types' && <MasterDataList title="Ombor turlari" endpoint="/warehouse-types" description="Omborlarni guruhlash uchun turlar (Masalan: Xom ashyo, Ishlab chiqarish)." icon={Layers} />}
                                         {activeWarehouseSubTab === 'material-groups' && <MasterDataList title="Material guruhlari" endpoint="/material-groups" description="Materiallarni guruhlash uchun (Masalan: DSP, Furnitura, Bo'yoq)." icon={Bookmark} />}
                                         {activeWarehouseSubTab === 'materials' && <MasterDataList title="Materiallar" endpoint="/materials" description="Barcha xom-ashyo va materiallar ro'yxati." icon={Boxes} />}
                                         {activeWarehouseSubTab === 'units' && <MasterDataList title="O‘lchov birliklari" endpoint="/units" description="Soni, kg, metr, kv.m va h.k." icon={Ruler} />}

@@ -48,7 +48,7 @@ app.use('/api/integrations', require('./routes/integrationRoutes'));
 const masterDataCollections = [
     'customer-types', 'lead-sources', 'sales-channels', 'kp-statuses', 'rejection-reasons',
     'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
-    'warehouses', 'material-groups', 'materials', 'units', 'wh-op-types',
+    'warehouses', 'warehouse-types', 'material-groups', 'materials', 'units', 'wh-op-types',
     'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms'
 ];
 
