@@ -26,7 +26,8 @@ import {
   CheckSquare,
   Send,
   BarChart3,
-  Layers
+  Layers,
+  PieChart
 } from 'lucide-react';
 import logo from '../assets/logo.png';
 
@@ -49,7 +50,7 @@ const Sidebar = () => {
   }, []);
 
   const superAdminLinks = [
-    { name: 'Bosh sahifa', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
+    { name: 'Dashboard', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
     { name: 'Fabrika', path: '/super-admin/fabrika', icon: <Factory size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
@@ -58,6 +59,7 @@ const Sidebar = () => {
     { name: 'Yetkazib beruvchilar', path: '/super-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Vazifalar', path: '/super-admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'AI Monitoring', path: '/super-admin/ai-insights', icon: <BarChart3 size={20} /> },
+    { name: 'Hisobotlar', path: '/super-admin/reports', icon: <PieChart size={20} /> },
     { name: 'Sozlamalar', path: '/super-admin/settings', icon: <Settings size={20} /> },
   ];
 
@@ -70,6 +72,7 @@ const Sidebar = () => {
     { name: 'Yetkazib beruvchilar', path: '/showroom-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Vazifalar', path: '/showroom-admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Karzina', path: '/showroom-admin/trash', icon: <Trash2 size={20} /> },
+    { name: 'Hisobotlar', path: '/showroom-admin/reports', icon: <PieChart size={20} /> },
     { name: 'Sozlamalar', path: '/showroom-admin/settings', icon: <Settings size={20} /> },
   ];
 

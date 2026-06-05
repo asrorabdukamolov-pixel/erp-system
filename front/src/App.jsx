@@ -5,8 +5,7 @@ import { NotificationProvider } from './context/NotificationContext';
 
 // Pages (Will create these next)
 import Login from './pages/Auth/Login';
-import SuperDashboard from './pages/SuperAdmin/Dashboard';
-import ShowroomDashboard from './pages/ShowroomAdmin/Dashboard';
+import Dashboard from './pages/Shared/Dashboard';
 import ShowroomsList from './pages/SuperAdmin/Showrooms';
 import Departments from './pages/SuperAdmin/Departments';
 import CostCenters from './pages/SuperAdmin/CostCenters';
@@ -33,6 +32,7 @@ import DistributorDashboard from './pages/Fabrika/Distributor';
 import Suppliers from './pages/Shared/Suppliers';
 import Tasks from './pages/Shared/Tasks';
 import AIInsights from './pages/SuperAdmin/AIInsights';
+import Reports from './pages/Shared/Reports';
 
 // Project Manager
 import ProjectOrders from './pages/ProjectManager/Orders';
@@ -73,7 +73,7 @@ const AppContent = () => {
       {/* Super Admin Routes */}
       <Route path="/super-admin" element={
         <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><SuperDashboard /></MainLayout>
+          <MainLayout><Dashboard /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/super-admin/showrooms" element={
@@ -138,11 +138,16 @@ const AppContent = () => {
           <MainLayout><Tasks /></MainLayout>
         </ProtectedRoute>
       } />
+      <Route path="/super-admin/reports" element={
+        <ProtectedRoute allowedRoles={['super']}>
+          <MainLayout><Reports /></MainLayout>
+        </ProtectedRoute>
+      } />
 
       {/* Showroom Admin Routes */}
       <Route path="/showroom-admin" element={
         <ProtectedRoute allowedRoles={['showroom']}>
-          <MainLayout><ShowroomDashboard /></MainLayout>
+          <MainLayout><Dashboard /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/showroom-admin/staff" element={
@@ -189,6 +194,11 @@ const AppContent = () => {
       <Route path="/showroom-admin/tasks" element={
         <ProtectedRoute allowedRoles={['showroom']}>
           <MainLayout><Tasks /></MainLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/showroom-admin/reports" element={
+        <ProtectedRoute allowedRoles={['showroom']}>
+          <MainLayout><Reports /></MainLayout>
         </ProtectedRoute>
       } />
       <Route path="/showroom-admin/settings" element={

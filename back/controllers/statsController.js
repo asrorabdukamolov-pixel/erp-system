@@ -31,7 +31,7 @@ exports.getSuperAdminStats = async (req, res) => {
         res.json({
             showroomsCount,
             activeAdminsCount,
-            totalSales,
+            totalSales: 0,
             monthlyGrowth: 0,
             recentActivities
         });
