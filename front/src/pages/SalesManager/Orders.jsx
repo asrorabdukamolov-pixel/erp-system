@@ -1870,9 +1870,9 @@ const Orders = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="" style={{ background: '#1e293b' }}>Tanlang...</option>
+                  <option value="" style={{ background: '#1e293b', color: '#fff' }}>Tanlang...</option>
                   {expenseCategories.map(cat => (
-                    <option key={cat.id} value={cat.name} style={{ background: '#1e293b' }}>
+                    <option key={cat.id} value={cat.name} style={{ background: '#1e293b', color: '#fff' }}>
                       {cat.code} - {cat.name}
                     </option>
                   ))}
@@ -1898,12 +1898,12 @@ const Orders = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="" style={{ background: '#1e293b' }}>Tanlang...</option>
+                  <option value="" style={{ background: '#1e293b', color: '#fff' }}>Tanlang...</option>
                   {allOrders.filter(o => {
                     const currentUserId = user?.id || user?._id;
                     return (user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || ((user?.role === 'sotuv_manager' || user?.role === 'sales_manager') && o.managerId === currentUserId)) && o.status !== 'yopildi';
                   }).map(o => (
-                    <option key={o._id} value={o.productionId || o.uniqueId} style={{ background: '#1e293b' }}>
+                    <option key={o._id} value={o.productionId || o.uniqueId} style={{ background: '#1e293b', color: '#fff' }}>
                       {o.productionId || o.uniqueId} - {o.selectedCustomer?.firstName} {o.selectedCustomer?.lastName}
                     </option>
                   ))}

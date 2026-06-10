@@ -54,8 +54,8 @@ input, select {
 }
 
 select option {
-  color: #1e293b;
-  background-color: #ffffff;
+  color: #f8fafc;
+  background-color: #1e293b;
 }
 
 input:focus {
