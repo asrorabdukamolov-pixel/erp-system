@@ -53,6 +53,11 @@ input, select {
   font-family: var(--font-main);
 }
 
+select option {
+  color: #1e293b;
+  background-color: #ffffff;
+}
+
 input:focus {
   border-color: var(--accent-gold);
   outline: none;
