@@ -40,22 +40,32 @@ exports.createUser = async (req, res) => {
         const { name, surname, patronymic, login, password, role, showroom, phone, positionId, positionName, department, costCenterId, costCenterName, workRate, salary } = req.body;
 
         const usersRef = db.collection('users');
-        const snapshot = await usersRef.where('login', '==', login.toLowerCase()).get();
-
-        if (!snapshot.empty) {
-            return res.status(400).json({ msg: 'Bu login allaqachon band' });
+        
+        let finalLogin = '';
+        if (login) {
+            finalLogin = login.toLowerCase();
+            const snapshot = await usersRef.where('login', '==', finalLogin).get();
+            if (!snapshot.empty) {
+                return res.status(400).json({ msg: 'Bu login allaqachon band' });
+            }
+        } else {
+            // Generate a unique dummy login for HR employees without login
+            finalLogin = 'emp_' + Math.random().toString(36).substring(2, 11);
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        let hashedPassword = '';
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            hashedPassword = await bcrypt.hash(password, salt);
+        }
 
         const newUser = {
             name,
             surname,
             patronymic: patronymic || '',
-            login: login.toLowerCase(),
+            login: finalLogin,
             password: hashedPassword,
-            role,
+            role: role || 'sales_manager',
             phone: phone || '',
             showroom: showroom || req.user.showroom || '',
             positionId: positionId || '',

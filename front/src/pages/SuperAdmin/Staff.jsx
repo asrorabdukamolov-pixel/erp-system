@@ -285,7 +285,13 @@ const SuperAdminStaff = () => {
                       {u.salary ? Number(u.salary).toLocaleString() + ' UZS' : 'Belgilanmagan'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px 8px', fontSize: '14px' }}>{u.login}</td>
+                  <td style={{ padding: '16px 8px', fontSize: '14px' }}>
+                    {u.login?.startsWith('emp_') ? (
+                      <span style={{ color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '12px' }}>Kirishsiz</span>
+                    ) : (
+                      u.login
+                    )}
+                  </td>
                   <td style={{ padding: '16px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                       <button onClick={() => handleOpenModal('edit', u)} className="action-btn" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
@@ -454,30 +460,6 @@ const SuperAdminStaff = () => {
                     <option value="">Global / Fabrika</option>
                     {showrooms.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                   </select>
-                </div>
-
-                <div style={{ gridColumn: 'span 2', borderTop: '1px solid var(--border-color)', paddingTop: '20px', marginTop: '10px' }}>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: 'var(--accent-gold)' }}>Tizimga kirish ma'lumotlari</h4>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Login</label>
-                  <input style={{ width: '100%' }} value={formData.login} onChange={e => setFormData({...formData, login: e.target.value})} required />
-                </div>
-
-                <div style={{ position: 'relative' }}>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Parol</label>
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    style={{ width: '100%' }} 
-                    value={formData.password} 
-                    onChange={e => setFormData({...formData, password: e.target.value})} 
-                    required={modalMode === 'add'}
-                    placeholder={modalMode === 'edit' ? "O'zgartirmaslik uchun bo'sh" : "••••••••"}
-                  />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '32px', background: 'transparent' }}>
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
                 </div>
               </div>
 
