@@ -7,7 +7,10 @@ const serviceAccount = require('../config/firebase-service-account.json');
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 const db = admin.firestore();
 
-const localDbPath = path.join(__dirname, '../local_db.json');
+let localDbPath = path.join(__dirname, '../seed_data.json');
+if (!fs.existsSync(localDbPath)) {
+  localDbPath = path.join(__dirname, '../local_db.json');
+}
 const data = JSON.parse(fs.readFileSync(localDbPath, 'utf8'));
 
 async function importCollection(collectionName, items) {
