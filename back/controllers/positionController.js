@@ -12,11 +12,13 @@ exports.getPositions = async (req, res) => {
 
 exports.createPosition = async (req, res) => {
     try {
-        const { name, code, description } = req.body;
+        const { name, code, description, departmentId, departmentName } = req.body;
         const newPos = {
             name,
             code: code.toUpperCase().trim(),
             description: description || '',
+            departmentId: departmentId || '',
+            departmentName: departmentName || '',
             createdAt: new Date().toISOString()
         };
         const docRef = await db.collection('positions').add(newPos);
@@ -29,7 +31,7 @@ exports.createPosition = async (req, res) => {
 
 exports.updatePosition = async (req, res) => {
     try {
-        const { name, code, description } = req.body;
+        const { name, code, description, departmentId, departmentName } = req.body;
         const posRef = db.collection('positions').doc(req.params.id);
         const doc = await posRef.get();
 
@@ -39,6 +41,8 @@ exports.updatePosition = async (req, res) => {
         if (name) updateData.name = name;
         if (code) updateData.code = code.toUpperCase().trim();
         if (description !== undefined) updateData.description = description;
+        if (departmentId !== undefined) updateData.departmentId = departmentId;
+        if (departmentName !== undefined) updateData.departmentName = departmentName;
 
         await posRef.update(updateData);
         const updatedDoc = await posRef.get();

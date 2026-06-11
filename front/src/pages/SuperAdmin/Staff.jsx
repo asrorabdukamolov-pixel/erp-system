@@ -5,10 +5,43 @@ import {
 } from 'lucide-react';
 import api from '../../utils/api';
 
+const mapPositionCodeToRole = (code) => {
+  if (!code) return '';
+  const num = parseInt(code, 10);
+  if (isNaN(num)) return '';
+
+  if (num >= 1 && num <= 4) return 'super';
+  if (num === 101) return 'showroom';
+  if (num >= 102 && num <= 106) return 'sales_manager';
+  if (num >= 201 && num <= 205) return 'proekt_manager';
+  if (num === 301) return 'fabrika';
+  if (num === 302 || num === 303) return 'fabrika';
+  if (num === 306) return 'cutting';
+  if (num === 307) return 'edging';
+  if (num === 308) return 'drilling';
+  if (num === 309) return 'carpentry';
+  if (num === 310) return 'painting';
+  if (num === 311) return 'packaging';
+  if (num === 312) return 'qc';
+  if (num >= 304 && num <= 313) return 'fabrika_worker';
+  if (num === 401 || num === 402 || num === 403 || num === 404 || num === 406) return 'warehouse';
+  if (num === 405) return 'finished_warehouse';
+  if (num >= 501 && num <= 503) return 'warehouse';
+  if (num === 601) return 'distributor';
+  if (num >= 602 && num <= 604) return 'distributor';
+  if (num >= 701 && num <= 705) return 'kassa';
+  if (num >= 801 && num <= 803) return 'super';
+  if (num >= 901 && num <= 905) return 'super';
+  if (num >= 1001 && num <= 1003) return 'super';
+
+  return '';
+};
+
 const SuperAdminStaff = () => {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [showrooms, setShowrooms] = useState([]);
+  const [positions, setPositions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -26,20 +59,24 @@ const SuperAdminStaff = () => {
     role: 'sales_manager',
     department: '',
     password: '',
-    showroom: ''
+    showroom: '',
+    positionId: '',
+    positionName: ''
   });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [userRes, depRes, showroomRes] = await Promise.all([
+      const [userRes, depRes, showroomRes, posRes] = await Promise.all([
         api.get('/users'),
         api.get('/departments'),
-        api.get('/showrooms')
+        api.get('/showrooms'),
+        api.get('/positions').catch(() => ({ data: [] }))
       ]);
       setUsers(userRes.data);
       setDepartments(depRes.data);
       setShowrooms(showroomRes.data);
+      setPositions(posRes.data || []);
     } catch (err) {
       console.error("Data loading error", err);
     }
@@ -62,7 +99,9 @@ const SuperAdminStaff = () => {
         role: user.role || 'sales_manager',
         department: user.department || '',
         password: '',
-        showroom: user.showroom || ''
+        showroom: user.showroom || '',
+        positionId: user.positionId || '',
+        positionName: user.positionName || ''
       });
     } else {
       setFormData({
@@ -73,7 +112,9 @@ const SuperAdminStaff = () => {
         role: 'sales_manager',
         department: '',
         password: '',
-        showroom: ''
+        showroom: '',
+        positionId: '',
+        positionName: ''
       });
     }
     setShowPassword(false);
@@ -207,10 +248,10 @@ const SuperAdminStaff = () => {
                       {departments.find(d => d.key === u.department)?.name || 'Biriktirilmagan'}
                     </span>
                   </td>
-                  <td style={{ padding: '16px 8px', textTransform: 'capitalize', fontSize: '14px' }}>
+                  <td style={{ padding: '16px 8px', fontSize: '14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Shield size={14} style={{ color: 'var(--accent-gold)' }} />
-                      {u.role?.replace('_', ' ')}
+                      {u.positionName || u.role?.replace('_', ' ')}
                     </div>
                   </td>
                   <td style={{ padding: '16px 8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
@@ -266,15 +307,53 @@ const SuperAdminStaff = () => {
                   <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Familiya</label>
                   <input style={{ width: '100%' }} value={formData.surname} onChange={e => setFormData({...formData, surname: e.target.value})} required />
                 </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Lavozim (Boshqaruv Sozlamalaridan)</label>
+                  <select 
+                    style={{ width: '100%', height: '44px', background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', padding: '0 12px', fontSize: '13px', outline: 'none', cursor: 'pointer' }} 
+                    value={formData.positionId} 
+                    onChange={e => {
+                      const posId = e.target.value;
+                      const pos = positions.find(p => (p._id || p.id) === posId);
+                      if (pos) {
+                        const determinedRole = mapPositionCodeToRole(pos.code);
+                        const dep = departments.find(d => d.name === pos.departmentName || d.id === pos.departmentId || d._id === pos.departmentId);
+                        const determinedDept = dep ? dep.key : '';
+
+                        setFormData({
+                          ...formData,
+                          positionId: posId,
+                          positionName: pos.name,
+                          role: determinedRole || formData.role,
+                          department: determinedDept || formData.department
+                        });
+                      } else {
+                        setFormData({
+                          ...formData,
+                          positionId: '',
+                          positionName: ''
+                        });
+                      }
+                    }} 
+                    required
+                  >
+                    <option value="" style={{ background: '#1e293b', color: '#fff' }}>Lavozimni tanlang...</option>
+                    {positions.map(p => (
+                      <option key={p._id || p.id} value={p._id || p.id} style={{ background: '#1e293b', color: '#fff' }}>
+                        [{p.code}] {p.name} ({p.departmentName})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Bo'lim</label>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Bo'lim (Avtomatik tanlanadi)</label>
                   <select style={{ width: '100%' }} value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} required>
                     <option value="">Bo'limni tanlang</option>
                     {departments.map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Lavozim (Role)</label>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tizim Roli (Ruxsat darajasi)</label>
                   <select style={{ width: '100%' }} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required>
                     <option value="super">Super Admin</option>
                     <option value="showroom">Showroom Admin</option>

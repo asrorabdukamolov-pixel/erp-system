@@ -37,7 +37,7 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const { name, surname, login, password, role, showroom, phone } = req.body;
+        const { name, surname, login, password, role, showroom, phone, positionId, positionName } = req.body;
 
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('login', '==', login.toLowerCase()).get();
@@ -57,6 +57,8 @@ exports.createUser = async (req, res) => {
             role,
             phone: phone || '',
             showroom: showroom || req.user.showroom || '',
+            positionId: positionId || '',
+            positionName: positionName || '',
             status: 'active',
             createdAt: new Date().toISOString()
         };
@@ -71,7 +73,7 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const { name, surname, login, password, role, status, phone } = req.body;
+        const { name, surname, login, password, role, status, phone, positionId, positionName } = req.body;
         const userRef = db.collection('users').doc(req.params.id);
         const doc = await userRef.get();
 
@@ -84,6 +86,8 @@ exports.updateUser = async (req, res) => {
         if (role) updateData.role = role;
         if (status) updateData.status = status;
         if (phone !== undefined) updateData.phone = phone;
+        if (positionId !== undefined) updateData.positionId = positionId;
+        if (positionName !== undefined) updateData.positionName = positionName;
 
         if (password) {
             const salt = await bcrypt.genSalt(10);

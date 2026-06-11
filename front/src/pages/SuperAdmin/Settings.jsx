@@ -15,6 +15,9 @@ import Partners from './Partners';
 import FactoryAccounts from './FactoryAccounts';
 import WarehousesSettings from './WarehousesSettings';
 import MasterDataList from '../../components/MasterDataList';
+import Staff from './Staff';
+import PermissionsSettings from './PermissionsSettings';
+import ApprovalMatrixSettings from './ApprovalMatrixSettings';
 import { 
     Settings as SettingsIcon, BarChart3, Wallet, Users, ShieldCheck, 
     Briefcase, ShoppingCart, Factory, Package, Building2, Layers,
@@ -38,6 +41,7 @@ const Settings = () => {
     const [activeProdSubTab, setActiveProdSubTab] = useState('product-types');
     const [activeWarehouseSubTab, setActiveWarehouseSubTab] = useState('warehouses');
     const [activePurchaseSubTab, setActivePurchaseSubTab] = useState('supplier-types');
+    const [activeITSubTab, setActiveITSubTab] = useState('users');
 
 
     const tabStyle = (isActive) => ({
@@ -88,7 +92,8 @@ const Settings = () => {
         { id: 'ombor', label: 'Ombor', icon: <Package size={18} /> },
         { id: 'xarid', label: 'Xarid', icon: <Building2 size={18} /> },
         { id: 'moliya', label: 'Moliya', icon: <Wallet size={18} /> },
-        { id: 'tashkiliy tuzilma', label: 'Tashkiliy tuzilma', icon: <Layers size={18} /> }
+        { id: 'tashkiliy tuzilma', label: 'Tashkiliy tuzilma', icon: <Layers size={18} /> },
+        { id: 'it', label: 'IT', icon: <ShieldCheck size={18} /> }
     ];
 
     const generalCategories = [
@@ -313,8 +318,7 @@ const Settings = () => {
                                     <div className="premium-card" style={{ padding: '15px', height: 'fit-content' }}>
                                         {[
                                             { id: 'departments', label: 'Bo\'limlar', icon: <Users size={16} /> },
-                                            { id: 'positions', label: 'Lavozimlar', icon: <Briefcase size={16} /> },
-                                            { id: 'roles', label: 'Rollar va huquqlar', icon: <ShieldCheck size={16} /> }
+                                            { id: 'positions', label: 'Lavozimlar', icon: <Briefcase size={16} /> }
                                         ].map(item => (
                                             <div key={item.id} onClick={() => setActiveOrgSubTab(item.id)} style={sideMenuItemStyle(activeOrgSubTab === item.id)}>
                                                 {item.icon} {item.label}
@@ -324,7 +328,30 @@ const Settings = () => {
                                     <div>
                                         {activeOrgSubTab === 'departments' && <Departments />}
                                         {activeOrgSubTab === 'positions' && <PositionsSettings />}
-                                        {activeOrgSubTab === 'roles' && <RolesPermissionsSettings />}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* IT CATEGORY */}
+                            {activeMasterDataTab === 'it' && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '30px' }}>
+                                    <div className="premium-card" style={{ padding: '15px', height: 'fit-content' }}>
+                                        {[
+                                            { id: 'users', label: 'Foydalanuvchilar', icon: <Users size={16} /> },
+                                            { id: 'roles', label: 'Rollar', icon: <ShieldCheck size={16} /> },
+                                            { id: 'permissions', label: 'Ruxsatlar / Permissions', icon: <Key size={16} /> },
+                                            { id: 'approval-matrix', label: 'Approval matrix', icon: <ClipboardList size={16} /> }
+                                        ].map(item => (
+                                            <div key={item.id} onClick={() => setActiveITSubTab(item.id)} style={sideMenuItemStyle(activeITSubTab === item.id)}>
+                                                {item.icon} {item.label}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div>
+                                        {activeITSubTab === 'users' && <Staff />}
+                                        {activeITSubTab === 'roles' && <RolesPermissionsSettings />}
+                                        {activeITSubTab === 'permissions' && <PermissionsSettings />}
+                                        {activeITSubTab === 'approval-matrix' && <ApprovalMatrixSettings />}
                                     </div>
                                 </div>
                             )}

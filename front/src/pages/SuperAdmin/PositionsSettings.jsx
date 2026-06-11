@@ -4,6 +4,7 @@ import api from '../../utils/api';
 
 const PositionsSettings = () => {
     const [positions, setPositions] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add');
@@ -13,15 +14,20 @@ const PositionsSettings = () => {
     const [formData, setFormData] = useState({
         name: '',
         code: '',
-        description: ''
+        description: '',
+        departmentId: '',
+        departmentName: ''
     });
 
     const loadData = async () => {
         setLoading(true);
         try {
-            // Check if /api/positions exists, otherwise use fallback or local_db mock pattern
-            const res = await api.get('/positions').catch(() => ({ data: [] }));
-            setPositions(res.data || []);
+            const [positionsRes, deptsRes] = await Promise.all([
+                api.get('/positions').catch(() => ({ data: [] })),
+                api.get('/departments').catch(() => ({ data: [] }))
+            ]);
+            setPositions(positionsRes.data || []);
+            setDepartments(deptsRes.data || []);
         } catch (err) {
             console.error("Positions load error:", err);
         }
@@ -39,13 +45,17 @@ const PositionsSettings = () => {
             setFormData({
                 name: pos.name || '',
                 code: pos.code || '',
-                description: pos.description || ''
+                description: pos.description || '',
+                departmentId: pos.departmentId || '',
+                departmentName: pos.departmentName || ''
             });
         } else {
             setFormData({
                 name: '',
                 code: '',
-                description: ''
+                description: '',
+                departmentId: '',
+                departmentName: ''
             });
         }
         setIsModalOpen(true);
@@ -120,6 +130,7 @@ const PositionsSettings = () => {
                             <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'left' }}>
                                 <th style={{ padding: '12px 8px' }}>KOD</th>
                                 <th style={{ padding: '12px 8px' }}>LAVOZIM NOMI</th>
+                                <th style={{ padding: '12px 8px' }}>BO'LIM</th>
                                 <th style={{ padding: '12px 8px' }}>TAVSIF</th>
                                 <th style={{ padding: '12px 8px', textAlign: 'right' }}>AMALLAR</th>
                             </tr>
@@ -129,6 +140,7 @@ const PositionsSettings = () => {
                                 <tr key={p._id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                                     <td style={{ padding: '16px 8px', fontSize: '13px', fontWeight: '700', color: 'var(--accent-gold)' }}>{p.code}</td>
                                     <td style={{ padding: '16px 8px', fontSize: '14px', fontWeight: '600' }}>{p.name}</td>
+                                    <td style={{ padding: '16px 8px', fontSize: '13px', fontWeight: '500', color: 'var(--text-primary)' }}>{p.departmentName || '-'}</td>
                                     <td style={{ padding: '16px 8px', fontSize: '13px', color: 'var(--text-secondary)' }}>{p.description || '-'}</td>
                                     <td style={{ padding: '16px 8px', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -165,6 +177,41 @@ const PositionsSettings = () => {
                                 <div>
                                     <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Lavozim nomi</label>
                                     <input style={{ width: '100%' }} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Bo'lim (Tashkiliy tuzilma)</label>
+                                    <select 
+                                        style={{ 
+                                            width: '100%', 
+                                            height: '44px', 
+                                            background: '#1e293b', 
+                                            border: '1px solid var(--border-color)', 
+                                            borderRadius: '8px', 
+                                            color: '#fff', 
+                                            padding: '0 12px', 
+                                            fontSize: '13px', 
+                                            outline: 'none',
+                                            cursor: 'pointer' 
+                                        }}
+                                        value={formData.departmentId} 
+                                        onChange={e => {
+                                            const depId = e.target.value;
+                                            const dep = departments.find(d => (d._id || d.id) === depId);
+                                            setFormData({
+                                                ...formData,
+                                                departmentId: depId,
+                                                departmentName: dep ? dep.name : ''
+                                            });
+                                        }}
+                                        required
+                                    >
+                                        <option value="" style={{ background: '#1e293b', color: '#fff' }}>Bo'limni tanlang...</option>
+                                        {departments.map(d => (
+                                            <option key={d._id || d.id} value={d._id || d.id} style={{ background: '#1e293b', color: '#fff' }}>
+                                                {d.name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Kodi (ID)</label>
