@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Plus, Users, Search, Edit2, Trash2, X, Eye, EyeOff, User, Phone,
-  Mail, Shield, MapPin, Loader2
+  Plus, Users, Search, Edit2, Trash2, X, Eye, EyeOff, Shield, MapPin, Loader2, Phone
 } from 'lucide-react';
 import api from '../../utils/api';
 
@@ -37,12 +36,11 @@ const mapPositionCodeToRole = (code) => {
   return '';
 };
 
-const SuperAdminStaff = () => {
+const ITUsers = () => {
   const [users, setUsers] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [showrooms, setShowrooms] = useState([]);
   const [positions, setPositions] = useState([]);
-  const [costCenters, setCostCenters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -55,7 +53,6 @@ const SuperAdminStaff = () => {
   const [formData, setFormData] = useState({
     name: '',
     surname: '',
-    patronymic: '',
     login: '',
     phone: '+998 ',
     role: 'sales_manager',
@@ -63,28 +60,22 @@ const SuperAdminStaff = () => {
     password: '',
     showroom: '',
     positionId: '',
-    positionName: '',
-    costCenterId: '',
-    costCenterName: '',
-    workRate: 1,
-    salary: 0
+    positionName: ''
   });
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const [empRes, depRes, showroomRes, posRes, ccRes] = await Promise.all([
-        api.get('/employees'),
+      const [userRes, depRes, showroomRes, posRes] = await Promise.all([
+        api.get('/users'),
         api.get('/departments'),
         api.get('/showrooms'),
-        api.get('/positions').catch(() => ({ data: [] })),
-        api.get('/cost-centers').catch(() => ({ data: [] }))
+        api.get('/positions').catch(() => ({ data: [] }))
       ]);
-      setUsers(empRes.data);
+      setUsers(userRes.data);
       setDepartments(depRes.data);
       setShowrooms(showroomRes.data);
       setPositions(posRes.data || []);
-      setCostCenters(ccRes.data || []);
     } catch (err) {
       console.error("Data loading error", err);
     }
@@ -102,7 +93,6 @@ const SuperAdminStaff = () => {
       setFormData({
         name: user.name || '',
         surname: user.surname || '',
-        patronymic: user.patronymic || '',
         login: user.login || '',
         phone: user.phone || '+998 ',
         role: user.role || 'sales_manager',
@@ -110,17 +100,12 @@ const SuperAdminStaff = () => {
         password: '',
         showroom: user.showroom || '',
         positionId: user.positionId || '',
-        positionName: user.positionName || '',
-        costCenterId: user.costCenterId || '',
-        costCenterName: user.costCenterName || '',
-        workRate: user.workRate || 1,
-        salary: user.salary || 0
+        positionName: user.positionName || ''
       });
     } else {
       setFormData({
         name: '',
         surname: '',
-        patronymic: '',
         login: '',
         phone: '+998 ',
         role: 'sales_manager',
@@ -128,11 +113,7 @@ const SuperAdminStaff = () => {
         password: '',
         showroom: '',
         positionId: '',
-        positionName: '',
-        costCenterId: '',
-        costCenterName: '',
-        workRate: 1,
-        salary: 0
+        positionName: ''
       });
     }
     setShowPassword(false);
@@ -142,14 +123,10 @@ const SuperAdminStaff = () => {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...formData };
-      delete payload.password; // HR employees don't have login credentials
-      delete payload.login;
-
       if (modalMode === 'add') {
-        await api.post('/employees', payload);
+        await api.post('/users', formData);
       } else {
-        await api.put(`/employees/${selectedUser._id || selectedUser.id}`, payload);
+        await api.put(`/users/${selectedUser._id}`, formData);
       }
       loadData();
       setIsModalOpen(false);
@@ -159,9 +136,9 @@ const SuperAdminStaff = () => {
   };
 
   const handleDeleteUser = async (id) => {
-    if (window.confirm("Haqiqatdan ham ushbu xodimni o'chirmoqchimisiz?")) {
+    if (window.confirm("Haqiqatdan ham ushbu foydalanuvchini o'chirmoqchimisiz?")) {
       try {
-        await api.delete(`/employees/${id}`);
+        await api.delete(`/users/${id}`);
         loadData();
       } catch (err) {
         alert(err.response?.data?.msg || "Xatolik yuz berdi");
@@ -170,7 +147,7 @@ const SuperAdminStaff = () => {
   };
 
   const filteredUsers = users.filter(u => {
-    const fullName = `${u.surname || ''} ${u.name || ''} ${u.patronymic || ''} ${u.login || ''}`;
+    const fullName = `${u.name || ''} ${u.surname || ''} ${u.login || ''}`;
     const matchesSearch = fullName.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDep = activeTab === 'all' || u.department === activeTab;
     return matchesSearch && matchesDep;
@@ -188,12 +165,12 @@ const SuperAdminStaff = () => {
     <div style={{ paddingBottom: '40px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Xodimlar Boshqaruvi</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Tizim xodimlarini boshqarish va yangilarini qo'shish.</p>
+          <h2 style={{ fontSize: '28px', fontWeight: '800', marginBottom: '8px' }}>Tizim Foydalanuvchilari</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>ERP tizimidan foydalanish huquqiga ega bo'lgan foydalanuvchilarni boshqarish.</p>
         </div>
         <button className="gold-btn" onClick={() => handleOpenModal('add')}>
           <Plus size={20} />
-          Yangi Xodim qo'shish
+          Yangi Foydalanuvchi qo'shish
         </button>
       </div>
 
@@ -230,7 +207,7 @@ const SuperAdminStaff = () => {
           <div style={{ position: 'relative', width: '300px' }}>
             <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} />
             <input 
-              placeholder="Xodimlarni qidirish..." 
+              placeholder="Foydalanuvchilarni qidirish..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{ width: '100%', paddingLeft: '40px', fontSize: '14px' }}
@@ -242,11 +219,11 @@ const SuperAdminStaff = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '14px', textAlign: 'left' }}>
-                <th style={{ padding: '16px 8px' }}>Xodim (F.I.Sh)</th>
+                <th style={{ padding: '16px 8px' }}>Foydalanuvchi</th>
                 <th style={{ padding: '16px 8px' }}>Bo'lim</th>
-                <th style={{ padding: '16px 8px' }}>Lavozim</th>
-                <th style={{ padding: '16px 8px' }}>Xarajat Markazi</th>
-                <th style={{ padding: '16px 8px' }}>Stavka / Oklad</th>
+                <th style={{ padding: '16px 8px' }}>Lavozim / Rol</th>
+                <th style={{ padding: '16px 8px' }}>Showroom</th>
+                <th style={{ padding: '16px 8px' }}>Login</th>
                 <th style={{ padding: '16px 8px', textAlign: 'right' }}>Amallar</th>
               </tr>
             </thead>
@@ -259,9 +236,7 @@ const SuperAdminStaff = () => {
                         {u.name?.charAt(0)}
                       </div>
                       <div>
-                        <p style={{ fontWeight: '600', fontSize: '14px' }}>
-                          {u.surname} {u.name} {u.patronymic}
-                        </p>
+                        <p style={{ fontWeight: '600', fontSize: '14px' }}>{u.name} {u.surname}</p>
                         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Phone size={10} /> {u.phone || 'Noma\'lum'}
                         </p>
@@ -280,14 +255,12 @@ const SuperAdminStaff = () => {
                     </div>
                   </td>
                   <td style={{ padding: '16px 8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    {u.costCenterName || 'Biriktirilmagan'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <MapPin size={14} />
+                      {showrooms.find(s => s._id === u.showroom)?.name || 'Global / Fabrika'}
+                    </div>
                   </td>
-                  <td style={{ padding: '16px 8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                    <span style={{ color: '#fff', fontWeight: '500' }}>{u.workRate || 1} stavka</span>
-                    <span style={{ display: 'block', fontSize: '12px', opacity: 0.7 }}>
-                      {u.salary ? Number(u.salary).toLocaleString() + ' UZS' : 'Belgilanmagan'}
-                    </span>
-                  </td>
+                  <td style={{ padding: '16px 8px', fontSize: '14px' }}>{u.login}</td>
                   <td style={{ padding: '16px 8px', textAlign: 'right' }}>
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                       <button onClick={() => handleOpenModal('edit', u)} className="action-btn" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
@@ -305,7 +278,7 @@ const SuperAdminStaff = () => {
           {filteredUsers.length === 0 && (
             <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-secondary)' }}>
               <Users size={48} style={{ marginBottom: '16px', opacity: 0.2 }} />
-              <p>Xodimlar topilmadi.</p>
+              <p>Foydalanuvchilar topilmadi.</p>
             </div>
           )}
         </div>
@@ -318,31 +291,24 @@ const SuperAdminStaff = () => {
           background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)',
           display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000
         }}>
-          <div className="premium-card" style={{ width: '650px', padding: '40px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="premium-card" style={{ width: '600px', padding: '40px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
-              <h3 style={{ fontSize: '24px', fontWeight: '800' }}>{modalMode === 'add' ? 'Yangi xodim qo\'shish' : 'Xodim ma\'lumotlari'}</h3>
+              <h3 style={{ fontSize: '24px', fontWeight: '800' }}>{modalMode === 'add' ? 'Yangi Foydalanuvchi' : 'Foydalanuvchi ma\'lumotlari'}</h3>
               <button onClick={() => setIsModalOpen(false)} style={{ background: 'transparent' }}><X size={24} /></button>
             </div>
             
             <form onSubmit={handleSave}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Familiya</label>
-                  <input style={{ width: '100%' }} value={formData.surname} onChange={e => setFormData({...formData, surname: e.target.value})} required />
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Ism</label>
                   <input style={{ width: '100%' }} value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} required />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Otasining ismi</label>
-                  <input style={{ width: '100%' }} value={formData.patronymic} onChange={e => setFormData({...formData, patronymic: e.target.value})} required />
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Familiya</label>
+                  <input style={{ width: '100%' }} value={formData.surname} onChange={e => setFormData({...formData, surname: e.target.value})} required />
                 </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '24px' }}>
                 <div style={{ gridColumn: 'span 2' }}>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Lavozimi</label>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Lavozim (Boshqaruv Sozlamalaridan)</label>
                   <select 
                     style={{ width: '100%', height: '44px', background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', padding: '0 12px', fontSize: '13px', outline: 'none', cursor: 'pointer' }} 
                     value={formData.positionId} 
@@ -351,7 +317,6 @@ const SuperAdminStaff = () => {
                       const pos = positions.find(p => (p._id || p.id) === posId);
                       if (pos) {
                         const determinedRole = mapPositionCodeToRole(pos.code);
-                        // Find matching department in frontend list
                         const dep = departments.find(d => d.name === pos.departmentName || d.id === pos.departmentId || d._id === pos.departmentId || d.key === pos.departmentId);
                         const determinedDept = dep ? dep.key : '';
 
@@ -366,8 +331,7 @@ const SuperAdminStaff = () => {
                         setFormData({
                           ...formData,
                           positionId: '',
-                          positionName: '',
-                          department: ''
+                          positionName: ''
                         });
                       }
                     }} 
@@ -381,81 +345,64 @@ const SuperAdminStaff = () => {
                     ))}
                   </select>
                 </div>
-
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Bo'lim (Lavozimdan kelib chiqadi)</label>
-                  <div style={{
-                    width: '100%', height: '44px', background: 'rgba(255,255,255,0.03)', 
-                    border: '1px solid var(--border-color)', borderRadius: '8px', 
-                    color: '#fff', padding: '12px 14px', fontSize: '13px', display: 'flex', alignItems: 'center'
-                  }}>
-                    {departments.find(d => d.key === formData.department)?.name || 'Lavozim tanlangach aniqlanadi'}
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Xarajat markazi</label>
-                  <select 
-                    style={{ width: '100%', height: '44px', background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', padding: '0 12px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
-                    value={formData.costCenterId}
-                    onChange={e => {
-                      const ccId = e.target.value;
-                      const cc = costCenters.find(c => (c._id || c.id) === ccId);
-                      setFormData({
-                        ...formData,
-                        costCenterId: ccId,
-                        costCenterName: cc ? cc.name : ''
-                      });
-                    }}
-                    required
-                  >
-                    <option value="">Tanlang...</option>
-                    {costCenters.map(cc => (
-                      <option key={cc._id || cc.id} value={cc._id || cc.id}>
-                        {cc.name} ({cc.code})
-                      </option>
-                    ))}
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Bo'lim (Avtomatik tanlanadi)</label>
+                  <select style={{ width: '100%' }} value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})} required>
+                    <option value="">Bo'limni tanlang</option>
+                    {departments.map(d => <option key={d.key} value={d.key}>{d.name}</option>)}
                   </select>
                 </div>
-
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Ish stavkasi</label>
-                  <select 
-                    style={{ width: '100%', height: '44px', background: '#1e293b', border: '1px solid var(--border-color)', borderRadius: '8px', color: '#fff', padding: '0 12px', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
-                    value={formData.workRate}
-                    onChange={e => setFormData({ ...formData, workRate: Number(e.target.value) })}
-                    required
-                  >
-                    <option value={0.25}>0.25 stavka</option>
-                    <option value={0.5}>0.5 (yarim) stavka</option>
-                    <option value={0.75}>0.75 stavka</option>
-                    <option value={1}>1.0 (to'liq) stavka</option>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tizim Roli (Ruxsat darajasi)</label>
+                  <select style={{ width: '100%' }} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required>
+                    <option value="super">Super Admin</option>
+                    <option value="showroom">Showroom Admin</option>
+                    <option value="sales_manager">Savdo Menejeri</option>
+                    <option value="proekt_manager">Proekt Menejer (PM)</option>
+                    <option value="kassa">Kassa / Hisobchi</option>
+                    <option value="fabrika">Fabrika Menejeri</option>
+                    <option value="distributor">Taqsimlovchi</option>
+                    <option value="fabrika_worker">Fabrika Ishchisi (Umumiy)</option>
+                    <option value="constructor">Konstruktor</option>
+                    <option value="warehouse">Xoma-ashyo ombori</option>
+                    <option value="cutting">Raspil (Kesish)</option>
+                    <option value="edging">Kromka</option>
+                    <option value="drilling">Teshish (Pristritka)</option>
+                    <option value="carpentry">Stolyarka</option>
+                    <option value="painting">Malyarka</option>
+                    <option value="qc">O'TK (Sifat nazorati)</option>
+                    <option value="packaging">Upakovka</option>
+                    <option value="finished_warehouse">Tayyor mahsulot ombori</option>
                   </select>
                 </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Oklad summasi (UZS)</label>
-                  <input 
-                    type="number"
-                    style={{ width: '100%' }} 
-                    value={formData.salary}
-                    onChange={e => setFormData({ ...formData, salary: Number(e.target.value) })}
-                    min={0}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Telefon</label>
-                  <input style={{ width: '100%' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
-                </div>
-
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Showroom (Ixtiyoriy)</label>
                   <select style={{ width: '100%' }} value={formData.showroom} onChange={e => setFormData({...formData, showroom: e.target.value})}>
                     <option value="">Global / Fabrika</option>
                     {showrooms.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                   </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Login</label>
+                  <input style={{ width: '100%' }} value={formData.login} onChange={e => setFormData({...formData, login: e.target.value})} required />
+                </div>
+                <div style={{ position: 'relative' }}>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Parol</label>
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    style={{ width: '100%' }} 
+                    value={formData.password} 
+                    onChange={e => setFormData({...formData, password: e.target.value})} 
+                    required={modalMode === 'add'}
+                    placeholder={modalMode === 'edit' ? "O'zgartirmaslik uchun bo'sh qoldiring" : "••••••••"}
+                  />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '12px', top: '32px', background: 'transparent' }}>
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Telefon</label>
+                  <input style={{ width: '100%' }} value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
               </div>
 
@@ -471,4 +418,4 @@ const SuperAdminStaff = () => {
   );
 };
 
-export default SuperAdminStaff;
+export default ITUsers;

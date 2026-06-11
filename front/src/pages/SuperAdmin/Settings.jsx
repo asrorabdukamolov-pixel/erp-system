@@ -15,7 +15,7 @@ import Partners from './Partners';
 import FactoryAccounts from './FactoryAccounts';
 import WarehousesSettings from './WarehousesSettings';
 import MasterDataList from '../../components/MasterDataList';
-import Staff from './Staff';
+import ITUsers from './ITUsers';
 import PermissionsSettings from './PermissionsSettings';
 import ApprovalMatrixSettings from './ApprovalMatrixSettings';
 import { 
@@ -348,7 +348,7 @@ const Settings = () => {
                                         ))}
                                     </div>
                                     <div>
-                                        {activeITSubTab === 'users' && <Staff />}
+                                        {activeITSubTab === 'users' && <ITUsers />}
                                         {activeITSubTab === 'roles' && <RolesPermissionsSettings />}
                                         {activeITSubTab === 'permissions' && <PermissionsSettings />}
                                         {activeITSubTab === 'approval-matrix' && <ApprovalMatrixSettings />}

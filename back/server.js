@@ -50,7 +50,7 @@ const masterDataCollections = [
     'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
     'warehouses', 'warehouse-types', 'material-groups', 'materials', 'units', 'wh-op-types',
     'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms',
-    'approval-matrix'
+    'approval-matrix', 'employees'
 ];
 
 masterDataCollections.forEach(col => {
