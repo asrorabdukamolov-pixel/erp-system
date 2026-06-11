@@ -49,7 +49,8 @@ const masterDataCollections = [
     'customer-types', 'lead-sources', 'sales-channels', 'kp-statuses', 'rejection-reasons',
     'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
     'warehouses', 'warehouse-types', 'material-groups', 'materials', 'units', 'wh-op-types',
-    'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms'
+    'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms',
+    'approval-matrix'
 ];
 
 masterDataCollections.forEach(col => {

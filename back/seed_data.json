@@ -1056,5 +1056,76 @@
       "description": "",
       "createdAt": "2026-06-11T05:09:55.500Z"
     }
+  ],
+  "approval-matrix": [
+    {
+      "id": "3y7UUUzPGj5bmrHcgroG",
+      "key": "purchase_request",
+      "name": "Xarid arizalari (Purchase Requests)",
+      "description": "Xoma-ashyo yoki ofis ehtiyojlari uchun sotib olish so'rovlari.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Ombor mudiri / Sex boshlig'i",
+          "condition": "Barcha arizalar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Bosh direktor (CEO)",
+          "condition": "Agar summa > 15,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:00.898Z"
+    },
+    {
+      "id": "CBz5X6BqdG79uf4HVVyj",
+      "key": "cash_outflow",
+      "name": "Kassadan chiqim qilish arizalari (Cash Outflow)",
+      "description": "Kassadan yoki bank hisobidan to'lov qilish so'rovlari.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Bosh Buxgalter",
+          "condition": "Barcha chiqimlar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Moliyaviy rahbar (CFO)",
+          "condition": "Barcha chiqimlar uchun",
+          "status": "active"
+        },
+        {
+          "id": 3,
+          "role": "Bosh direktor (CEO)",
+          "condition": "Agar summa > 50,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:01.510Z"
+    },
+    {
+      "id": "teCsAPaUk32qZcCisiKf",
+      "key": "pre_sale",
+      "name": "Sotuvoldi xarajatlar arizalari (Pre-sale Expenses)",
+      "description": "Sales Manager tomonidan sotuvoldi arizalarining tasdiqlanish jarayoni.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Savdo Rahbari (Sales Head)",
+          "condition": "Barcha arizalar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Moliyaviy Rahbar (CFO)",
+          "condition": "Agar summa > 5,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:00.491Z"
+    }
   ]
 }

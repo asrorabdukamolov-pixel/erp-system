@@ -34,11 +34,22 @@ async function main() {
   const departments = await exportCollection('departments');
   console.log(`Fetched ${departments.length} departments.`);
 
+  console.log('Fetching approval matrix...');
+  const approvalMatrix = await exportCollection('approval-matrix');
+  console.log(`Fetched ${approvalMatrix.length} approval matrix items.`);
+
   existingData.positions = positions;
   existingData.departments = departments;
+  existingData['approval-matrix'] = approvalMatrix;
 
   fs.writeFileSync(localDbPath, JSON.stringify(existingData, null, 2), 'utf8');
   console.log('Successfully exported and saved to local_db.json');
+  
+  // Copy to seed_data.json
+  const seedDbPath = path.join(__dirname, '../seed_data.json');
+  fs.writeFileSync(seedDbPath, JSON.stringify(existingData, null, 2), 'utf8');
+  console.log('Successfully copied to seed_data.json');
+  
   process.exit(0);
 }
 
