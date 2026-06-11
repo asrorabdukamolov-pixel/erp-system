@@ -41,6 +41,7 @@ const ITUsers = () => {
   const [departments, setDepartments] = useState([]);
   const [showrooms, setShowrooms] = useState([]);
   const [positions, setPositions] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('all');
@@ -66,16 +67,38 @@ const ITUsers = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [userRes, depRes, showroomRes, posRes] = await Promise.all([
+      const [userRes, depRes, showroomRes, posRes, rolesRes] = await Promise.all([
         api.get('/users'),
         api.get('/departments'),
         api.get('/showrooms'),
-        api.get('/positions').catch(() => ({ data: [] }))
+        api.get('/positions').catch(() => ({ data: [] })),
+        api.get('/roles').catch(() => ({ data: [] }))
       ]);
       setUsers(userRes.data);
       setDepartments(depRes.data);
       setShowrooms(showroomRes.data);
       setPositions(posRes.data || []);
+
+      let fetchedRoles = rolesRes.data || [];
+      if (fetchedRoles.length === 0) {
+        const defaultRoles = [
+          { key: 'super', name: 'Super Admin', description: 'Tizimning to\'liq boshqaruvi, barcha modullarga cheksiz ruxsat.', permissions: ['manage_users', 'system_settings', 'view_logs', 'create_lead', 'edit_customer', 'create_proposal', 'approve_proposal', 'manage_projects', 'upload_designs', 'factory_control', 'update_task_status', 'view_finance_reports', 'approve_pre_sale_expense', 'make_payments', 'warehouse_inout', 'create_purchase_req', 'approve_purchase_order'] },
+          { key: 'showroom', name: 'Showroom Admin', description: 'Muayyan filial (showroom) boshqaruvi va nazorati.', permissions: ['create_lead', 'edit_customer', 'create_proposal', 'approve_proposal', 'make_payments'] },
+          { key: 'sales_manager', name: 'Savdo Menejeri', description: 'Mijozlar bilan ishlash va savdo jarayonlarini yuritish.', permissions: ['create_lead', 'edit_customer', 'create_proposal', 'approve_proposal'] },
+          { key: 'proekt_manager', name: 'Proekt Menejer (PM)', description: 'Loyiha-dizayn va ishlab chiqarish jarayonini muvofiqlashtirish.', permissions: ['manage_projects', 'upload_designs', 'create_purchase_req'] },
+          { key: 'kassa', name: 'Kassa / Hisobchi', description: 'Moliyaviy tranzaksiyalar va to\'lovlar nazorati.', permissions: ['approve_pre_sale_expense', 'make_payments'] },
+          { key: 'fabrika', name: 'Fabrika Menejeri', description: 'Ishlab chiqarish jarayoni va fabrika xodimlari nazorati.', permissions: ['factory_control', 'update_task_status', 'create_purchase_req'] },
+          { key: 'warehouse', name: 'Xoma-ashyo ombori', description: 'Xom-ashyo ombori kirim-chiqim nazorati.', permissions: ['warehouse_inout', 'create_purchase_req', 'approve_purchase_order'] },
+          { key: 'finished_warehouse', name: 'Tayyor mahsulot ombori', description: 'Tayyor mahsulotlar ombori boshqaruvi.', permissions: ['warehouse_inout'] },
+          { key: 'fabrika_worker', name: 'Fabrika Ishchisi (Umumiy)', description: 'Ishlab chiqarish sexlaridagi umumiy ishchi.', permissions: ['update_task_status'] }
+        ];
+        for (const role of defaultRoles) {
+          await api.post('/roles', role);
+        }
+        const freshRoles = await api.get('/roles');
+        fetchedRoles = freshRoles.data || [];
+      }
+      setRoles(fetchedRoles);
     } catch (err) {
       console.error("Data loading error", err);
     }
@@ -355,24 +378,10 @@ const ITUsers = () => {
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tizim Roli (Ruxsat darajasi)</label>
                   <select style={{ width: '100%' }} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})} required>
-                    <option value="super">Super Admin</option>
-                    <option value="showroom">Showroom Admin</option>
-                    <option value="sales_manager">Savdo Menejeri</option>
-                    <option value="proekt_manager">Proekt Menejer (PM)</option>
-                    <option value="kassa">Kassa / Hisobchi</option>
-                    <option value="fabrika">Fabrika Menejeri</option>
-                    <option value="distributor">Taqsimlovchi</option>
-                    <option value="fabrika_worker">Fabrika Ishchisi (Umumiy)</option>
-                    <option value="constructor">Konstruktor</option>
-                    <option value="warehouse">Xoma-ashyo ombori</option>
-                    <option value="cutting">Raspil (Kesish)</option>
-                    <option value="edging">Kromka</option>
-                    <option value="drilling">Teshish (Pristritka)</option>
-                    <option value="carpentry">Stolyarka</option>
-                    <option value="painting">Malyarka</option>
-                    <option value="qc">O'TK (Sifat nazorati)</option>
-                    <option value="packaging">Upakovka</option>
-                    <option value="finished_warehouse">Tayyor mahsulot ombori</option>
+                    <option value="">Tanlang...</option>
+                    {roles.map(r => (
+                      <option key={r._id || r.id} value={r.key}>{r.name}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
