@@ -43,6 +43,7 @@ app.use('/api/cash-flow', require('./routes/cashFlowRoutes'));
 app.use('/api/expense-items', require('./routes/expenseItemsRoutes'));
 app.use('/api/cost-centers', require('./routes/costCenterRoutes'));
 app.use('/api/integrations', require('./routes/integrationRoutes'));
+app.use('/api/approval-matrix', require('./routes/approvalMatrixRoutes'));
 
 // Generic Master Data Routes
 const masterDataCollections = [
@@ -50,7 +51,7 @@ const masterDataCollections = [
     'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
     'warehouses', 'warehouse-types', 'material-groups', 'materials', 'units', 'wh-op-types',
     'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms',
-    'approval-matrix', 'employees', 'roles'
+    'employees', 'roles'
 ];
 
 masterDataCollections.forEach(col => {

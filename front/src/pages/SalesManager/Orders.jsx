@@ -572,18 +572,27 @@ const Orders = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [ordersRes, customersRes, proposalsRes] = await Promise.all([
-          api.get('/orders'),
-          api.get('/customers'),
-          api.get('/proposals')
-        ]);
-        setAllOrders(ordersRes.data);
-        setCustomers(customersRes.data);
-        setProposals(proposalsRes.data);
+        const ordersRes = await api.get('/orders');
+        setAllOrders(ordersRes.data || []);
       } catch (err) {
-        console.error("Core data load error", err);
+        console.error("Orders load error", err);
       }
 
+      try {
+        const customersRes = await api.get('/customers');
+        setCustomers(customersRes.data || []);
+      } catch (err) {
+        console.error("Customers load error", err);
+      }
+
+      try {
+        const proposalsRes = await api.get('/proposals');
+        setProposals(proposalsRes.data || []);
+      } catch (err) {
+        console.error("Proposals load error", err);
+      }
+
+      let categories = [];
       try {
         const expenseItemsRes = await api.get('/expense-items');
         const items = expenseItemsRes.data || [];
@@ -594,7 +603,6 @@ const Orders = () => {
           (String(i.code).trim() === '8000' || (i.name && i.name.toLowerCase().includes('sotuvoldi')))
         );
 
-        let categories = [];
         if (mainItem) {
           categories = items.filter(i => i.parentId === mainItem.id || i.parentId === mainItem._id);
         }
@@ -606,22 +614,22 @@ const Orders = () => {
             (String(i.code).startsWith('80') || String(i.code).startsWith('81'))
           );
         }
-
-        // Ultimate fallback if still empty (e.g. database not seeded or empty)
-        if (categories.length === 0) {
-          categories = [
-            { id: 'exp_8010', code: '8010', name: "Zamer xarajatlari" },
-            { id: 'exp_8020', code: '8020', name: "Transport / Yo'l xarajatlari" },
-            { id: 'exp_8030', code: '8030', name: "Oziq-ovqat xarajatlari" },
-            { id: 'exp_8110', code: '8110', name: "Boshqa sotuvoldi xarajatlari" }
-          ];
-        }
-
-        categories.sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
-        setExpenseCategories(categories);
       } catch (err) {
         console.error("Expense items load error", err);
       }
+
+      // Ultimate fallback if still empty (e.g. database not seeded or empty, or API failed)
+      if (categories.length === 0) {
+        categories = [
+          { id: 'exp_8010', code: '8010', name: "Zamer xarajatlari" },
+          { id: 'exp_8020', code: '8020', name: "Transport / Yo'l xarajatlari" },
+          { id: 'exp_8030', code: '8030', name: "Oziq-ovqat xarajatlari" },
+          { id: 'exp_8110', code: '8110', name: "Boshqa sotuvoldi xarajatlari" }
+        ];
+      }
+
+      categories.sort((a, b) => parseInt(a.code || 0) - parseInt(b.code || 0));
+      setExpenseCategories(categories);
     };
     loadData();
     
@@ -1872,7 +1880,7 @@ const Orders = () => {
                 >
                   <option value="" style={{ background: '#1e293b', color: '#fff' }}>Tanlang...</option>
                   {expenseCategories.map(cat => (
-                    <option key={cat.id} value={cat.name} style={{ background: '#1e293b', color: '#fff' }}>
+                    <option key={cat.id || cat._id || cat.code} value={cat.name} style={{ background: '#1e293b', color: '#fff' }}>
                       {cat.code} - {cat.name}
                     </option>
                   ))}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ClipboardList, Plus, Trash2, Clock, Loader2, Save } from 'lucide-react';
+import { ClipboardList, Plus, Trash2, Clock, Loader2, Save, ArrowRight, Check, AlertCircle, Shield } from 'lucide-react';
 import api from '../../utils/api';
 
 const ApprovalMatrixSettings = () => {
@@ -8,57 +8,29 @@ const ApprovalMatrixSettings = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-
-    const defaultChains = [
-        {
-            key: 'pre_sale',
-            name: 'Sotuvoldi xarajatlar arizalari (Pre-sale Expenses)',
-            description: 'Sales Manager tomonidan sotuvoldi arizalarining tasdiqlanish jarayoni.',
-            steps: [
-                { id: 1, role: 'Savdo Rahbari (Sales Head)', condition: 'Barcha arizalar uchun', status: 'active' },
-                { id: 2, role: 'Moliyaviy Rahbar (CFO)', condition: 'Agar summa > 5,000,000 UZS bo\'lsa', status: 'active' }
-            ]
-        },
-        {
-            key: 'purchase_request',
-            name: 'Xarid arizalari (Purchase Requests)',
-            description: 'Xoma-ashyo yoki ofis ehtiyojlari uchun sotib olish so\'rovlari.',
-            steps: [
-                { id: 1, role: 'Ombor mudiri / Sex boshlig\'i', condition: 'Barcha arizalar uchun', status: 'active' },
-                { id: 2, role: 'Bosh direktor (CEO)', condition: 'Agar summa > 15,000,000 UZS bo\'lsa', status: 'active' }
-            ]
-        },
-        {
-            key: 'cash_outflow',
-            name: 'Kassadan chiqim qilish arizalari (Cash Outflow)',
-            description: 'Kassadan yoki bank hisobidan to\'lov qilish so\'rovlari.',
-            steps: [
-                { id: 1, role: 'Bosh Buxgalter', condition: 'Barcha chiqimlar uchun', status: 'active' },
-                { id: 2, role: 'Moliyaviy rahbar (CFO)', condition: 'Barcha chiqimlar uchun', status: 'active' },
-                { id: 3, role: 'Bosh direktor (CEO)', condition: 'Agar summa > 50,000,000 UZS bo\'lsa', status: 'active' }
-            ]
-        }
-    ];
+    
+    // Dropdown options
+    const [users, setUsers] = useState([]);
+    const [roles, setRoles] = useState([]);
 
     const fetchChains = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/approval-matrix');
-            if (res.data && res.data.length > 0) {
-                setApprovalChains(res.data);
-                setSelectedChain(res.data[0]);
-            } else {
-                // Seed default chains
-                const seeded = [];
-                for (const chain of defaultChains) {
-                    const seedRes = await api.post('/approval-matrix', chain);
-                    seeded.push(seedRes.data);
-                }
-                setApprovalChains(seeded);
-                setSelectedChain(seeded[0]);
+            const [chainRes, userRes, roleRes] = await Promise.all([
+                api.get('/approval-matrix'),
+                api.get('/users').catch(() => ({ data: [] })),
+                api.get('/roles').catch(() => ({ data: [] }))
+            ]);
+            
+            setUsers(userRes.data || []);
+            setRoles(roleRes.data || []);
+
+            if (chainRes.data && chainRes.data.length > 0) {
+                setApprovalChains(chainRes.data);
+                setSelectedChain(chainRes.data[0]);
             }
         } catch (err) {
-            console.error("Failed to load approval matrix:", err);
+            console.error("Failed to load approval matrix settings:", err);
         }
         setLoading(false);
     };
@@ -68,11 +40,17 @@ const ApprovalMatrixSettings = () => {
     }, []);
 
     const handleAddStep = () => {
+        const nextOrder = selectedChain.steps.length + 1;
         const newStep = {
-            id: selectedChain.steps.length + 1,
-            role: 'Bosh direktor (CEO)',
-            condition: 'Barcha arizalar uchun',
-            status: 'active'
+            step_order: nextOrder,
+            label: `Bosqich ${nextOrder}`,
+            approver_type: 'role',
+            role_id: 'sales_head',
+            user_id: '',
+            scope: 'all_company',
+            condition: '',
+            required: true,
+            active: true
         };
         const updatedChain = {
             ...selectedChain,
@@ -82,8 +60,10 @@ const ApprovalMatrixSettings = () => {
         setApprovalChains(approvalChains.map(c => (c._id || c.id) === (selectedChain._id || selectedChain.id) ? updatedChain : c));
     };
 
-    const handleDeleteStep = (stepId) => {
-        const updatedSteps = selectedChain.steps.filter(s => s.id !== stepId).map((s, idx) => ({ ...s, id: idx + 1 }));
+    const handleDeleteStep = (stepOrder) => {
+        const updatedSteps = selectedChain.steps
+            .filter(s => s.step_order !== stepOrder)
+            .map((s, idx) => ({ ...s, step_order: idx + 1 }));
         const updatedChain = {
             ...selectedChain,
             steps: updatedSteps
@@ -92,18 +72,19 @@ const ApprovalMatrixSettings = () => {
         setApprovalChains(approvalChains.map(c => (c._id || c.id) === (selectedChain._id || selectedChain.id) ? updatedChain : c));
     };
 
-    const handleRoleChange = (stepId, newRole) => {
-        const updatedSteps = selectedChain.steps.map(s => s.id === stepId ? { ...s, role: newRole } : s);
-        const updatedChain = {
-            ...selectedChain,
-            steps: updatedSteps
-        };
-        setSelectedChain(updatedChain);
-        setApprovalChains(approvalChains.map(c => (c._id || c.id) === (selectedChain._id || selectedChain.id) ? updatedChain : c));
-    };
-
-    const handleConditionChange = (stepId, newCondition) => {
-        const updatedSteps = selectedChain.steps.map(s => s.id === stepId ? { ...s, condition: newCondition } : s);
+    const handleStepFieldChange = (stepOrder, fieldName, value) => {
+        const updatedSteps = selectedChain.steps.map(s => {
+            if (s.step_order === stepOrder) {
+                const updated = { ...s, [fieldName]: value };
+                // Reset role/user if changing type
+                if (fieldName === 'approver_type') {
+                    updated.role_id = '';
+                    updated.user_id = '';
+                }
+                return updated;
+            }
+            return s;
+        });
         const updatedChain = {
             ...selectedChain,
             steps: updatedSteps
@@ -123,10 +104,17 @@ const ApprovalMatrixSettings = () => {
                     description: selectedChain.description,
                     steps: selectedChain.steps
                 };
-                await api.put(`/approval-matrix/${docId}`, payload);
-                setApprovalChains(approvalChains.map(c => (c._id || c.id) === docId ? selectedChain : c));
+                const res = await api.put(`/approval-matrix/${docId}`, payload);
+                
+                // Refresh list since a new version document ID might be returned
+                const freshRes = await api.get('/approval-matrix');
+                setApprovalChains(freshRes.data);
+                const updatedSelected = freshRes.data.find(c => c.key === selectedChain.key) || res.data;
+                setSelectedChain(updatedSelected);
+                alert("Workflow o'zgarishlari muvaffaqiyatli saqlandi! Yangi versiya yaratildi.");
             } catch (err) {
                 console.error("Failed to save approval matrix:", err);
+                alert("Workflow saqlashda xatolik yuz berdi");
             }
             setSaving(false);
         }
@@ -156,7 +144,7 @@ const ApprovalMatrixSettings = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '30px' }}>
                 {/* Left Side: Chains list */}
                 <div className="premium-card" style={{ padding: '20px', height: 'fit-content' }}>
-                    <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', uppercase: 'true', marginBottom: '12px', letterSpacing: '0.5px' }}>HUJJAT TURLARI</p>
+                    <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.5px' }}>HUJJAT TURLARI</p>
                     {approvalChains.map(chain => {
                         const chainId = chain._id || chain.id;
                         const isActive = activeChainId === chainId;
@@ -181,9 +169,12 @@ const ApprovalMatrixSettings = () => {
                                     border: '1px solid ' + (isActive ? 'var(--accent-gold)' : 'var(--border-color)')
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <ClipboardList size={16} />
-                                    <span style={{ lineHeight: '1.4' }}>{chain.name.split(' (')[0]}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <ClipboardList size={16} />
+                                        <span style={{ lineHeight: '1.4' }}>{chain.name}</span>
+                                    </div>
+                                    <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>v{chain.version || 1}</span>
                                 </div>
                             </div>
                         );
@@ -194,16 +185,21 @@ const ApprovalMatrixSettings = () => {
                 {selectedChain && (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <div className="premium-card" style={{ padding: '32px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '32px' }}>
                                 <div>
-                                    <h4 style={{ fontSize: '18px', fontWeight: '800', marginBottom: '6px' }}>{selectedChain.name}</h4>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                                        <h4 style={{ fontSize: '18px', fontWeight: '800' }}>{selectedChain.name}</h4>
+                                        <span style={{ fontSize: '12px', background: 'rgba(212,175,55,0.15)', color: 'var(--accent-gold)', padding: '2px 8px', borderRadius: '12px', fontWeight: '800' }}>
+                                            Versiya: v{selectedChain.version || 1} (Faol)
+                                        </span>
+                                    </div>
                                     <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{selectedChain.description}</p>
                                 </div>
                                 <button 
                                     className="gold-btn" 
                                     onClick={handleToggleEdit}
                                     disabled={saving}
-                                    style={{ padding: '8px 16px', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    style={{ padding: '10px 20px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}
                                 >
                                     {saving ? (
                                         <>
@@ -213,27 +209,28 @@ const ApprovalMatrixSettings = () => {
                                     ) : isEditing ? (
                                         <>
                                             <Save size={14} />
-                                            <span>Saqlash va yakunlash</span>
+                                            <span>Saqlash (Yangi versiya)</span>
                                         </>
                                     ) : (
-                                        <span>Matritsani tahrirlash</span>
+                                        <span>Workflow tahrirlash</span>
                                     )}
                                 </button>
                             </div>
 
                             {/* Visual Workflow Steps */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', position: 'relative' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', position: 'relative' }}>
                                 {selectedChain.steps.map((step, idx) => (
-                                    <div key={step.id} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div key={step.step_order || idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '20px', position: 'relative' }}>
                                         {/* Connection Line */}
-                                        {idx > 0 && (
+                                        {idx < selectedChain.steps.length - 1 && (
                                             <div style={{
                                                 position: 'absolute',
-                                                left: '32px',
-                                                top: `${(idx * 76) - 20}px`,
-                                                height: '24px',
+                                                left: '20px',
+                                                top: '40px',
+                                                bottom: '-30px',
                                                 width: '2px',
-                                                background: 'var(--border-color)'
+                                                background: 'var(--border-color)',
+                                                zIndex: 1
                                             }} />
                                         )}
 
@@ -250,9 +247,10 @@ const ApprovalMatrixSettings = () => {
                                             justifyContent: 'center',
                                             fontWeight: '700',
                                             fontSize: '14px',
-                                            zIndex: 2
+                                            zIndex: 2,
+                                            marginTop: '6px'
                                         }}>
-                                            {step.id}
+                                            {step.step_order}
                                         </div>
 
                                         {/* Step card */}
@@ -260,62 +258,176 @@ const ApprovalMatrixSettings = () => {
                                             flex: 1,
                                             background: 'rgba(255,255,255,0.01)',
                                             border: '1px solid var(--border-color)',
-                                            borderRadius: '12px',
-                                            padding: '16px 20px',
+                                            borderRadius: '16px',
+                                            padding: '20px',
                                             display: 'flex',
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
+                                            flexDirection: 'column',
+                                            gap: '16px'
                                         }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 {isEditing ? (
-                                                    <select 
-                                                        value={step.role} 
-                                                        onChange={(e) => handleRoleChange(step.id, e.target.value)}
-                                                        style={{ height: '36px', width: '220px', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 8px' }}
-                                                    >
-                                                        <option>Savdo Rahbari (Sales Head)</option>
-                                                        <option>Moliyaviy Rahbar (CFO)</option>
-                                                        <option>Ombor mudiri / Sex boshlig\'i</option>
-                                                        <option>Bosh direktor (CEO)</option>
-                                                        <option>Bosh Buxgalter</option>
-                                                    </select>
+                                                    <div style={{ display: 'flex', gap: '12px', flex: 1 }}>
+                                                        <div style={{ flex: 1 }}>
+                                                            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Bosqich nomi</label>
+                                                            <input 
+                                                                value={step.label || ''} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'label', e.target.value)}
+                                                                placeholder="Masalan: Showroom rahbari"
+                                                                style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 10px' }}
+                                                            />
+                                                        </div>
+                                                        <div style={{ width: '180px' }}>
+                                                            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Tasdiqlovchi turi</label>
+                                                            <select 
+                                                                value={step.approver_type} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'approver_type', e.target.value)}
+                                                                style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 8px' }}
+                                                            >
+                                                                <option value="role">Rol bo'yicha</option>
+                                                                <option value="showroom_manager">Showroom rahbari</option>
+                                                                <option value="director">Bosh direktor (CEO)</option>
+                                                                <option value="finance_manager">Moliyaviy rahbar (CFO)</option>
+                                                                <option value="department_head">Bo'lim boshlig'i</option>
+                                                                <option value="specific_user">Aniq foydalanuvchi</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
                                                 ) : (
-                                                    <p style={{ fontWeight: '700', fontSize: '14px' }}>{step.role}</p>
+                                                    <div>
+                                                        <h5 style={{ fontWeight: '800', fontSize: '15px', color: 'white' }}>{step.label || step.role}</h5>
+                                                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                                                            Turi: <span style={{ color: 'var(--accent-gold)' }}>{step.approver_type}</span>
+                                                        </span>
+                                                    </div>
                                                 )}
 
-                                                {isEditing ? (
-                                                    <input 
-                                                        value={step.condition} 
-                                                        onChange={(e) => handleConditionChange(step.id, e.target.value)}
-                                                        style={{ height: '36px', width: '300px', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 10px', marginTop: '4px' }}
-                                                    />
-                                                ) : (
-                                                    <p style={{ fontSize: '12px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <Clock size={12} /> Shart: {step.condition}
-                                                    </p>
-                                                )}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    {isEditing && (
+                                                        <button 
+                                                            onClick={() => handleDeleteStep(step.step_order)}
+                                                            style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{
-                                                    fontSize: '10px',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '6px',
-                                                    background: 'rgba(16,185,129,0.1)',
-                                                    color: '#10b981',
-                                                    fontWeight: '700'
-                                                }}>
-                                                    FAOLLIK
-                                                </span>
-                                                {isEditing && (
-                                                    <button 
-                                                        onClick={() => handleDeleteStep(step.id)}
-                                                        style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                )}
-                                            </div>
+                                            {/* Sub-inputs if editing or detail view */}
+                                            {isEditing ? (
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '16px' }}>
+                                                    {step.approver_type === 'role' && (
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Rolni tanlang</label>
+                                                            <select 
+                                                                value={step.role_id || ''} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'role_id', e.target.value)}
+                                                                style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 8px' }}
+                                                            >
+                                                                <option value="">Rolni tanlang...</option>
+                                                                <option value="sales_head">Savdo rahbari</option>
+                                                                <option value="finance_manager">Moliyaviy rahbar</option>
+                                                                <option value="chief_accountant">Bosh buxgalter</option>
+                                                                <option value="hr_manager">HR menejeri</option>
+                                                                <option value="warehouse_head">Ombor mudiri</option>
+                                                                {roles.map(r => (
+                                                                    <option key={r._id || r.id} value={r.key}>{r.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    )}
+
+                                                    {step.approver_type === 'specific_user' && (
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Foydalanuvchini tanlang</label>
+                                                            <select 
+                                                                value={step.user_id || ''} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'user_id', e.target.value)}
+                                                                style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 8px' }}
+                                                            >
+                                                                <option value="">Foydalanuvchini tanlang...</option>
+                                                                {users.map(u => (
+                                                                    <option key={u._id || u.id} value={u._id || u.id}>{u.name} {u.surname} ({u.login})</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                    )}
+
+                                                    {(step.approver_type === 'role' || step.approver_type === 'department_head') && (
+                                                        <div>
+                                                            <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Qamrov (Scope)</label>
+                                                            <select 
+                                                                value={step.scope || 'all_company'} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'scope', e.target.value)}
+                                                                style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 8px' }}
+                                                            >
+                                                                <option value="all_company">Barcha kompaniya</option>
+                                                                <option value="requester_showroom">Faqat arizachi showroomi</option>
+                                                                <option value="requester_department">Faqat arizachi bo'limi</option>
+                                                            </select>
+                                                        </div>
+                                                    )}
+
+                                                    <div style={{ gridColumn: 'span 2' }}>
+                                                        <label style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Shart (Masalan: {"amount > 5000000"})</label>
+                                                        <input 
+                                                            value={step.condition || ''} 
+                                                            onChange={(e) => handleStepFieldChange(step.step_order, 'condition', e.target.value)}
+                                                            placeholder="Bo'sh bo'lsa barcha arizalar uchun ishlaydi"
+                                                            style={{ height: '36px', width: '100%', background: '#1e293b', color: '#fff', border: '1px solid var(--border-color)', borderRadius: '6px', fontSize: '13px', padding: '0 10px' }}
+                                                        />
+                                                    </div>
+
+                                                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center', marginTop: '10px' }}>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#fff', cursor: 'pointer' }}>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={step.required !== false} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'required', e.target.checked)}
+                                                            />
+                                                            Majburiy step
+                                                        </label>
+                                                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#fff', cursor: 'pointer' }}>
+                                                            <input 
+                                                                type="checkbox" 
+                                                                checked={step.active !== false} 
+                                                                onChange={(e) => handleStepFieldChange(step.step_order, 'active', e.target.checked)}
+                                                            />
+                                                            Faol step
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '12px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                                                        <span style={{ color: 'var(--text-secondary)' }}>Qamrov (Scope):</span>
+                                                        <span style={{ color: '#fff', fontWeight: '600' }}>
+                                                            {step.scope === 'requester_showroom' ? 'Arizachi showroomi' :
+                                                             step.scope === 'requester_department' ? 'Arizachi bo\'limi' : 'Barcha kompaniya'}
+                                                        </span>
+                                                    </div>
+                                                    {step.role_id && (
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                                                            <span style={{ color: 'var(--text-secondary)' }}>Mavqe / Rol:</span>
+                                                            <span style={{ color: '#fff', fontWeight: '600' }}>{step.role_id}</span>
+                                                        </div>
+                                                    )}
+                                                    {step.user_id && (
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                                                            <span style={{ color: 'var(--text-secondary)' }}>Foydalanuvchi:</span>
+                                                            <span style={{ color: '#fff', fontWeight: '600' }}>
+                                                                {users.find(u => u._id === step.user_id || u.id === step.user_id)?.name || step.user_id}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                                                        <span style={{ color: 'var(--text-secondary)' }}>Ishlash sharti:</span>
+                                                        <span style={{ color: 'var(--accent-gold)', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                            <Clock size={12} /> {step.condition || 'Barcha arizalar uchun'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ))}

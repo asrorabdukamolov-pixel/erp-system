@@ -235,16 +235,45 @@ const Finance = () => {
   };
 
   const myRequests = requests;
-  const activeRequests = myRequests.filter(r => r.status === 'pending');
-  const archiveRequests = myRequests.filter(r => r.status !== 'pending');
+  const activeRequests = myRequests.filter(r => r.status !== 'paid' && r.status !== 'rejected' && r.status !== 'cancelled');
+  const archiveRequests = myRequests.filter(r => r.status === 'paid' || r.status === 'rejected' || r.status === 'cancelled');
 
   const totalPending = activeRequests.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (req) => {
+    const status = req.status;
     switch (status) {
-      case 'approved': return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '11px', fontWeight: '800' }}>TASDIQLANDI</span>;
-      case 'rejected': return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '800' }}>RAD ETILDI</span>;
-      default: return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(251,191,36,0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>KUTILMOQDA</span>;
+      case 'paid':
+        return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '11px', fontWeight: '800' }}>PUL BERILDI / TO'LANDI</span>;
+      case 'approved_for_payment':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontSize: '11px', fontWeight: '800', textAlign: 'center' }}>TO'LOVGA TAYYOR</span>
+            <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontWeight: '700', paddingLeft: '4px' }}>
+              Ijrochi: <span style={{ color: 'var(--accent-gold)', fontWeight: '800' }}>Kassir</span>
+            </span>
+          </div>
+        );
+      case 'rejected':
+        return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', fontSize: '11px', fontWeight: '800' }}>RAD ETILDI</span>;
+      case 'returned':
+        return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}>QAYTARILDI</span>;
+      case 'draft':
+      case 'qoralama':
+        return <span style={{ padding: '4px 12px', borderRadius: '20px', background: 'rgba(156,163,175,0.15)', color: '#9ca3af', fontSize: '11px', fontWeight: '800' }}>QORALAMA</span>;
+      case 'pending_approval':
+      default:
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'rgba(255,255,255,0.02)', padding: '8px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+            <span style={{ padding: '2px 8px', borderRadius: '6px', background: 'rgba(251,191,36,0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800', textAlign: 'center', width: 'fit-content' }}>Kutilmoqda</span>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+              Keyingi bosqich: <span style={{ color: '#fff', fontWeight: '700' }}>{req.currentStepLabel || 'Tasdiqlovchi'}</span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+              Mas’ul: <span style={{ color: 'var(--accent-gold)', fontWeight: '700' }}>{req.currentApproverNames || 'Aniq odam topilmadi'}</span>
+            </div>
+          </div>
+        );
     }
   };
 
@@ -329,7 +358,7 @@ const Finance = () => {
                     <td style={{ padding: '20px', fontSize: '13px' }}>
                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
                     </td>
-                    <td style={{ padding: '20px' }}>{getStatusBadge(req.status)}</td>
+                    <td style={{ padding: '20px' }}>{getStatusBadge(req)}</td>
                     <td style={{ padding: '20px' }}>
                       <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '200px' }}>
                         {req.comment && <div style={{ marginBottom: '4px' }}>📝 {req.comment}</div>}
@@ -407,7 +436,7 @@ const Finance = () => {
                         <td style={{ padding: '20px', fontSize: '13px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} color="var(--text-secondary)" /> {req.neededDate}</div>
                         </td>
-                        <td style={{ padding: '20px' }}>{getStatusBadge(req.status)}</td>
+                        <td style={{ padding: '20px' }}>{getStatusBadge(req)}</td>
                         <td style={{ padding: '20px' }}>
                           <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '250px' }}>
                             {req.comment && <div style={{ marginBottom: '4px' }}>📝 {req.comment}</div>}

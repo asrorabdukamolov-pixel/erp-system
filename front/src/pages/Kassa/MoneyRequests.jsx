@@ -64,7 +64,7 @@ const MoneyRequests = () => {
       // 2. Update request status in the database
       const isFullPayment = payAmt >= req.amount;
       const updateData = {
-        status: isFullPayment ? 'approved' : 'pending',
+        status: isFullPayment ? 'paid' : 'approved_for_payment',
         paidTotal: (Number(req.paidTotal) || 0) + payAmt,
         paymentMethod: selectedPaymentMethod,
         amount: isFullPayment ? 0 : req.amount - payAmt
@@ -103,7 +103,7 @@ const MoneyRequests = () => {
 
   const [selectedManager, setSelectedManager] = useState(null);
 
-  const pendingRequests = moneyRequests.filter(r => r.status === 'pending');
+  const pendingRequests = moneyRequests.filter(r => r.status === 'approved_for_payment');
 
   // Grouping by Manager
   const groupedManagers = pendingRequests.reduce((acc, req) => {
@@ -124,7 +124,7 @@ const MoneyRequests = () => {
       <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h1 style={{ fontSize: '28px', fontWeight: '900', marginBottom: '8px' }}>Pul uchun so'rovlar</h1>
-          <p style={{ color: 'var(--text-secondary)' }}>Managerlar tomonidan yuborilgan yangi pul buyurtmalari.</p>
+          <p style={{ color: 'var(--text-secondary)' }}>Managerlar tomonidan yuborilgan to'lovga tayyor arizalar.</p>
         </div>
         {selectedManager && (
           <button 
@@ -146,7 +146,8 @@ const MoneyRequests = () => {
           <div style={{ display: 'inline-flex', width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', alignItems: 'center', justifyContent: 'center', marginBottom: '24px', color: 'var(--text-secondary)' }}>
             <Check size={40} />
           </div>
-          <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>Yangi so'rovlar mavjud emas</h3>
+          <h3 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '8px' }}>To'lovga tayyor so'rovlar mavjud emas</h3>
+          <p style={{ color: 'var(--text-secondary)' }}>Barcha so'rovlar to'langan yoki tasdiqlanmoqda.</p>
           <p style={{ color: 'var(--text-secondary)' }}>Barcha so'rovlar ko'rib chiqilgan.</p>
         </div>
       ) : !selectedManager ? (
@@ -210,9 +211,6 @@ const MoneyRequests = () => {
             </thead>
             <tbody>
               {managerRequests.map(req => {
-                const isProduct = req.category === 'Maxsulot uchun' || req.purchaseId;
-                const needsAdminApproval = isProduct && !req.adminApproved;
-                
                 return (
                   <tr key={req._id || req.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td style={{ padding: '20px' }}>
@@ -222,15 +220,9 @@ const MoneyRequests = () => {
                     <td style={{ padding: '20px' }}>
                       {req.orderId && <div style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', marginBottom: '4px', display: 'inline-block' }}>📦 {req.orderId}</div>}
                       {req.purchaseId && <div style={{ fontSize: '11px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 10px', borderRadius: '6px', display: 'inline-block' }}>🛒 {req.purchaseId}</div>}
-                      {needsAdminApproval ? (
-                        <div style={{ display: 'block', marginTop: '6px', fontSize: '10px', color: '#ef4444', fontWeight: '800' }}>
-                          ⚠️ ADMIN TASDIG'I KUTILMOQDA
-                        </div>
-                      ) : isProduct ? (
-                        <div style={{ display: 'block', marginTop: '6px', fontSize: '10px', color: '#10b981', fontWeight: '800' }}>
-                          ✅ ADMIN TASDIQLADI
-                        </div>
-                      ) : null}
+                      <div style={{ display: 'block', marginTop: '6px', fontSize: '10px', color: '#10b981', fontWeight: '800' }}>
+                        ✅ TASDIQLANGAN
+                      </div>
                     </td>
                     <td style={{ padding: '20px' }}>
                       <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '2px' }}>
@@ -257,17 +249,16 @@ const MoneyRequests = () => {
                       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
                         <button onClick={() => { setRequestToReject(req); setRejectModalOpen(true); }} style={{ background: 'rgba(239,68,68,0.1)', border: 'none', borderRadius: '8px', padding: '10px 16px', color: '#ef4444', fontWeight: '700', cursor: 'pointer' }}>Rad etish</button>
                         <button 
-                          disabled={needsAdminApproval}
                           onClick={() => openApproveModal(req)} 
                           style={{ 
-                            background: needsAdminApproval ? 'rgba(255,255,255,0.05)' : 'var(--accent-gold)', 
+                            background: 'var(--accent-gold)', 
                             border: 'none', 
                             borderRadius: '8px', 
                             padding: '10px 16px', 
-                            color: needsAdminApproval ? 'rgba(255,255,255,0.2)' : '#000', 
+                            color: '#000', 
                             fontWeight: '800', 
-                            cursor: needsAdminApproval ? 'not-allowed' : 'pointer',
-                            opacity: needsAdminApproval ? 0.5 : 1
+                            cursor: 'pointer',
+                            opacity: 1
                           }}
                         >
                           Berildi

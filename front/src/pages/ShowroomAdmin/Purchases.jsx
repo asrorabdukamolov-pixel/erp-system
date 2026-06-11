@@ -239,15 +239,14 @@ const ShowroomPurchases = () => {
   const [moneyRequests, setMoneyRequests] = useState([]);
 
   const pendingPurchaseRequests = moneyRequests.filter(r => 
-    (r.category === 'Maxsulot uchun' || r.purchaseId) && 
-    r.status === 'pending' && 
-    r.adminApproved !== true
+    r.status === 'pending_approval' && 
+    r.currentApprovers?.some(a => a.id === user?.id || a.id === user?._id)
   );
 
   const handleAdminApprove = async (reqId, purchaseId, amount) => {
     try {
-      // 1. Update the request
-      await api.put(`/requests/${reqId}`, { adminApproved: true });
+      // 1. Update the request (advances workflow in backend)
+      await api.put(`/requests/${reqId}`, { status: 'approved' });
       
       // 2. Find and update the purchase document if it exists
       if (purchaseId) {
