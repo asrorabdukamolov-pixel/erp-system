@@ -37,7 +37,7 @@ exports.getUsers = async (req, res) => {
 
 exports.createUser = async (req, res) => {
     try {
-        const { name, surname, login, password, role, showroom, phone, positionId, positionName } = req.body;
+        const { name, surname, patronymic, login, password, role, showroom, phone, positionId, positionName, department, costCenterId, costCenterName, workRate, salary } = req.body;
 
         const usersRef = db.collection('users');
         const snapshot = await usersRef.where('login', '==', login.toLowerCase()).get();
@@ -52,6 +52,7 @@ exports.createUser = async (req, res) => {
         const newUser = {
             name,
             surname,
+            patronymic: patronymic || '',
             login: login.toLowerCase(),
             password: hashedPassword,
             role,
@@ -59,6 +60,11 @@ exports.createUser = async (req, res) => {
             showroom: showroom || req.user.showroom || '',
             positionId: positionId || '',
             positionName: positionName || '',
+            department: department || '',
+            costCenterId: costCenterId || '',
+            costCenterName: costCenterName || '',
+            workRate: workRate !== undefined ? Number(workRate) : 1.0,
+            salary: salary !== undefined ? Number(salary) : 0,
             status: 'active',
             createdAt: new Date().toISOString()
         };
@@ -73,7 +79,7 @@ exports.createUser = async (req, res) => {
 
 exports.updateUser = async (req, res) => {
     try {
-        const { name, surname, login, password, role, status, phone, positionId, positionName } = req.body;
+        const { name, surname, patronymic, login, password, role, status, phone, positionId, positionName, department, costCenterId, costCenterName, workRate, salary } = req.body;
         const userRef = db.collection('users').doc(req.params.id);
         const doc = await userRef.get();
 
@@ -82,12 +88,18 @@ exports.updateUser = async (req, res) => {
         const updateData = {};
         if (name) updateData.name = name;
         if (surname) updateData.surname = surname;
+        if (patronymic !== undefined) updateData.patronymic = patronymic;
         if (login) updateData.login = login.toLowerCase();
         if (role) updateData.role = role;
         if (status) updateData.status = status;
         if (phone !== undefined) updateData.phone = phone;
         if (positionId !== undefined) updateData.positionId = positionId;
         if (positionName !== undefined) updateData.positionName = positionName;
+        if (department !== undefined) updateData.department = department;
+        if (costCenterId !== undefined) updateData.costCenterId = costCenterId;
+        if (costCenterName !== undefined) updateData.costCenterName = costCenterName;
+        if (workRate !== undefined) updateData.workRate = Number(workRate);
+        if (salary !== undefined) updateData.salary = Number(salary);
 
         if (password) {
             const salt = await bcrypt.genSalt(10);
