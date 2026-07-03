@@ -77,10 +77,15 @@ const Staff = () => {
   }, [isActiveDelete, countdown, staffList, staffToDelete]);
 
   const roles = [
-    { label: 'Kassa', value: 'kassa' },
-    { label: 'Sotuv manageri', value: 'sotuv_manager' },
-    { label: 'Proekt manager', value: 'proekt_manager' },
-    { label: 'Ofiss manager', value: 'ofiss_manager' }
+    { label: 'Savdo Menejeri', value: 'sotuv_manager' },
+    { label: 'Proekt Menejer', value: 'proekt_manager' },
+    { label: 'Kassir / Kassa xodimi', value: 'kassa' },
+    { label: 'Ofis Menejeri', value: 'ofiss_manager' },
+    { label: 'Farrosh', value: 'farrosh' },
+    { label: 'Yuk tashuvchi (Loader)', value: 'yuk_tashuvchi' },
+    { label: 'Haydovchi (Driver)', value: 'haydovchi' },
+    { label: 'Qorovul (Guard)', value: 'qorovul' },
+    { label: 'Boshqa', value: 'boshqa' }
   ];
 
   const getRoleIcon = (role) => {
@@ -89,6 +94,10 @@ const Staff = () => {
       case 'sotuv_manager': return <Briefcase size={16} />;
       case 'proekt_manager': return <BadgeInfo size={16} />;
       case 'ofiss_manager': return <ShieldCheck size={16} />;
+      case 'farrosh': return <User size={16} />;
+      case 'yuk_tashuvchi': return <User size={16} />;
+      case 'haydovchi': return <User size={16} />;
+      case 'qorovul': return <User size={16} />;
       default: return <Users size={16} />;
     }
   };
@@ -101,6 +110,10 @@ const Staff = () => {
       case 'sotuv_manager': return '#fbbf24';
       case 'proekt_manager': return '#3b82f6';
       case 'ofiss_manager': return '#8b5cf6';
+      case 'farrosh': return '#ec4899';
+      case 'yuk_tashuvchi': return '#a855f7';
+      case 'haydovchi': return '#14b8a6';
+      case 'qorovul': return '#6b7280';
       default: return 'var(--text-secondary)';
     }
   };
@@ -112,15 +125,13 @@ const Staff = () => {
       setFormData({
         firstName: staff.name,
         lastName: staff.surname,
-        login: staff.login,
         phone: staff.phone || '+998 ',
-        role: staff.role,
-        password: ''
+        role: staff.role
       });
     } else {
-      setFormData({ firstName: '', lastName: '', login: '', phone: '+998 ', role: 'kassa', password: '' });
+      setSelectedStaff(null);
+      setFormData({ firstName: '', lastName: '', phone: '+998 ', role: 'farrosh' });
     }
-    setShowPassword(false);
     setIsModalOpen(true);
   };
 
@@ -144,11 +155,10 @@ const Staff = () => {
       const data = {
         name: formData.firstName,
         surname: formData.lastName,
-        login: formData.login,
-        password: formData.password,
         role: formData.role,
         phone: formData.phone,
-        showroom: user?.showroom
+        showroom: user?.showroom,
+        hasAccount: selectedStaff ? selectedStaff.hasAccount === true : false
       };
 
       if (modalMode === 'add') {
@@ -192,13 +202,9 @@ const Staff = () => {
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
         <div>
-          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '8px' }}>Xodimlar Boshqaruvi</h2>
-          <p style={{ color: 'var(--text-secondary)' }}>Xodimlar uchun login va parollarni bering.</p>
+          <h2 style={{ fontSize: '28px', fontWeight: '900', marginBottom: '8px' }}>Xodimlar Boshqaruvi</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Ushbu showroomga tegishli barcha xodimlar va ularning faollik monitoringi.</p>
         </div>
-        <button className="gold-btn" onClick={() => handleOpenModal('add')}>
-          <Plus size={20} />
-          Yangi Xodim qo'shish
-        </button>
       </div>
 
       <div className="premium-card">
@@ -206,13 +212,14 @@ const Staff = () => {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
               <thead>
-                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '14px' }}>
+                <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   <th style={{ padding: '16px 8px' }}>Xodim</th>
-                  <th style={{ padding: '16px 8px' }}>Login</th>
+                  <th style={{ padding: '16px 8px' }}>Akkaunt turi</th>
+                  <th style={{ padding: '16px 8px' }}>Tarmoqda</th>
+                  <th style={{ padding: '16px 8px' }}>Tizimda Bugun</th>
                   <th style={{ padding: '16px 8px' }}>Telefon</th>
                   <th style={{ padding: '16px 8px' }}>Lavozimi</th>
                   <th style={{ padding: '16px 8px' }}>Holati</th>
-                  <th style={{ padding: '16px 8px', textAlign: 'right' }}>Amallar</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,19 +237,49 @@ const Staff = () => {
                           <User size={20} />
                         </div>
                         <div>
-                          <p style={{ fontWeight: '600' }}>{(staff.name || '')} {(staff.surname || '')}</p>
-                          <p style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>ID: #{staff._id ? staff._id.slice(-4) : '...'}</p>
+                          <p style={{ fontWeight: '800', fontSize: '15px' }}>{(staff.name || '')} {(staff.surname || '')}</p>
+                          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>ID: #{staff._id ? staff._id.slice(-4) : '...'}</p>
                         </div>
                       </div>
                     </td>
-                    <td style={{ padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
-                      {staff.login || '—'}
+                    <td style={{ padding: '20px 8px' }}>
+                      <span style={{ 
+                        fontSize: '11px', 
+                        background: staff.hasAccount !== false ? 'rgba(59, 130, 246, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+                        color: staff.hasAccount !== false ? '#3b82f6' : '#9ca3af',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        fontWeight: '800'
+                      }}>
+                        {staff.hasAccount !== false ? 'AKKAUNTLI' : 'AKKAUNTSIZ'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '20px 8px' }}>
+                      {staff.hasAccount !== false ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: staff.isOnline ? '#10b981' : '#6b7280',
+                            boxShadow: staff.isOnline ? '0 0 8px #10b981' : 'none'
+                          }}></span>
+                          <span style={{ fontSize: '13px', color: staff.isOnline ? '#10b981' : 'var(--text-secondary)', fontWeight: '700' }}>
+                            {staff.isOnline ? 'ONLINE' : 'OFFLINE'}
+                          </span>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>—</span>
+                      )}
+                    </td>
+                    <td style={{ padding: '20px 8px', color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                      {staff.hasAccount !== false ? `${staff.activeHoursToday || '0.0'} soat` : '—'}
                     </td>
                     <td style={{ padding: '20px 8px', color: 'var(--text-secondary)', fontSize: '14px' }}>
                       {staff.phone || '—'}
                     </td>
                     <td style={{ padding: '20px 8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: getRoleColor(staff.role), fontWeight: '500', fontSize: '14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: getRoleColor(staff.role), fontWeight: '700', fontSize: '14px' }}>
                         {getRoleIcon(staff.role)}
                         {getRoleLabel(staff.role)}
                       </div>
@@ -254,23 +291,10 @@ const Staff = () => {
                         color: (staff.status || 'active') === 'active' ? '#10b981' : '#ef4444',
                         padding: '4px 10px',
                         borderRadius: '20px',
-                        fontWeight: '600'
+                        fontWeight: '800'
                       }}>
                         {(staff.status || 'active') === 'active' ? 'FAOL' : 'BLOKLANGAN'}
                       </span>
-                    </td>
-                    <td style={{ padding: '20px 8px', textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                        <button onClick={() => toggleStatus(staff)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title={staff.status === 'active' ? 'Bloklash' : 'Aktivlashtirish'}>
-                          <Ban size={18} />
-                        </button>
-                        <button onClick={() => handleOpenModal('edit', staff)} style={{ padding: '8px', color: 'var(--text-secondary)', background: 'transparent' }} title="Tahrirlash">
-                          <Edit2 size={18} />
-                        </button>
-                        <button onClick={() => startDeleteProcess(staff)} style={{ padding: '8px', color: '#ef4444', background: 'transparent' }} title="O'chirish">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 ))}
@@ -288,7 +312,7 @@ const Staff = () => {
             </div>
             <h3 style={{ fontSize: '20px', marginBottom: '8px' }}>Xodimlar topilmadi</h3>
             <p style={{ color: 'var(--text-secondary)', maxWidth: '400px', margin: '0 auto' }}>
-              Xodimlar qo'shishda ularga tizimga kirish uchun login va parol berishni unutmang.
+              Xodimlar ro'yxati hozircha bo'sh. Akkauntli xodimlar faqat Super Admin tomonidan ochib beriladi. Akkauntsiz xodimlarni esa shu sahifada qo'shishingiz mumkin.
             </p>
           </div>
         )}
@@ -321,10 +345,6 @@ const Staff = () => {
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                   <div>
-                    <label style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Login</label>
-                    <input style={{ width: '100%', padding: '14px', fontSize: '16px' }} value={formData.login} onChange={e => setFormData({...formData, login: e.target.value})} required placeholder="admin_77" />
-                  </div>
-                  <div>
                     <label style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Telefon raqami</label>
                     <input 
                       style={{ width: '100%', padding: '14px', fontSize: '16px' }} 
@@ -335,42 +355,12 @@ const Staff = () => {
                       maxLength="17" 
                     />
                   </div>
-                </div>
-                <div>
-                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Lavozim</label>
-                  <select style={{ width: '100%', padding: '14px', fontSize: '16px' }} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                    {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                  </select>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <label style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Parol</label>
-                  <input 
-                    type={showPassword ? "text" : "password"} 
-                    style={{ width: '100%', padding: '14px', paddingRight: '50px', fontSize: '16px' }} 
-                    value={formData.password} 
-                    onChange={e => setFormData({...formData, password: e.target.value})} 
-                    placeholder={modalMode === 'edit' ? "O'zgartirmasangiz bo'sh qoldiring" : "••••••••"} 
-                    required={modalMode === 'add'} 
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{ 
-                      position: 'absolute', 
-                      right: '16px', 
-                      top: '36px', 
-                      background: 'transparent', 
-                      color: 'var(--text-secondary)',
-                      padding: '4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      border: 'none',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
+                  <div>
+                    <label style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'block', marginBottom: '6px' }}>Lavozim</label>
+                    <select style={{ width: '100%', padding: '14px', fontSize: '16px' }} value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                      {roles.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                    </select>
+                  </div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '16px' }}>

@@ -58,10 +58,12 @@ const SuperAdminStaff = () => {
     patronymic: '',
     login: '',
     phone: '+998 ',
-    role: 'sales_manager',
+    role: 'sotuv_manager',
     department: '',
     password: '',
     showroom: '',
+    workDays: [1, 2, 3, 4, 5, 6, 7],
+    leadWeight: 50,
     positionId: '',
     positionName: '',
     costCenterId: '',
@@ -105,10 +107,12 @@ const SuperAdminStaff = () => {
         patronymic: user.patronymic || '',
         login: user.login || '',
         phone: user.phone || '+998 ',
-        role: user.role || 'sales_manager',
+        role: user.role || 'sotuv_manager',
         department: user.department || '',
         password: '',
         showroom: user.showroom || '',
+        workDays: user.workDays || [1, 2, 3, 4, 5, 6, 7],
+        leadWeight: user.leadWeight !== undefined ? user.leadWeight : 50,
         positionId: user.positionId || '',
         positionName: user.positionName || '',
         costCenterId: user.costCenterId || '',
@@ -123,10 +127,12 @@ const SuperAdminStaff = () => {
         patronymic: '',
         login: '',
         phone: '+998 ',
-        role: 'sales_manager',
+        role: 'sotuv_manager',
         department: '',
         password: '',
         showroom: '',
+        workDays: [1, 2, 3, 4, 5, 6, 7],
+        leadWeight: 50,
         positionId: '',
         positionName: '',
         costCenterId: '',
@@ -245,6 +251,7 @@ const SuperAdminStaff = () => {
                 <th style={{ padding: '16px 8px' }}>Xodim (F.I.Sh)</th>
                 <th style={{ padding: '16px 8px' }}>Bo'lim</th>
                 <th style={{ padding: '16px 8px' }}>Lavozim</th>
+                <th style={{ padding: '16px 8px' }}>Showroom</th>
                 <th style={{ padding: '16px 8px' }}>Xarajat Markazi</th>
                 <th style={{ padding: '16px 8px' }}>Stavka / Oklad</th>
                 <th style={{ padding: '16px 8px', textAlign: 'right' }}>Amallar</th>
@@ -277,6 +284,12 @@ const SuperAdminStaff = () => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <Shield size={14} style={{ color: 'var(--accent-gold)' }} />
                       {u.positionName || u.role?.replace('_', ' ')}
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px 8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <MapPin size={14} />
+                      {showrooms.find(s => s._id === u.showroom)?.name || (u.showroom === 'fabrika' ? 'Fabrika' : 'Global')}
                     </div>
                   </td>
                   <td style={{ padding: '16px 8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
@@ -453,10 +466,68 @@ const SuperAdminStaff = () => {
                 <div>
                   <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Showroom (Ixtiyoriy)</label>
                   <select style={{ width: '100%' }} value={formData.showroom} onChange={e => setFormData({...formData, showroom: e.target.value})}>
-                    <option value="">Global / Fabrika</option>
+                    <option value="">Global</option>
+                    <option value="fabrika">Fabrika</option>
                     {showrooms.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
                   </select>
                 </div>
+                {(formData.role === 'sotuv_manager' || formData.role === 'proekt_manager') && (
+                  <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: '16px', background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '10px', fontWeight: 'bold' }}>Ish kunlari (Work Days)</label>
+                      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                        {[
+                          { label: 'Dush', value: 1 },
+                          { label: 'Sesh', value: 2 },
+                          { label: 'Chor', value: 3 },
+                          { label: 'Pay', value: 4 },
+                          { label: 'Jum', value: 5 },
+                          { label: 'Shan', value: 6 },
+                          { label: 'Yak', value: 7 }
+                        ].map(d => {
+                          const active = formData.workDays?.includes(d.value);
+                          return (
+                            <button
+                              key={d.value}
+                              type="button"
+                              onClick={() => {
+                                const current = formData.workDays || [];
+                                const next = current.includes(d.value)
+                                  ? current.filter(x => x !== d.value)
+                                  : [...current, d.value];
+                                setFormData({ ...formData, workDays: next });
+                              }}
+                              style={{
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                border: '1px solid var(--border-color)',
+                                background: active ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)',
+                                color: active ? '#000' : '#fff',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                              }}
+                            >
+                              {d.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px', fontWeight: 'bold' }}>Taqsimot ulushi % (Lead Weight)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={formData.leadWeight || 50}
+                        onChange={e => setFormData({ ...formData, leadWeight: Number(e.target.value) })}
+                        style={{ width: '100px', height: '40px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '8px', color: 'white', padding: '0 10px', textAlign: 'center' }}
+                      />
+                      <span style={{ marginLeft: '12px', fontSize: '12px', color: 'var(--text-secondary)' }}>Odatda: 60 yoki 40</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '16px', marginTop: '40px' }}>

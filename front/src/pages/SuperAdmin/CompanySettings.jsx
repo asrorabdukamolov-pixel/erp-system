@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Phone, Globe, MapPin, Save, Upload, Info, CheckCircle2 } from 'lucide-react';
+import { Building2, Phone, Globe, MapPin, Save, Upload, Info, CheckCircle2, FileText } from 'lucide-react';
 import api from '../../utils/api';
 
 const CompanySettings = () => {

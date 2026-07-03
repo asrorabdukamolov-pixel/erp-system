@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, Printer, Edit, Trash2, 
-  Calendar, Clock, DollarSign, Plus, X
+  Calendar, Clock, DollarSign, Plus, X, FileSpreadsheet
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import KPModal from './KPModal';
+import { exportProposalToExcel } from '../../utils/excelExport';
 
 const Proposals = () => {
   const { user } = useAuth();
@@ -548,8 +549,11 @@ const Proposals = () => {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '12px' }}>
-                <button onClick={() => handlePrint(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Chop etish">
+                 <button onClick={() => handlePrint(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Chop etish">
                   <Printer size={20} />
+                </button>
+                <button onClick={() => exportProposalToExcel(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Excel eksport">
+                  <FileSpreadsheet size={20} />
                 </button>
                 <button onClick={() => handleEdit(p)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Tahrirlash">
                   <Edit size={20} />

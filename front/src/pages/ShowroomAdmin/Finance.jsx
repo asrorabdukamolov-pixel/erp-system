@@ -240,7 +240,7 @@ const Finance = () => {
               <div style={{ marginTop: 'auto', color: 'var(--accent-gold)', fontWeight: '700', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>Kirish <ArrowRight size={16} /></div>
             </div>
 
-            <div onClick={() => setCurrentView('creditor')} className="premium-card clickable-card" style={{ padding: '40px 32px', cursor: 'pointer', textAlign: 'center', transition: '0.3s', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+            <div onClick={() => { setCurrentView('creditor'); setFilterMonth('all'); setFilterYear('all'); }} className="premium-card clickable-card" style={{ padding: '40px 32px', cursor: 'pointer', textAlign: 'center', transition: '0.3s', border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'rgba(16,185,129,0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Handshake size={40} /></div>
               <div>
                 <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '8px' }}>Kreditorlar</h3>
@@ -980,13 +980,15 @@ const Finance = () => {
               <span style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: '600' }}>Saralash (Davr):</span>
             </div>
             <select value={filterYear} onChange={(e) => setFilterYear(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '6px 12px', color: 'white', fontSize: '14px', outline: 'none' }}>
-              {[2024, 2025, 2026].map(y => <option key={y} value={y.toString()} style={{ background: '#0f172a' }}>{y}</option>)}
+              <option value="all" style={{ background: '#0f172a' }}>Barcha yillar</option>
+              {yearsList.map(y => <option key={y} value={y.toString()} style={{ background: '#0f172a' }}>{y}</option>)}
             </select>
             <select value={filterMonth} onChange={(e) => setFilterMonth(e.target.value)} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', borderRadius: '8px', padding: '6px 12px', color: 'white', fontSize: '14px', outline: 'none' }}>
+              <option value="all" style={{ background: '#0f172a' }}>Barcha oylar</option>
               {MONTHS.map((m, idx) => <option key={idx} value={idx.toString()} style={{ background: '#0f172a' }}>{m}</option>)}
             </select>
             <button 
-              onClick={() => { setFilterMonth(new Date().getMonth().toString()); setFilterYear(new Date().getFullYear().toString()); }}
+              onClick={() => { setFilterMonth('all'); setFilterYear('all'); }}
               style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: '13px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
             >
               <RotateCcw size={14} /> Tozalash
@@ -998,7 +1000,9 @@ const Finance = () => {
             {(() => {
               const filteredPurchasesForPeriod = purchases.filter(p => {
                 const pDate = new Date(p.date);
-                return pDate.getMonth().toString() === filterMonth && pDate.getFullYear().toString() === filterYear;
+                const matchesMonth = filterMonth === 'all' || pDate.getMonth().toString() === filterMonth;
+                const matchesYear = filterYear === 'all' || pDate.getFullYear().toString() === filterYear;
+                return matchesMonth && matchesYear;
               });
               const totalDebtAll = filteredPurchasesForPeriod.filter(p => p.adminApproved === true).reduce((sum, p) => {
                 const total = Number(p.total_amount) || Number(p.totalAmount) || 0;
@@ -1080,7 +1084,8 @@ const Finance = () => {
                     {purchases.filter(p => {
                       if (p.adminApproved !== true) return false;
                       const pDate = new Date(p.date);
-                      const matchesPeriod = pDate.getMonth().toString() === filterMonth && pDate.getFullYear().toString() === filterYear;
+                      const matchesPeriod = (filterMonth === 'all' || pDate.getMonth().toString() === filterMonth) && 
+                                            (filterYear === 'all' || pDate.getFullYear().toString() === filterYear);
                       if (!matchesPeriod) return false;
                       if (selectedPartnerDetails.id === 'all') return true;
                       const partnerId = selectedPartnerDetails.id || selectedPartnerDetails._id;

@@ -6,6 +6,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import KPImageTool from './KPImageTool';
+import DraggableResizableWindow from '../../components/DraggableResizableWindow';
 
 // PARTNERS array moved inside the component to be dynamic
 
@@ -31,7 +32,52 @@ const formatAmount = (val) => {
   return num.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 };
 
-const KPModal = ({ onClose, editData = null }) => {
+// --- Client-side Image Compressor for Slow Internet ---
+const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.75) => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(file);
+          return;
+        }
+        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+          type: "image/jpeg",
+          lastModified: Date.now()
+        });
+        resolve(compressedFile);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => resolve(file);
+  });
+};
+
+const KPModal = ({ onClose, editData = null, orderFiles = null, onSaved = null, initialCustomer = null, readOnly = false }) => {
   const { user } = useAuth();
 
   // Mijoz
@@ -80,8 +126,12 @@ const KPModal = ({ onClose, editData = null }) => {
       setKpNumber(editData.kpNumber);
     } else {
       setKpNumber(`KP-${Date.now().toString().slice(-6)}`);
+      if (initialCustomer) {
+        setSelectedCustomer(initialCustomer);
+        setCustomerSearch(`${initialCustomer.firstName} ${initialCustomer.lastName}`);
+      }
     }
-  }, [editData]);
+  }, [editData, initialCustomer]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -157,10 +207,43 @@ const KPModal = ({ onClose, editData = null }) => {
   const removeItem = id => setItems(p => p.filter(i => i.id !== id));
   const updateItem = (id, field, value) => setItems(p => p.map(i => i.id === id ? { ...i, [field]: value } : i));
   
-  const handleItemImage = (id, file) => {
+  const handleItemImage = async (id, file) => {
     if (!file) return;
-    setCroppingItemId(id);
-    setCroppingFile(file);
+
+    // PDFs must always be cropped/snipped
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      setCroppingItemId(id);
+      setCroppingFile(file);
+      return;
+    }
+
+    // For images, ask the user
+    const wantToCrop = window.confirm("Rasmni yuklashdan oldin qirqib olmoqchimisiz?\n\n[OK] - Qirqib olish\n[Cancel] - To'g'ridan-to'g'ri yuklash");
+
+    if (wantToCrop) {
+      setCroppingItemId(id);
+      setCroppingFile(file);
+    } else {
+      // Direct Upload
+      try {
+        updateItem(id, 'image', 'loading...');
+        
+        // Compress image (speeds up upload on slow mobile internet)
+        const compressedFile = await compressImage(file);
+        
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+
+        const res = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        updateItem(id, 'image', res.data.url);
+      } catch (err) {
+        console.error("Direct upload error:", err);
+        alert("Rasmni yuklashda xatolik yuz berdi");
+        updateItem(id, 'image', null);
+      }
+    }
   };
 
   const dataURLtoBlob = (dataurl) => {
@@ -248,12 +331,14 @@ const KPModal = ({ onClose, editData = null }) => {
     };
     
     try {
+      let res;
       if (editData) {
-        await api.put(`/proposals/${editData._id}`, proposalData);
+        res = await api.put(`/proposals/${editData._id}`, proposalData);
       } else {
-        await api.post('/proposals', proposalData);
+        res = await api.post('/proposals', proposalData);
       }
       alert(editData ? "Taklif muvaffaqiyatli yangilandi!" : "KP muvaffaqiyatli saqlandi!");
+      if (onSaved) onSaved(res.data);
       onClose();
     } catch (err) {
       console.error("Save error", err);
@@ -644,21 +729,17 @@ const KPModal = ({ onClose, editData = null }) => {
   const inp = { width:'100%', height:'50px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', color:'white', padding:'0 14px', fontSize:'14px' };
 
   return (
-    <div translate="no" style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.92)', backdropFilter:'blur(16px)', display:'flex', justifyContent:'center', alignItems:'center', zIndex:3000, padding:'20px' }}>
-      <div style={{ width:'1440px', maxWidth:'98vw', maxHeight:'95vh', background:'var(--secondary-bg)', borderRadius:'28px', border:'1px solid rgba(255,255,255,0.1)', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 40px 120px rgba(0,0,0,0.8)' }}>
-
-        {/* ── Header ── */}
-        <div style={{ padding:'28px 40px', borderBottom:'1px solid rgba(255,255,255,0.07)', display:'flex', justifyContent:'space-between', alignItems:'center', flexShrink:0 }}>
-          <div>
-            <h2 style={{ fontSize:'26px', fontWeight:'900' }}>Tijorat Taklifi <span style={{ color:'var(--accent-gold)' }}>{kpNumber}</span></h2>
-            <p style={{ color:'var(--text-secondary)', marginTop:'4px', fontSize:'13px' }}>Mijozingizga professional KP tayyorlang</p>
-          </div>
-          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.06)', padding:'12px', borderRadius:'50%', color:'var(--text-secondary)', border:'none', cursor:'pointer' }}><X size={22}/></button>
-        </div>
-
-        {/* ── Body ── */}
-        <div className="no-scrollbar" style={{ flex:1, overflowY:'auto', padding:'36px 40px' }}>
-          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'48px' }}>
+    <DraggableResizableWindow
+      title={`Tijorat Taklifi ${kpNumber}`}
+      onClose={onClose}
+      initialWidth={Math.min(1300, window.innerWidth - 80)}
+      initialHeight={Math.min(850, window.innerHeight - 80)}
+      initialX={40}
+      initialY={40}
+      zIndex={10050}
+    >
+      <div className="no-scrollbar" style={{ flex:1, overflowY:'auto', padding:'36px 40px' }}>
+          <fieldset disabled={readOnly} style={{ border:'none', padding:0, margin:0, minWidth:0, display:'grid', gridTemplateColumns:'1fr 1fr', gap:'48px', width:'100%' }}>
 
             {/* ══ CHAP USTUN ══ */}
             <div style={{ display:'flex', flexDirection:'column', gap:'28px' }}>
@@ -718,6 +799,30 @@ const KPModal = ({ onClose, editData = null }) => {
                 </div>
               </div>
 
+              {/* Buyurtma chizmalari va suratlari */}
+              {orderFiles && orderFiles.length > 0 && (
+                <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', padding:'20px' }}>
+                  <label style={lbl}>Buyurtma chizmalari va suratlari</label>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(80px, 1fr))', gap:'12px', marginTop: '12px' }}>
+                    {orderFiles.map((file, idx) => {
+                      const isImage = file.url?.match(/\.(jpeg|jpg|gif|png)$/i) || file.url?.startsWith('data:image');
+                      return (
+                        <div key={idx} style={{ position:'relative', borderRadius:'10px', overflow:'hidden', border:'1px solid rgba(255,255,255,0.1)', aspectRatio:'1/1', background:'rgba(0,0,0,0.2)' }}>
+                          {isImage ? (
+                            <img src={file.url} alt={file.name} style={{ width:'100%', height:'100%', objectFit:'cover', cursor:'pointer' }} onClick={() => window.open(file.url, '_blank')} />
+                          ) : (
+                            <a href={file.url} target="_blank" rel="noreferrer" style={{ width:'100%', height:'100%', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'white', textDecoration:'none', fontSize:'10px', textAlign:'center', padding:'6px' }}>
+                              <FileText size={20} color="var(--accent-gold)" />
+                              <span style={{ textOverflow:'ellipsis', overflow:'hidden', whiteSpace:'nowrap', width:'100%', marginTop:'4px' }}>{file.name}</span>
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Muddat */}
               <div>
                 <label style={lbl}>Tayyor Bo'lish Muddati</label>
@@ -738,8 +843,8 @@ const KPModal = ({ onClose, editData = null }) => {
                   {DEADLINE_OPTIONS.map(opt => (
                     <div key={opt.id} style={{ display:'flex', flexDirection:'column', gap:'8px' }}>
                       <label 
-                        onClick={() => setDeadlineBasis(opt.id)}
-                        style={{ display:'flex', alignItems:'center', gap:'12px', padding:'13px 16px', background: deadlineBasis === opt.id ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.03)', border:`1px solid ${deadlineBasis === opt.id ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius:'10px', cursor:'pointer', transition:'0.2s', fontSize:'13px' }}>
+                        onClick={() => !readOnly && setDeadlineBasis(opt.id)}
+                        style={{ display:'flex', alignItems:'center', gap:'12px', padding:'13px 16px', background: deadlineBasis === opt.id ? 'rgba(251,191,36,0.08)' : 'rgba(255,255,255,0.03)', border:`1px solid ${deadlineBasis === opt.id ? 'rgba(251,191,36,0.4)' : 'rgba(255,255,255,0.08)'}`, borderRadius:'10px', cursor: readOnly ? 'default' : 'pointer', transition:'0.2s', fontSize:'13px' }}>
                         <div style={{ width:'18px', height:'18px', borderRadius:'50%', border:`2px solid ${deadlineBasis === opt.id ? '#008B8B' : 'rgba(255,255,255,0.25)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                           {deadlineBasis === opt.id && <div style={{ width:'9px', height:'9px', borderRadius:'50%', background:'#008B8B' }}/>}
                         </div>
@@ -788,8 +893,8 @@ const KPModal = ({ onClose, editData = null }) => {
                           placeholder="0" 
                           style={{ width:'110px', height:'34px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(16,185,129,0.4)', borderRadius:'8px', color:'#10b981', padding:'0 10px', fontSize:'13px', textAlign:'right' }}/>
                       )}
-                      <button type="button" onClick={() => setServices(s => ({ ...s, [svc.id]: !s[svc.id] }))}
-                        style={{ width:'44px', height:'24px', borderRadius:'12px', background: services[svc.id] ? '#10b981' : 'rgba(255,255,255,0.1)', position:'relative', transition:'0.3s', flexShrink:0, border:'none', cursor:'pointer' }}>
+                      <button type="button" onClick={() => !readOnly && setServices(s => ({ ...s, [svc.id]: !s[svc.id] }))}
+                        style={{ width:'44px', height:'24px', borderRadius:'12px', background: services[svc.id] ? '#10b981' : 'rgba(255,255,255,0.1)', position:'relative', transition:'0.3s', flexShrink:0, border:'none', cursor: readOnly ? 'default' : 'pointer' }}>
                         <div style={{ position:'absolute', width:'18px', height:'18px', background:'white', borderRadius:'50%', top:'3px', left: services[svc.id] ? '23px' : '3px', transition:'0.3s' }}/>
                       </button>
                     </div>
@@ -807,8 +912,8 @@ const KPModal = ({ onClose, editData = null }) => {
                     partnersList.map(p => {
                       const active = selectedPartners.includes(p._id);
                       return (
-                        <button key={p._id} type="button" onClick={() => togglePartner(p._id)}
-                          style={{ background: active ? 'rgba(251,191,36,0.08)' : '#fff', border:`2px solid ${active ? '#008B8B' : '#e5e7eb'}`, borderRadius:'12px', padding:'10px 6px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', transition:'0.2s', position:'relative', overflow:'hidden', minHeight: '80px' }}>
+                        <button key={p._id} type="button" onClick={() => !readOnly && togglePartner(p._id)}
+                          style={{ background: active ? 'rgba(251,191,36,0.08)' : '#fff', border:`2px solid ${active ? '#008B8B' : '#e5e7eb'}`, borderRadius:'12px', padding:'10px 6px', cursor: readOnly ? 'default' : 'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:'6px', transition:'0.2s', position:'relative', overflow:'hidden', minHeight: '80px' }}>
                           {active && (
                             <div style={{ position:'absolute', top:'4px', right:'4px', width:'18px', height:'18px', background:'#008B8B', borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>
                               <CheckCircle2 size={12} color="#0f1117" strokeWidth={3}/>
@@ -838,17 +943,23 @@ const KPModal = ({ onClose, editData = null }) => {
                 {items.map((item, idx) => (
                   <div key={item.id} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', padding:'18px', position:'relative' }}>
                     <div style={{ display:'flex', gap:'14px', marginBottom:'12px' }}>
-                      <label style={{ width:'66px', height:'66px', borderRadius:'12px', background: item.image ? 'transparent' : 'rgba(255,255,255,0.05)', border:'2px dashed rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-                        {item.image ? <img src={item.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <Package size={22} color="rgba(255,255,255,0.3)"/>}
-                        <input type="file" accept="image/*,.pdf" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>
+                      <label style={{ width:'66px', height:'66px', borderRadius:'12px', background: item.image ? 'transparent' : 'rgba(255,255,255,0.05)', border:'2px dashed rgba(255,255,255,0.15)', cursor: readOnly ? 'default' : 'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
+                        {item.image === 'loading...' ? (
+                          <span style={{ fontSize: '10px', color: 'var(--accent-gold)' }}>Yuklanmoqda...</span>
+                        ) : item.image ? (
+                          <img src={item.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                        ) : (
+                          <Package size={22} color="rgba(255,255,255,0.3)"/>
+                        )}
+                        {!readOnly && <input type="file" accept="image/*,.pdf" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>}
                       </label>
                       <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'8px' }}>
                         <input value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} placeholder={`Mahsulot nomi (${idx + 1})`}
                           style={{ width:'100%', height:'38px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', color:'white', padding:'0 12px', fontSize:'14px', fontWeight:'700' }}/>
-                        <input value={item.desc} onChange={e => updateItem(item.id, 'desc', e.target.value)} placeholder="Tavsif, o'lcham, material... (ixtiyoriy)"
-                          style={{ width:'100%', height:'34px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', color:'white', padding:'0 12px', fontSize:'12px' }}/>
+                        <textarea value={item.desc} onChange={e => updateItem(item.id, 'desc', e.target.value)} placeholder="Tavsif, o'lcham, material... (ixtiyoriy)"
+                          style={{ width:'100%', minHeight:'50px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', color:'white', padding:'8px 12px', fontSize:'12px', resize:'vertical', fontFamily:'inherit', lineHeight:'1.4' }}/>
                       </div>
-                      {items.length > 1 && (
+                      {!readOnly && items.length > 1 && (
                         <button onClick={() => removeItem(item.id)} style={{ color:'#ef4444', background:'transparent', border:'none', padding:'4px', alignSelf:'flex-start', flexShrink:0, cursor:'pointer' }}><Trash2 size={16}/></button>
                       )}
                     </div>
@@ -888,12 +999,14 @@ const KPModal = ({ onClose, editData = null }) => {
                 ))}
               </div>
 
-              <button type="button" onClick={addItem}
-                style={{ height:'48px', background:'rgba(255,255,255,0.04)', border:'2px dashed rgba(255,255,255,0.15)', borderRadius:'14px', color:'var(--text-secondary)', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', fontWeight:'700', cursor:'pointer', transition:'0.2s', fontSize:'14px' }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor='var(--accent-gold)'; e.currentTarget.style.color='var(--accent-gold)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.color='var(--text-secondary)'; }}>
-                <Plus size={18}/> Mahsulot qo'shish
-              </button>
+              {!readOnly && (
+                <button type="button" onClick={addItem}
+                  style={{ height:'48px', background:'rgba(255,255,255,0.04)', border:'2px dashed rgba(255,255,255,0.15)', borderRadius:'14px', color:'var(--text-secondary)', display:'flex', alignItems:'center', justifyContent:'center', gap:'8px', fontWeight:'700', cursor:'pointer', transition:'0.2s', fontSize:'14px' }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor='var(--accent-gold)'; e.currentTarget.style.color='var(--accent-gold)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor='rgba(255,255,255,0.15)'; e.currentTarget.style.color='var(--text-secondary)'; }}>
+                  <Plus size={18}/> Mahsulot qo'shish
+                </button>
+              )}
 
               {/* Jami */}
               <div style={{ background:'linear-gradient(135deg,rgba(251,191,36,0.12),rgba(251,191,36,0.04))', border:'1px solid rgba(251,191,36,0.25)', borderRadius:'16px', padding:'20px 24px' }}>
@@ -913,7 +1026,7 @@ const KPModal = ({ onClose, editData = null }) => {
                 </div>
               </div>
             </div>
-          </div>
+          </fieldset>
         </div>
 
         {/* ── Footer ── */}
@@ -921,9 +1034,11 @@ const KPModal = ({ onClose, editData = null }) => {
           <button onClick={onClose} style={{ height:'50px', padding:'0 28px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'12px', color:'var(--text-secondary)', fontWeight:'700', cursor:'pointer', fontSize:'14px' }}>
             Bekor Qilish
           </button>
-          <button onClick={handleSave} style={{ height:'50px', padding:'0 28px', background:'rgba(251,191,36,0.12)', border:'1px solid var(--accent-gold)', borderRadius:'12px', color:'var(--accent-gold)', fontWeight:'700', cursor:'pointer', display:'flex', alignItems:'center', gap:'8px', fontSize:'14px' }}>
-            <FileText size={18}/> Saqlash
-          </button>
+          {!readOnly && (
+            <button onClick={handleSave} style={{ height:'50px', padding:'0 28px', background:'rgba(251,191,36,0.12)', border:'1px solid var(--accent-gold)', borderRadius:'12px', color:'var(--accent-gold)', fontWeight:'700', cursor:'pointer', display:'flex', alignItems:'center', gap:'8px', fontSize:'14px' }}>
+              <FileText size={18}/> Saqlash
+            </button>
+          )}
           <button onClick={handlePrint} style={{ height:'50px', padding:'0 32px', background:'var(--accent-gold)', borderRadius:'12px', color:'#0f172a', fontWeight:'900', cursor:'pointer', fontSize:'15px', display:'flex', alignItems:'center', gap:'8px', border:'none' }}>
             <Printer size={18}/> Preview & Chop etish
           </button>
@@ -936,8 +1051,7 @@ const KPModal = ({ onClose, editData = null }) => {
             onCancel={() => { setCroppingFile(null); setCroppingItemId(null); }}
           />
         )}
-      </div>
-    </div>
+    </DraggableResizableWindow>
   );
 };
 

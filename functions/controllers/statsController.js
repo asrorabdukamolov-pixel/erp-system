@@ -2,37 +2,46 @@ const { db } = require('../config/firebase');
 
 exports.getSuperAdminStats = async (req, res) => {
     try {
-        const showroomsSnap = await db.collection('showrooms').get();
-        const showroomsCount = showroomsSnap.size;
-        
-        const adminsSnap = await db.collection('users').where('role', '!=', 'super').where('status', '==', 'active').get();
-        const activeAdminsCount = adminsSnap.size;
-        
-        // Oxirgi amallarni yig'ish
-        const usersSnap = await db.collection('users').where('role', '!=', 'super').orderBy('createdAt', 'desc').limit(5).get();
-        const latestUsers = usersSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        const showroomsLatestSnap = await db.collection('showrooms').orderBy('createdAt', 'desc').limit(5).get();
-        const latestShowrooms = showroomsLatestSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Get counts from Firestore/local DB
+        const showroomsSnapshot = await db.collection('showrooms').get();
+        const usersSnapshot = await db.collection('users').get();
+        const ordersSnapshot = await db.collection('orders').get();
+
+        const showroomsCount = showroomsSnapshot.size || showroomsSnapshot.docs.length;
+        const activeAdminsCount = usersSnapshot.docs.filter(d => {
+            const u = d.data();
+            return u.role !== 'super' && u.status === 'active';
+        }).length;
+
+        // Recent activities
+        const latestUsers = usersSnapshot.docs
+            .filter(d => d.data().role !== 'super')
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .slice(0, 5);
+
+        const latestShowrooms = showroomsSnapshot.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+            .slice(0, 5);
 
         const recentActivities = [
             ...latestUsers.map(u => ({
                 id: u.id,
                 type: 'user',
-                title: `Yangi xodim: ${u.name} ${u.surname}`,
+                title: `Yangi xodim: ${u.name || ''} ${u.surname || ''}`,
                 time: u.createdAt,
                 role: u.role
             })),
             ...latestShowrooms.map(s => ({
                 id: s.id,
                 type: 'showroom',
-                title: `Yangi showroom: ${s.name}`,
+                title: `Yangi showroom: ${s.name || ''}`,
                 time: s.createdAt,
-                address: s.address
+                address: s.address || ''
             }))
-        ].sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 5);
+        ].sort((a, b) => new Date(b.time || 0) - new Date(a.time || 0)).slice(0, 5);
 
-        // TODO: Calculate total sales correctly. Setting to 0 for now to prevent crashes.
         res.json({
             showroomsCount,
             activeAdminsCount,

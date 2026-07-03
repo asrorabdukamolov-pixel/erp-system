@@ -66,6 +66,32 @@ exports.updateOrder = async (req, res) => {
 
         const updateData = { ...req.body };
 
+        // Auto-assign best PM if moving to yangi_kp_ariza and no PM is assigned
+        if (req.body.pmStatus === 'yangi_kp_ariza' && req.body.status === 'pm' && !order.assignedPmId && !req.body.assignedPmId) {
+            try {
+                const { selectBestPM } = require('./integrationController');
+                const bestPm = await selectBestPM(order.showroom || req.body.showroom);
+                if (bestPm) {
+                    updateData.assignedPmId = bestPm.id || bestPm._id;
+                    updateData.assignedPmName = bestPm.name;
+                    updateData.assignedPmPhone = bestPm.phone || '';
+                    updateData.assignedAt = new Date().toISOString();
+                    
+                    updateData.timeline = [
+                        ...(updateData.timeline || order.timeline || []),
+                        {
+                            type: 'system',
+                            text: `Avtomatik taqsimlash: Loyiha menejeri biriktirildi - ${bestPm.name}`,
+                            user: 'Tizim',
+                            time: new Date().toISOString()
+                        }
+                    ];
+                }
+            } catch (assignErr) {
+                console.error("Auto-assign PM error:", assignErr.message);
+            }
+        }
+
         if (req.body.status && req.body.status !== order.status) {
             updateData.timeline = [
                 ...(order.timeline || []),
@@ -76,6 +102,61 @@ exports.updateOrder = async (req, res) => {
                     time: new Date().toISOString()
                 }
             ];
+
+            if (order.status === 'amocrm_lead' && req.body.status !== 'amocrm_lead') {
+                try {
+                    const tasksSnapshot = await db.collection('tasks')
+                        .where('orderId', '==', req.params.id)
+                        .get();
+                    
+                    const batch = db.batch();
+                    tasksSnapshot.forEach(doc => {
+                        const taskData = doc.data();
+                        if (taskData.status !== 'bajarildi') {
+                            batch.update(doc.ref, {
+                                status: 'bajarildi',
+                                completedAt: new Date().toISOString()
+                            });
+                        }
+                    });
+                    await batch.commit();
+                    console.log(`Closed active tasks for order ${req.params.id} as it moved out of amocrm_lead`);
+                } catch (taskErr) {
+                    console.error("Error auto-closing tasks on status change:", taskErr.message);
+                }
+            }
+            if (req.body.status === 'oylayabdi' && order.status !== 'oylayabdi') {
+                try {
+                    const taskDueDate = new Date();
+                    taskDueDate.setHours(taskDueDate.getHours() + 24); // Give 24 hours to schedule
+
+                    const newTask = {
+                        orderId: req.params.id,
+                        title: "Proekt menedjer KP ni tayyorlab yubordi, mijoz bilan kelishib uchrashuv vaqtini belgilang",
+                        status: 'yangi',
+                        dueDate: taskDueDate.toISOString(),
+                        createdAt: new Date().toISOString(),
+                        type: 'call',
+                        assigneeId: order.managerId,
+                        assigneeName: order.managerName || ''
+                    };
+                    
+                    const taskRef = await db.collection('tasks').add(newTask);
+                    console.log(`Created KP tayyor task ${taskRef.id} for order ${req.params.id}`);
+
+                    updateData.timeline = [
+                        ...(updateData.timeline || []),
+                        {
+                            type: 'task',
+                            text: "Yangi vazifa yaratildi: Proekt menedjer KP ni tayyorlab yubordi...",
+                            user: 'Tizim',
+                            time: new Date().toISOString()
+                        }
+                    ];
+                } catch (taskErr) {
+                    console.error("Error auto-creating task for KP tayyor:", taskErr.message);
+                }
+            }
         }
 
         if (req.body.status === 'tasdiqlandi' && order.proposalId) {
@@ -87,6 +168,15 @@ exports.updateOrder = async (req, res) => {
 
         await orderRef.update(updateData);
         const updated = await orderRef.get();
+
+        // Trigger immediate check of tasks for the lead
+        try {
+            const { checkAmoLeadsAndTasksInternal } = require('./integrationController');
+            checkAmoLeadsAndTasksInternal().catch(e => console.error("Post-update task check failed:", e.message));
+        } catch (requireErr) {
+            console.error("Failed to require integrationController:", requireErr.message);
+        }
+
         res.json(formatDoc(updated));
     } catch (err) {
         console.error("UpdateOrder Error:", err.message);
@@ -207,6 +297,32 @@ exports.restoreOrder = async (req, res) => {
         res.json(formatDoc(updated));
     } catch (err) {
         console.error("RestoreOrder Error:", err.message);
+        res.status(500).send('Server xatosi');
+    }
+};
+
+exports.checkUpdates = async (req, res) => {
+    try {
+        const { lastCreatedAt, lastStatusUpdatedAt } = req.query;
+        
+        const [snapCreated, snapStatus] = await Promise.all([
+            db.collection('orders').orderBy('createdAt', 'desc').limit(1).get(),
+            db.collection('orders').orderBy('statusUpdatedAt', 'desc').limit(1).get()
+        ]);
+        
+        const latestCreatedTime = snapCreated.empty ? '' : (snapCreated.docs[0].data().createdAt || '');
+        const latestStatusTime = snapStatus.empty ? '' : (snapStatus.docs[0].data().statusUpdatedAt || '');
+        
+        const hasCreatedNew = latestCreatedTime && latestCreatedTime !== lastCreatedAt;
+        const hasStatusNew = latestStatusTime && latestStatusTime !== lastStatusUpdatedAt;
+        
+        res.json({
+            hasUpdates: hasCreatedNew || hasStatusNew,
+            latestCreatedAt: latestCreatedTime,
+            latestStatusUpdatedAt: latestStatusTime
+        });
+    } catch (err) {
+        console.error("CheckUpdates Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

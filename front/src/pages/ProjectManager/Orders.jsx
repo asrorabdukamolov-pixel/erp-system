@@ -10,9 +10,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import KPModal from '../SalesManager/KPModal';
 import api from '../../utils/api';
+import DraggableResizableWindow from '../../components/DraggableResizableWindow';
+import ImageZoomPreview from '../../components/ImageZoomPreview';
+
+// --- Helper ---
+const isImageFile = (filename) => {
+  if (!filename) return false;
+  return /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(filename);
+};
 
 // --- Constants ---
 const STAGES = [
+  { id: 'yangi_kp_ariza', title: 'Yangi KP ariza 📝', color: '#14b8a6', bg: 'rgba(20,184,166,0.1)' },
+  { id: 'kp_tayyor', title: 'KP Tayyor ✅', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
   { id: 'yangi_buyurtma', title: 'Yangi buyurtma ✨', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
   { id: 'kontrol_zamer', title: 'Kontrolni zamer 📏', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   { id: 'chizma_chizish', title: 'Chizma chizish ✏️', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
@@ -23,6 +33,17 @@ const STAGES = [
   { id: 'tayyor', title: 'Mijozga topshirishga tayyor 🎁', color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
   { id: 'bajarildi', title: 'Bajarildi 🎉', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
 ];
+
+const SM_STATUS_LABELS = {
+  yangi: 'Yangi lid',
+  aloqa_chiqildi: 'Aloqaga chiqildi',
+  qiziqish_bildirdi: 'Qiziqish bildirdi',
+  uchrashuv: 'Ma\'lumot berildi',
+  kp_yuborildi: 'Zamer olish',
+  prezentatsiya: 'O\'lcham olindi',
+  oylayabdi: 'KP tayyor',
+  shartnoma: 'Shartnoma'
+};
 
 const LOCKED_STAGES = ['yopildi'];
 
@@ -96,6 +117,10 @@ const IconInput = ({ icon: Icon, ...props }) => (
 // --- FileManagerModal ---
 const FileManagerModal = ({ type, files, onClose, onRemove, onAdd, readOnly }) => {
   const fileInputRef = useRef(null);
+  const handleDownload = (url) => {
+    const downloadProxyUrl = `${api.defaults.baseURL || '/api'}/upload/download?fileUrl=${encodeURIComponent(url)}`;
+    window.open(downloadProxyUrl, '_blank');
+  };
   const handleFileChange = async (e) => {
     const selectedFiles = Array.from(e.target.files);
     if (selectedFiles.length === 0) return;
@@ -125,6 +150,7 @@ const FileManagerModal = ({ type, files, onClose, onRemove, onAdd, readOnly }) =
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}><div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent-gold)' }}><FileText size={20} /></div><div style={{ overflow: 'hidden', flex: 1 }}><p style={{ fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.name}</p><p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{(file.size / 1024 / 1024).toFixed(2)} MB</p></div></div>
                 <div style={{ position: 'absolute', top: '10px', right: '10px', display: 'flex', gap: '4px' }}>
                   <button onClick={() => window.open(file.url, '_blank')} style={{ color: 'var(--accent-gold)', background: 'rgba(251, 191, 36, 0.1)', border: 'none', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Ko'rish"><Eye size={14} /></button>
+                  <button onClick={() => handleDownload(file.url, file.name)} style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', border: 'none', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Yuklab olish"><Download size={14} /></button>
                   {!readOnly && <button onClick={() => onRemove(idx)} style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.1)', border: 'none', padding: '6px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'chirish"><Trash2 size={14} /></button>}
                 </div>
               </div>
@@ -141,44 +167,451 @@ const FileManagerModal = ({ type, files, onClose, onRemove, onAdd, readOnly }) =
   );
 };
 
-// --- AgentModal ---
-const AgentModal = ({ onClose, onSaved }) => {
-  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '+998 ', firm: '' });
+// --- CustomerModal ---
+const CustomerModal = ({ onClose, onSaved, user, initialType = 'B2C' }) => {
+  const [clientType, setClientType] = useState(initialType); // B2C, B2B, Agent
+  const [form, setForm] = useState({ 
+    firstName: '', 
+    lastName: '', 
+    phone: '+998 ', 
+    address: '', 
+    propertyType: 'hovli', 
+    source: '', 
+    companyName: '',
+    inn: '',
+    contactPerson: '',
+    legalAddress: '',
+    agentName: '',
+    agentType: '',
+    commissionTerms: '',
+    status: 'faol',
+    managerId: user?.id || user?._id || '',
+    managerName: user?.name || '',
+    selectedAgent: null,
+    age: '',
+    gender: 'Erkak'
+  });
+
+  const [leadSources, setLeadSources] = useState([]);
+  const [managers, setManagers] = useState([]);
+  const [customerTypes, setCustomerTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const handleChange = (e) => { const { name, value } = e.target; setForm({ ...form, [name]: name === 'phone' ? formatPhone(value) : value }); };
+  const [agents, setAgents] = useState([]);
+  const [agentSearch, setAgentSearch] = useState('');
+  const [agentSuggestions, setAgentSuggestions] = useState([]);
+
+  // Fetch all agents when source becomes an agent-based source
+  useEffect(() => {
+    const isAgentSource = form.source?.toLowerCase().includes('agent');
+    if (isAgentSource && agents.length === 0) {
+      const fetchAgents = async () => {
+        try {
+          const res = await api.get('/customers', { params: { type: 'agent' } });
+          setAgents(res.data);
+        } catch (err) {
+          console.error("Failed to fetch agents", err);
+        }
+      };
+      fetchAgents();
+    }
+  }, [form.source]);
+
+  // Filter agents client-side based on search term
+  useEffect(() => {
+    if (agentSearch.trim().length > 0) {
+      const term = agentSearch.toLowerCase();
+      const filtered = agents.filter(a => {
+        const fullName = `${a.firstName || ''} ${a.lastName || ''}`.toLowerCase();
+        const agentName = (a.agentName || '').toLowerCase();
+        return fullName.includes(term) || agentName.includes(term);
+      });
+      setAgentSuggestions(filtered);
+    } else {
+      setAgentSuggestions([]);
+    }
+  }, [agentSearch, agents]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [sourcesRes, usersRes, typesRes] = await Promise.all([
+          api.get('/lead-sources'),
+          api.get('/users'),
+          api.get('/customer-types')
+        ]);
+        setLeadSources(sourcesRes.data);
+        setManagers(usersRes.data);
+        setCustomerTypes(typesRes.data);
+      } catch (err) {
+        console.error("Fetch data error", err);
+      }
+    };
+    fetchData();
+  }, []);
+
+  const handleChange = (e) => { 
+    const { name, value } = e.target; 
+    setForm({ ...form, [name]: name === 'phone' ? formatPhone(value) : value }); 
+  };
+  
   const handleSave = async (e) => { 
     e.preventDefault(); 
     setLoading(true);
-    try { await api.post('/customers', { ...form, type: 'agent' }); if (onSaved) onSaved(); onClose(); } catch (err) { alert("Xatolik!"); }
+    try {
+      let payload = { clientType };
+      const finalManagerId = user?.role === 'super' ? form.managerId : (user?.id || user?._id || form.managerId);
+      const selectedManager = managers.find(m => m._id === finalManagerId);
+      const managerName = selectedManager ? `${selectedManager.name} ${selectedManager.surname}` : (user?.role === 'super' ? form.managerName : (user?.name || form.managerName));
+
+      const selectedTypeObj = customerTypes.find(t => t.name === clientType);
+      const isB2B = selectedTypeObj?.legalStatus?.toLowerCase().includes('yuridik');
+      const isAgent = clientType === 'Agent';
+
+      if (isAgent) {
+        payload = { 
+          ...payload, 
+          type: 'agent', 
+          agentName: form.agentName, 
+          phone: form.phone, 
+          agentType: form.agentType, 
+          commissionTerms: form.commissionTerms, 
+          status: form.status 
+        };
+      } else if (isB2B) {
+        payload = { 
+          ...payload, 
+          type: 'customer', 
+          subType: 'b2b', 
+          companyName: form.companyName, 
+          inn: form.inn, 
+          contactPerson: form.contactPerson, 
+          phone: form.phone, 
+          legalAddress: form.legalAddress, 
+          source: form.source, 
+          managerId: finalManagerId, 
+          managerName,
+          selectedAgent: form.selectedAgent
+        };
+      } else {
+        // B2C and others (jismoniy)
+        payload = { 
+          ...payload, 
+          type: 'customer', 
+          firstName: form.firstName, 
+          lastName: form.lastName, 
+          phone: form.phone, 
+          address: form.address, 
+          propertyType: form.propertyType, 
+          source: form.source, 
+          managerId: finalManagerId, 
+          managerName,
+          selectedAgent: form.selectedAgent,
+          age: form.age,
+          gender: form.gender
+        };
+      }
+
+      const res = await api.post('/customers', payload);
+      if (onSaved) onSaved(res.data); 
+      onClose(); 
+    } catch (err) {
+      console.error("Customer save error", err);
+      alert("Mijozni saqlashda xatolik: " + (err.response?.data?.message || err.message));
+    }
     setLoading(false);
   };
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 3000 }}>
-      <div className="premium-card" style={{ width: '450px', padding: '32px' }}>
-        <h3 style={{ fontSize: '20px', fontWeight: '800', marginBottom: '24px' }}>Yangi Agent Qo'shish</h3>
-        <form onSubmit={handleSave}><div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}><div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div><div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div><div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div><div><Lbl>Firma (Agar bo'lsa)</Lbl><input name="firm" value={form.firm} onChange={handleChange} autoComplete="off" style={{ width: '100%', height: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} /></div></div><div style={{ display: 'flex', gap: '10px', marginTop: '32px' }}><button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '48px' }} disabled={loading}>Bekor qilish</button><button type="submit" className="gold-btn" style={{ flex: 1, height: '48px', justifyContent: 'center' }} disabled={loading}>{loading ? 'Saqlanmoqda...' : 'Saqlash'}</button></div></form>
-      </div>
-    </div>
-  );
-};
 
-// --- CustomerModal ---
-const CustomerModal = ({ onClose, onSaved, user }) => {
-  const [form, setForm] = useState({ firstName: '', lastName: '', phone: '+998 ', address: '', propertyType: 'kvartira', age: '', gender: 'erkak', source: '', selectedAgent: null });
-  const [agentSearch, setAgentSearch] = useState('');
-  const [agentSuggestions, setAgentSuggestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const handleChange = (e) => { const { name, value } = e.target; setForm({ ...form, [name]: name === 'phone' ? formatPhone(value) : value }); };
-  useEffect(() => { 
-    const searchAgents = async () => { if (form.source === 'agent' && agentSearch.length > 1) { try { const res = await api.get('/customers', { params: { type: 'agent', search: agentSearch } }); setAgentSuggestions(res.data); } catch (err) {} } else setAgentSuggestions([]); };
-    searchAgents();
-  }, [agentSearch, form.source]);
-  const handleSave = async (e) => { e.preventDefault(); setLoading(true); try { await api.post('/customers', { ...form, type: 'customer' }); if (onSaved) onSaved(); onClose(); } catch (err) { alert("Xatolik!"); } setLoading(false); };
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }}>
-      <div className="premium-card" style={{ width: '1000px', padding: '48px', maxHeight: '92vh', overflowY: 'auto' }}>
-        <h3 style={{ fontSize: '32px', fontWeight: '900', marginBottom: '40px' }}>Yangi Mijoz Qo'shish</h3>
-        <form onSubmit={handleSave}><div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}><div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}><div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div><div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div></div><div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '24px' }}><div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div><div><Lbl>Yoshi</Lbl><input name="age" type="number" value={form.age} onChange={handleChange} autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div><div><Lbl>Jinsi</Lbl><div style={{ display: 'flex', gap: '8px' }}>{['erkak', 'ayol'].map(g => (<button key={g} type="button" onClick={() => setForm({...form, gender: g})} style={{ flex: 1, height: '54px', borderRadius: '12px', background: form.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: g === form.gender ? 'black' : 'white', border: '1px solid var(--border-color)', fontWeight: '700' }}>{g}</button>))}</div></div></div><div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div><div><Lbl>Uy Turi</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>{PROPERTY_TYPES.map(pt => (<button key={pt.value} type="button" onClick={() => setForm({...form, propertyType: pt.value})} style={{ height: '54px', borderRadius: '12px', background: form.propertyType === pt.value ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: pt.value === form.propertyType ? 'black' : 'white', border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '700' }}>{pt.label}</button>))}</div></div><div><Lbl>Platforma</Lbl><div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '12px' }}>{SOURCE_OPTIONS.map(opt => (<button key={opt.value} type="button" onClick={() => setForm({...form, source: opt.value})} style={{ height: '60px', borderRadius: '12px', background: form.source === opt.value ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.03)', border: `1px solid ${form.source === opt.value ? 'var(--accent-gold)' : 'var(--border-color)'}`, color: opt.value === form.source ? 'var(--accent-gold)' : 'white', fontSize: '12px', fontWeight: '800' }}>{opt.label}</button>))}</div></div>{form.source === 'agent' && (<div style={{ position: 'relative' }}><Lbl>Agent Qidirish</Lbl><IconInput icon={Search} value={agentSearch} onChange={e => setAgentSearch(e.target.value)} placeholder="Agent ismi..." autoComplete="off" style={{ height: '54px' }} />{agentSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', zIndex: 100, border: '1px solid var(--border-color)', borderRadius: '12px', overflow: 'hidden' }}>{agentSuggestions.map(a => <div key={a._id} onClick={() => { setForm({...form, selectedAgent: a}); setAgentSearch(`${a.firstName} ${a.lastName}`); setAgentSuggestions([]); }} style={{ padding: '15px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{a.firstName} {a.lastName}</div>)}</div>)}</div>)}</div><div style={{ display: 'flex', gap: '16px', marginTop: '54px' }}><button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '60px' }} disabled={loading}>Bekor Qilish</button><button type="submit" className="gold-btn" style={{ flex: 1, height: '60px', justifyContent: 'center' }} disabled={loading}>{loading ? 'Saqlanmoqda...' : 'Saqlash'}</button></div></form>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000 }}>
+      <div className="premium-card" style={{ width: '800px', padding: '48px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+          <h3 style={{ fontSize: '32px', fontWeight: '900' }}>Yangi Mijoz Qo'shish</h3>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '50%', color: 'white' }}><X /></button>
+        </div>
+        
+        <div style={{ marginBottom: '32px' }}>
+          <Lbl>Mijoz Turi</Lbl>
+          <select 
+            value={clientType} 
+            onChange={(e) => setClientType(e.target.value)}
+            style={{ 
+              width: '100%', 
+              height: '54px', 
+              background: 'var(--secondary-bg)', 
+              border: '1px solid var(--border-color)', 
+              color: 'white', 
+              borderRadius: '12px', 
+              padding: '0 15px',
+              fontSize: '15px',
+              fontWeight: '600',
+              outline: 'none'
+            }}
+          >
+            {customerTypes.length > 0 ? (
+              customerTypes.map(t => <option key={t._id} value={t.name}>{t.name}</option>)
+            ) : (
+              <>
+                <option value="B2C">B2C</option>
+                <option value="B2B">B2B</option>
+                <option value="Agent">Agent</option>
+              </>
+            )}
+          </select>
+        </div>
+
+        <form onSubmit={handleSave}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {(() => {
+              const selectedTypeObj = customerTypes.find(t => t.name === clientType);
+              const isB2B = selectedTypeObj?.legalStatus?.toLowerCase().includes('yuridik');
+              const isAgent = clientType === 'Agent';
+
+              if (isAgent) {
+                return (
+                  <>
+                    <div><Lbl>Agent nomi</Lbl><input name="agentName" value={form.agentName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Agent turi</Lbl><input name="agentType" value={form.agentType} onChange={handleChange} required placeholder="Masalan: Dizayner, Quruvchi" autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Komissiya sharti</Lbl><input name="commissionTerms" value={form.commissionTerms} onChange={handleChange} required placeholder="Masalan: 5% yoki 500 000" autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div>
+                       <Lbl>Status</Lbl>
+                       <select name="status" value={form.status} onChange={handleChange} style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                         <option value="faol">Faol</option>
+                         <option value="bloklangan">Bloklangan</option>
+                       </select>
+                    </div>
+                  </>
+                );
+              }
+
+              if (isB2B) {
+                return (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                      <div><Lbl>Kompaniya nomi</Lbl><input name="companyName" value={form.companyName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                      <div><Lbl>INN / STIR</Lbl><input name="inn" value={form.inn} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    </div>
+                    <div><Lbl>Kontakt shaxs</Lbl><input name="contactPerson" value={form.contactPerson} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Yuridik manzil</Lbl><input name="legalAddress" value={form.legalAddress} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div>
+                      <Lbl>Mijoz manbasi</Lbl>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                        {leadSources.map(s => (
+                          <button 
+                            key={s._id} 
+                            type="button" 
+                            onClick={() => setForm({...form, source: s.name})} 
+                            style={{ 
+                              height: '54px', 
+                              borderRadius: '12px', 
+                              background: form.source === s.name ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                              color: s.name === form.source ? 'black' : 'white', 
+                              border: '1px solid var(--border-color)', 
+                              fontSize: '14px', 
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {form.source?.toLowerCase().includes('agent') && (
+                      <div style={{ position: 'relative' }}>
+                        <Lbl>Agentni tanlang</Lbl>
+                        <input 
+                          type="text" 
+                          value={agentSearch} 
+                          onChange={(e) => {
+                            setAgentSearch(e.target.value);
+                            if (form.selectedAgent) {
+                              setForm(prev => ({ ...prev, selectedAgent: null }));
+                            }
+                          }} 
+                          placeholder="Agent ismini kiriting..." 
+                          autoComplete="off" 
+                          style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }} 
+                          required={!form.selectedAgent}
+                        />
+                        {agentSuggestions.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', marginTop: '4px' }}>
+                            {agentSuggestions.map(a => {
+                              const name = a.agentName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Noma\'lum';
+                              return (
+                                <div 
+                                  key={a._id} 
+                                  onClick={() => {
+                                    setForm(prev => ({ ...prev, selectedAgent: a }));
+                                    setAgentSearch(name);
+                                    setAgentSuggestions([]);
+                                  }} 
+                                  style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', transition: 'background 0.2s' }}
+                                  onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                >
+                                  {name} ({a.phone})
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {user?.role === 'super' && (
+                      <div>
+                        <Lbl>Mas’ul savdo menejeri</Lbl>
+                        <select name="managerId" value={form.managerId} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                          {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                        </select>
+                      </div>
+                    )}
+                  </>
+                );
+              }
+
+              // Default: B2C
+              return (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div><Lbl>Ism</Lbl><input name="firstName" value={form.firstName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                    <div><Lbl>Familiya</Lbl><input name="lastName" value={form.lastName} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div>
+                      <Lbl>Yoshi</Lbl>
+                      <input 
+                        type="number" 
+                        name="age" 
+                        value={form.age} 
+                        onChange={handleChange} 
+                        required 
+                        placeholder="Masalan: 35" 
+                        autoComplete="off" 
+                        style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} 
+                      />
+                    </div>
+                    <div>
+                      <Lbl>Jinsi</Lbl>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        {['Erkak', 'Ayol'].map(g => (
+                          <button 
+                            key={g} 
+                            type="button" 
+                            onClick={() => setForm({...form, gender: g})} 
+                            style={{ 
+                              height: '54px', 
+                              borderRadius: '12px', 
+                              background: form.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                              color: g === form.gender ? 'black' : 'white', 
+                              border: '1px solid var(--border-color)', 
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <div><Lbl>Telefon</Lbl><input name="phone" value={form.phone} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  <div><Lbl>Manzil</Lbl><input name="address" value={form.address} onChange={handleChange} required autoComplete="off" style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px' }} /></div>
+                  <div>
+                    <Lbl>Uy Turi</Lbl>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                      {PROPERTY_TYPES.map(pt => (
+                        <button key={pt.value} type="button" onClick={() => setForm({...form, propertyType: pt.value})} style={{ height: '54px', borderRadius: '12px', background: form.propertyType === pt.value ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', color: pt.value === form.propertyType ? 'black' : 'white', border: '1px solid var(--border-color)', fontSize: '14px', fontWeight: '700' }}>{pt.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                   <div>
+                     <Lbl>Mijoz manbasi</Lbl>
+                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                       {leadSources.map(s => (
+                         <button 
+                           key={s._id} 
+                           type="button" 
+                           onClick={() => setForm({...form, source: s.name})} 
+                           style={{ 
+                             height: '54px', 
+                             borderRadius: '12px', 
+                             background: form.source === s.name ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                             color: s.name === form.source ? 'black' : 'white', 
+                             border: '1px solid var(--border-color)', 
+                             fontSize: '14px', 
+                             fontWeight: '700',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s'
+                           }}
+                         >
+                           {s.name}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+                  {form.source?.toLowerCase().includes('agent') && (
+                    <div style={{ position: 'relative' }}>
+                      <Lbl>Agentni tanlang</Lbl>
+                      <input 
+                        type="text" 
+                        value={agentSearch} 
+                        onChange={(e) => {
+                          setAgentSearch(e.target.value);
+                          if (form.selectedAgent) {
+                            setForm(prev => ({ ...prev, selectedAgent: null }));
+                          }
+                        }} 
+                        placeholder="Agent ismini kiriting..." 
+                        autoComplete="off" 
+                        style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }} 
+                        required={!form.selectedAgent}
+                      />
+                      {agentSuggestions.length > 0 && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', marginTop: '4px' }}>
+                          {agentSuggestions.map(a => {
+                            const name = a.agentName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Noma\'lum';
+                            return (
+                              <div 
+                                key={a._id} 
+                                onClick={() => {
+                                  setForm(prev => ({ ...prev, selectedAgent: a }));
+                                  setAgentSearch(name);
+                                  setAgentSuggestions([]);
+                                }} 
+                                style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                {name} ({a.phone})
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                    {user?.role === 'super' && (
+                      <div>
+                        <Lbl>Mas’ul savdo menejeri</Lbl>
+                        <select name="managerId" value={form.managerId} onChange={handleChange} required style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '12px', padding: '0 15px', outline: 'none' }}>
+                          {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                        </select>
+                      </div>
+                    )}
+                </>
+              );
+            })()}
+          </div>
+
+          <div style={{ display: 'flex', gap: '16px', marginTop: '54px' }}>
+            <button type="button" onClick={onClose} className="secondary-btn" style={{ flex: 1, height: '60px' }} disabled={loading}>Bekor Qilish</button>
+            <button type="submit" className="gold-btn" style={{ flex: 1, height: '60px', justifyContent: 'center' }} disabled={loading}>{loading ? 'Saqlanmoqda...' : 'Saqlash'}</button>
+          </div>
+        </form>
       </div>
     </div>
   );
@@ -198,8 +631,8 @@ const Orders = () => {
   const [modalTab, setModalTab] = useState('timeline');
   const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
   const [isKPModalOpen, setIsKPModalOpen] = useState(false);
+  const [selectedProposalData, setSelectedProposalData] = useState(null);
   const [fileManager, setFileManager] = useState({ isOpen: false, type: 'kp', files: [], orderId: null });
   const [editingId, setEditingId] = useState(null);
   const [tasks, setTasks] = useState([]);
@@ -210,19 +643,70 @@ const Orders = () => {
   const [proposalSuggestions, setProposalSuggestions] = useState([]);
   const [contextMenu, setContextMenu] = useState({ isOpen: false, x: 0, y: 0, orderId: null, isLocked: false });
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, orderId: null, reason: '' });
+  const [rejectionReasons, setRejectionReasons] = useState([]);
   const commentFileInputRef = useRef(null);
+  const [previewFile, setPreviewFile] = useState(null);
 
   const emptyOrder = { customerSearch: '', selectedCustomer: null, kpAmount: '', discount: '0', amount: '', currency: 'UZS', exchangeRate: '', kpFiles: [], designFiles: [], checklist: { design3d: false, construction: false, color: false, handle: false, materials: false }, durationDays: '', orderDate: new Date().toISOString().split('T')[0], deliveryDate: '', status: 'yangi', description: '', timeline: [], proposalId: null, proposalNumber: '', productionAmount: '' };
   const [newOrder, setNewOrder] = useState(emptyOrder);
   const [customerSuggestions, setCustomerSuggestions] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
+  const lastCreatedAtRef = useRef('');
+  const lastStatusUpdatedAtRef = useRef('');
+
   const loadData = async () => {
     setLoading(true);
-    try { const [ordersRes, customersRes, proposalsRes] = await Promise.all([api.get('/orders'), api.get('/customers'), api.get('/proposals')]); setAllOrders(ordersRes.data); setCustomers(customersRes.data); setProposals(proposalsRes.data); } catch (err) {}
+    try {
+      const [ordersRes, customersRes, proposalsRes, rejectionsRes] = await Promise.all([
+        api.get('/orders'),
+        api.get('/customers'),
+        api.get('/proposals'),
+        api.get('/rejection-reasons').catch(() => ({ data: [] }))
+      ]);
+      setAllOrders(ordersRes.data);
+      setCustomers(customersRes.data);
+      setProposals(proposalsRes.data);
+      setRejectionReasons(rejectionsRes.data || []);
+
+      // Update refs with current max timestamps
+      const maxCreated = ordersRes.data.reduce((max, o) => !o.createdAt ? max : (o.createdAt > max ? o.createdAt : max), '');
+      const maxStatusUpdated = ordersRes.data.reduce((max, o) => !o.statusUpdatedAt ? max : (o.statusUpdatedAt > max ? o.statusUpdatedAt : max), '');
+      lastCreatedAtRef.current = maxCreated;
+      lastStatusUpdatedAtRef.current = maxStatusUpdated;
+    } catch (err) {}
     setLoading(false);
   };
   useEffect(() => { loadData(); }, []);
+
+  useEffect(() => {
+    let intervalId;
+    const checkUpdatesInterval = async () => {
+      if (document.hidden) return;
+      if (!lastCreatedAtRef.current && !lastStatusUpdatedAtRef.current) return;
+      
+      try {
+        const res = await api.get('/orders/check/updates', {
+          params: {
+            lastCreatedAt: lastCreatedAtRef.current,
+            lastStatusUpdatedAt: lastStatusUpdatedAtRef.current
+          }
+        });
+        
+        if (res.data.hasUpdates) {
+          console.log("Updates detected, reloading data...");
+          lastCreatedAtRef.current = res.data.latestCreatedAt;
+          lastStatusUpdatedAtRef.current = res.data.latestStatusUpdatedAt;
+          loadData();
+        }
+      } catch (err) {
+        console.error("Failed to check for updates:", err);
+      }
+    };
+
+    intervalId = setInterval(checkUpdatesInterval, 3000); // Check every 3 seconds
+    return () => clearInterval(intervalId);
+  }, []);
   useEffect(() => { setCurrentView(location.pathname.includes('archive') ? 'archive' : 'kanban'); }, [location.pathname]);
   useEffect(() => { if (editingId) loadOrderTasks(editingId); }, [editingId]);
   const loadOrderTasks = async (orderId) => { try { const res = await api.get('/tasks'); setTasks(res.data.filter(t => t.orderId === orderId)); } catch (err) {} };
@@ -230,10 +714,38 @@ const Orders = () => {
   const handleSelectCustomer = (c) => { setNewOrder({ ...newOrder, selectedCustomer: c, customerSearch: `${c.firstName} ${c.lastName}` }); setCustomerSuggestions([]); };
   const handleSelectProposal = (p) => { const kpSum = formatAmount(p.grandTotal || 0); setNewOrder({ ...newOrder, proposalId: p._id, proposalNumber: p.kpNumber, kpAmount: kpSum, amount: kpSum, discount: '0', kpFiles: p.kpFiles || [], designFiles: p.designFiles || [] }); setProposalSearch(p.kpNumber); setProposalSuggestions([]); };
 
+  const handleOpenLinkedKP = async () => {
+    if (!newOrder.proposalId) return;
+    try {
+      const res = await api.get(`/proposals/${newOrder.proposalId}`);
+      setSelectedProposalData(res.data);
+      setIsKPModalOpen(true);
+    } catch (err) {
+      console.error("Fetch linked proposal error:", err);
+      alert("KP ma'lumotlarini yuklashda xatolik yuz berdi");
+    }
+  };
+
+  const handleCreateKPForOrder = () => {
+    if (!newOrder.selectedCustomer) {
+      alert("Iltimos, avval mijozni tanlang yoki yarating!");
+      return;
+    }
+    setSelectedProposalData(null);
+    setIsKPModalOpen(true);
+  };
+
   useEffect(() => {
     const term = newOrder.customerSearch.toLowerCase().trim();
     if (term.length < 2) { setCustomerSuggestions([]); return; }
-    setCustomerSuggestions(customers.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(term) || c.phone.includes(term)));
+    
+    const cleanTermDigits = term.replace(/\D/g, '');
+    const filtered = customers.filter(c => {
+      const nameMatch = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase().includes(term);
+      const phoneMatch = cleanTermDigits.length > 0 && c.phone.replace(/\D/g, '').includes(cleanTermDigits);
+      return nameMatch || phoneMatch;
+    });
+    setCustomerSuggestions(filtered);
   }, [newOrder.customerSearch, customers]);
 
   useEffect(() => {
@@ -298,7 +810,7 @@ const Orders = () => {
       
       if (!editingId && user.role === 'proekt_manager') {
         payload.assignedPmId = currentUserId;
-        payload.pmStatus = 'yangi_buyurtma';
+        payload.pmStatus = 'yangi_kp_ariza';
         payload.status = 'pm'; // Ensure it's treated as a PM order
       }
       
@@ -320,7 +832,7 @@ const Orders = () => {
     }
   };
 
-  const PM_DELETE_ALLOWED_STAGES = ['yangi_buyurtma', 'kontrol_zamer', 'chizma_chizish', 'chizma_tasdiqlash'];
+  const PM_DELETE_ALLOWED_STAGES = ['yangi_kp_ariza', 'kp_tayyor', 'yangi_buyurtma', 'kontrol_zamer', 'chizma_chizish', 'chizma_tasdiqlash'];
 
   const handleContextMenu = (e, orderId, status, assignedPmId) => {
     e.preventDefault();
@@ -367,11 +879,16 @@ const Orders = () => {
 
   const filteredOrders = allOrders.filter(o => {
     const currentUserId = user?.id || user?._id;
-    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'proekt_manager' && o.assignedPmId === currentUserId);
+    const matchesUser = user?.role === 'super' || (user?.role === 'showroom' && o.showroom === user.showroom) || (user?.role === 'proekt_manager' && (o.assignedPmId === currentUserId || (!o.assignedPmId && o.showroom === user.showroom && o.pmStatus === 'yangi_kp_ariza')));
     const searchStr = `${o.selectedCustomer?.firstName || ''} ${o.uniqueId || ''}`.toLowerCase();
     const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
     return matchesUser && matchesSearch && (currentView === 'archive' ? o.status === 'yopildi' : o.status !== 'yopildi');
   });
+
+  const isInProduction = ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.status) || 
+                         ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.pmStatus);
+  const isBeforeProduction = !isInProduction;
+  const isFactoryApproved = newOrder.factoryStatus === 'accepted';
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: '24px' }}>
@@ -379,7 +896,6 @@ const Orders = () => {
         <h2 style={{ fontSize: '28px', fontWeight: '900' }}>CRM Board <span style={{ color: 'var(--accent-gold)' }}>Loyihalar</span></h2>
         <div style={{ display: 'flex', gap: '12px' }}>
           <div style={{ position: 'relative', width: '280px' }}><Search size={18} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-secondary)' }} /><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Qidirish..." style={{ width: '100%', paddingLeft: '44px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', height: '44px', color: 'white' }} /></div>
-          <button onClick={() => setIsAgentModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
           <button onClick={() => setIsCustomerModalOpen(true)} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
           <button onClick={() => setIsKPModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}><FileText size={18} /> Tijorat Taklifi</button>
           <button className="gold-btn" onClick={() => { setEditingId(null); setNewOrder(emptyOrder); setProposalSearch(''); setIsOrderModalOpen(true); }}><Plus size={20} /> Yangi Buyurtma</button>
@@ -389,7 +905,7 @@ const Orders = () => {
       <div style={{ flex: 1, display: 'flex', gap: '20px', overflowX: 'auto', paddingBottom: '20px' }}>
         {STAGES.map(stage => {
           const stageOrders = filteredOrders.filter(o => {
-            let s = o.pmStatus || 'yangi_buyurtma';
+            let s = o.pmStatus || 'yangi_kp_ariza';
             if (o.status === 'ishlab_chiqarishda') s = 'ishlab_chiqarishda';
             if (o.status === 'ornatish') s = 'ornatish';
             if (o.status === 'ombor') s = 'ombor';
@@ -429,7 +945,7 @@ const Orders = () => {
                   }
 
                   return (
-                    <div key={order._id} draggable onDragStart={e => handleDragStart(e, order._id)} onContextMenu={(e) => handleContextMenu(e, order._id, order.pmStatus || 'yangi_buyurtma', order.assignedPmId)} onClick={() => { 
+                    <div key={order._id} draggable onDragStart={e => handleDragStart(e, order._id)} onContextMenu={(e) => handleContextMenu(e, order._id, order.pmStatus || 'yangi_kp_ariza', order.assignedPmId)} onClick={() => { 
                       setEditingId(order._id); 
                       setNewOrder({
                         ...order,
@@ -444,6 +960,11 @@ const Orders = () => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                           <div style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', padding: '4px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>{order.uniqueId}</div>
+                          {order.status !== 'pm' && SM_STATUS_LABELS[order.status] && (
+                            <div style={{ background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '700' }}>
+                              {SM_STATUS_LABELS[order.status]}
+                            </div>
+                          )}
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
                           {order.factoryDeadline && <div style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '4px 8px', borderRadius: '8px', fontSize: '10px', fontWeight: '800' }}>F: {order.factoryDeadline}</div>}
@@ -568,13 +1089,9 @@ const Orders = () => {
             {(() => {
               const currentUserId = user.id || user._id;
               const isCreator = !editingId || newOrder.managerId === currentUserId;
-              const isNewStage = !editingId || newOrder.pmStatus === 'yangi_buyurtma';
+              const isNewStage = (!editingId || newOrder.pmStatus === 'yangi_buyurtma' || newOrder.pmStatus === 'yangi_kp_ariza' || newOrder.pmStatus === 'kp_tayyor') && newOrder.status === 'pm';
               const isEditable = isCreator && isNewStage;
-
-              const isInProduction = ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.status) || 
-                                     ['ishlab_chiqarishda', 'ombor', 'ornatish', 'tayyor', 'bajarildi'].includes(newOrder.pmStatus);
-              const isBeforeProduction = !isInProduction;
-              const isFactoryApproved = newOrder.factoryStatus === 'accepted';
+              const isFormDisabled = !isEditable || isKPModalOpen;
 
               return (
                 <>
@@ -587,13 +1104,50 @@ const Orders = () => {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>Menejer: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.managerName || user.name}</span> • Showroom: <span style={{ color: 'white', fontWeight: '700' }}>{newOrder.showroom || user.showroom}</span></p>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                {!newOrder.assignedPmId && editingId && (
+                  <button 
+                    onClick={async () => {
+                      const log = { type: 'system', text: `Loyiha menejeri arizani qabul qildi: ${user.name}`, time: new Date().toISOString(), user: user.name };
+                      try {
+                        const payload = { 
+                          ...newOrder, 
+                          assignedPmId: currentUserId,
+                          assignedPmName: user.name,
+                          assignedAt: new Date().toISOString(),
+                          timeline: [...(newOrder.timeline || []), log]
+                        };
+                        const res = await api.put(`/orders/${editingId}`, payload);
+                        setAllOrders(allOrders.map(o => o._id === editingId ? res.data : o));
+                        setNewOrder(res.data);
+                        alert("Loyiha sizga muvaffaqiyatli biriktirildi!");
+                      } catch (err) {
+                        console.error("Claim order error:", err);
+                        alert("Biriktirishda xatolik yuz berdi");
+                      }
+                    }} 
+                    className="gold-btn" 
+                    style={{ height: '48px', padding: '0 24px', background: '#10b981', color: 'white', border: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                  >
+                    <Check size={20} /> Arizani qabul qilish
+                  </button>
+                )}
                 {(isEditable || isBeforeProduction) && (
-                  <button onClick={handleCreateOrder} className="gold-btn" style={{ height: '48px', padding: '0 32px' }}>
+                  <button 
+                    onClick={handleCreateOrder} 
+                    className="gold-btn" 
+                    style={{ height: '48px', padding: '0 32px', opacity: isKPModalOpen ? 0.5 : 1, cursor: isKPModalOpen ? 'not-allowed' : 'pointer' }}
+                    disabled={isKPModalOpen}
+                  >
                     <Check size={20} /> Saqlash
                   </button>
                 )}
-                <button onClick={() => setIsOrderModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', color: 'white' }}>
+                {isKPModalOpen && (
+                  <div style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '0 16px', borderRadius: '12px', color: '#ef4444', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '700', height: '48px' }}>
+                    <Lock size={12} /> KP loyihasi ochiq
+                  </div>
+                )}
+                <button onClick={() => setIsOrderModalOpen(false)} style={{ background: 'rgba(255,255,255,0.05)', padding: '12px', borderRadius: '12px', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '48px', width: '48px' }}>
                   <X size={24} />
                 </button>
               </div>
@@ -601,32 +1155,11 @@ const Orders = () => {
             
             {/* Body */}
             <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '550px 1fr', overflow: 'hidden' }}>
-              <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', padding: '40px', overflowY: 'auto' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div style={{ borderRight: '1px solid rgba(255,255,255,0.05)', padding: '40px', overflowY: 'auto', opacity: isFormDisabled ? 0.7 : 1 }}>
+                <div style={{ border: 'none', padding: 0, margin: 0, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '24px' }}>
                   {(() => {
                     return (
                       <>
-                        {/* Files Section */}
-                        <div style={{ marginBottom: '32px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-                            <FileText size={18} color="var(--accent-gold)" />
-                            <h4 style={{ fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Fayllar</h4>
-                          </div>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                            <button 
-                              onClick={() => setFileManager({ isOpen: true, type: 'kp', files: newOrder.kpFiles || [], orderId: editingId })}
-                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '13px', fontWeight: '700' }}
-                            >
-                              <FileCheck size={18} color="var(--accent-gold)" /> KP Fayllari ({newOrder.kpFiles?.length || 0})
-                            </button>
-                            <button 
-                              onClick={() => setFileManager({ isOpen: true, type: 'design', files: newOrder.designFiles || [], orderId: editingId })}
-                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontSize: '13px', fontWeight: '700' }}
-                            >
-                              <FileUp size={18} color="#3b82f6" /> Dizayn Fayllari ({newOrder.designFiles?.length || 0})
-                            </button>
-                          </div>
-                        </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                           <User size={18} color="var(--accent-gold)" />
@@ -640,6 +1173,31 @@ const Orders = () => {
                           {isEditable ? (
                             <div style={{ position: 'relative', marginBottom: newOrder.selectedCustomer ? '16px' : '0' }}>
                               <IconInput icon={Search} value={newOrder.customerSearch} onChange={e => setNewOrder({...newOrder, customerSearch: e.target.value})} placeholder="Ism yoki telefon..." autoComplete="off" style={{ height: '54px' }} />
+                              {isEditable && (
+                                <button
+                                  type="button"
+                                  onClick={() => setIsCustomerModalOpen(true)}
+                                  className="secondary-btn"
+                                  style={{
+                                    width: '100%',
+                                    height: '48px',
+                                    marginTop: '12px',
+                                    borderColor: 'var(--accent-gold)',
+                                    color: 'var(--accent-gold)',
+                                    background: 'rgba(251,191,36,0.05)',
+                                    justifyContent: 'center',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    fontWeight: '700',
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    borderRadius: '12px'
+                                  }}
+                                >
+                                  <UserPlus size={16} /> Yangi mijoz qo'shish
+                                </button>
+                              )}
                               {customerSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden' }}>{customerSuggestions.map((c, i) => <div key={c._id} onClick={() => handleSelectCustomer(c)} style={{ padding: '15px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', background: i === selectedIndex ? 'rgba(251,191,36,0.1)' : 'transparent' }}>{c.firstName} {c.lastName} | {c.phone}</div>)}</div>)}
                             </div>
                           ) : (
@@ -675,6 +1233,42 @@ const Orders = () => {
                           <Lbl>KP RAQAMI {!isEditable && "(FAQAT KO'RISH)"}</Lbl>
                           <IconInput icon={Search} value={proposalSearch} onChange={e => setProposalSearch(e.target.value)} readOnly={!isEditable} placeholder="KP raqami..." style={{ height: '54px' }} />
                           {isEditable && proposalSuggestions.length > 0 && (<div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden' }}>{proposalSuggestions.map(p => <div key={p._id} onClick={() => handleSelectProposal(p)} style={{ padding: '12px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{p.kpNumber} | {p.customer?.firstName} | {p.grandTotal?.toLocaleString()} so'm</div>)}</div>)}
+                        </div>
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '12px', marginBottom: '16px', pointerEvents: 'auto' }}>
+                          {newOrder.proposalId ? (
+                            <button
+                              type="button"
+                              disabled={false}
+                              onClick={handleOpenLinkedKP}
+                              className="secondary-btn"
+                              style={{ flex: 1, height: '48px', borderColor: 'var(--accent-gold)', color: 'var(--accent-gold)', background: 'rgba(251,191,36,0.08)', justifyContent: 'center', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', borderRadius: '12px', pointerEvents: 'auto', opacity: 1 }}
+                            >
+                              <FileText size={18} /> KP loyihasini ochish / Tahrirlash
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={false}
+                              onClick={handleCreateKPForOrder}
+                              className="secondary-btn"
+                              style={{ 
+                                flex: 1, 
+                                height: '48px', 
+                                justifyContent: 'center', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: '8px',
+                                opacity: !newOrder.selectedCustomer ? 0.6 : 1,
+                                pointerEvents: 'auto',
+                                cursor: 'pointer',
+                                fontWeight: '800',
+                                fontSize: '14px',
+                                borderRadius: '12px'
+                              }}
+                            >
+                              <Plus size={18} /> Yangi KP yaratish
+                            </button>
+                          )}
                         </div>
 
                         <div style={{ position: 'relative', opacity: isEditable ? 1 : 0.7, pointerEvents: isEditable ? 'auto' : 'none' }}>
@@ -715,6 +1309,26 @@ const Orders = () => {
                             {Object.entries(CHECKLIST_LABELS).map(([k, l]) => (
                               <button key={k} onClick={() => isBeforeProduction && setNewOrder({...newOrder, checklist: {...newOrder.checklist, [k]: !newOrder.checklist?.[k]}})} style={{ height: '48px', borderRadius: '12px', background: newOrder.checklist?.[k] ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.02)', border: `1px solid ${newOrder.checklist?.[k] ? '#10b981' : 'var(--border-color)'}`, color: newOrder.checklist?.[k] ? '#10b981' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }}>{newOrder.checklist?.[k] ? <CheckSquare size={16} /> : <div style={{ width: '16px', height: '16px', border: '1.5px solid currentColor', borderRadius: '4px' }} />}{l}</button>
                             ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <Lbl>Hujjatlar va Fayllar</Lbl>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <button 
+                              type="button" 
+                              onClick={() => setFileManager({ isOpen: true, type: 'kp', files: newOrder.kpFiles || [], orderId: editingId })}
+                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: '700' }}
+                            >
+                              <FileUp size={18} color="var(--accent-gold)" /> KP Fayllari ({newOrder.kpFiles?.length || 0})
+                            </button>
+                            <button 
+                              type="button" 
+                              onClick={() => setFileManager({ isOpen: true, type: 'design', files: newOrder.designFiles || [], orderId: editingId })}
+                              style={{ height: '54px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-color)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', fontWeight: '700' }}
+                            >
+                              <FileIcon size={18} color="var(--accent-gold)" /> Dizayn Fayllari ({newOrder.designFiles?.length || 0})
+                            </button>
                           </div>
                         </div>
 
@@ -768,7 +1382,8 @@ const Orders = () => {
                               const [full, name, url] = fileMatch;
                               return (
                                 <button 
-                                  onClick={() => window.open(url, '_blank')}
+                                  type="button"
+                                  onClick={() => setPreviewFile({ name, url })}
                                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', background: 'rgba(251,191,36,0.1)', border: '1px solid var(--accent-gold)', borderRadius: '10px', color: 'var(--accent-gold)', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}
                                 >
                                   <FileText size={16} /> {name}
@@ -803,9 +1418,39 @@ const Orders = () => {
     </div>
   )}
 
-      {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} onSaved={loadData} />}
-      {isAgentModalOpen && <AgentModal onClose={() => setIsAgentModalOpen(false)} onSaved={loadData} />}
-      {isCustomerModalOpen && <CustomerModal onClose={() => setIsCustomerModalOpen(false)} onSaved={loadData} />}
+      {isKPModalOpen && (
+        <KPModal 
+          onClose={() => setIsKPModalOpen(false)} 
+          editData={selectedProposalData}
+          initialCustomer={newOrder.selectedCustomer}
+          orderFiles={newOrder.files}
+          readOnly={isFactoryApproved || isInProduction || newOrder.status !== 'pm'}
+          onSaved={(savedProposal) => {
+            const kpSum = formatAmount(savedProposal.grandTotal || 0);
+            setNewOrder(prev => ({
+              ...prev,
+              proposalId: savedProposal._id || savedProposal.id,
+              proposalNumber: savedProposal.kpNumber,
+              kpAmount: kpSum,
+              amount: kpSum
+            }));
+            setProposalSearch(savedProposal.kpNumber);
+            loadData();
+          }}
+        />
+      )}
+      {isCustomerModalOpen && (
+        <CustomerModal 
+          user={user} 
+          onClose={() => setIsCustomerModalOpen(false)} 
+          onSaved={(newCust) => {
+            loadData();
+            if (newCust && isOrderModalOpen) {
+              handleSelectCustomer(newCust);
+            }
+          }} 
+        />
+      )}
 
       {fileManager.isOpen && (
         <FileManagerModal 
@@ -814,50 +1459,90 @@ const Orders = () => {
           readOnly={false} // PM needs to be able to add/remove files too if needed
           onClose={() => setFileManager({ ...fileManager, isOpen: false })}
           onRemove={async (idx) => {
+            const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
             const newFiles = fileManager.files.filter((_, i) => i !== idx);
             if (editingId) {
-              const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
               await api.put(`/orders/${editingId}`, { [field]: newFiles });
               setAllOrders(allOrders.map(o => o._id === editingId ? { ...o, [field]: newFiles } : o));
-              setNewOrder({ ...newOrder, [field]: newFiles });
             }
+            setNewOrder({ ...newOrder, [field]: newFiles });
             setFileManager({ ...fileManager, files: newFiles });
           }}
           onAdd={async (uploaded) => {
-            const newFiles = [...fileManager.files, ...uploaded];
+            const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
+            const newFiles = [...(newOrder[field] || []), ...uploaded];
             if (editingId) {
-              const field = fileManager.type === 'kp' ? 'kpFiles' : 'designFiles';
               await api.put(`/orders/${editingId}`, { [field]: newFiles });
               setAllOrders(allOrders.map(o => o._id === editingId ? { ...o, [field]: newFiles } : o));
-              setNewOrder({ ...newOrder, [field]: newFiles });
             }
+            setNewOrder({ ...newOrder, [field]: newFiles });
             setFileManager({ ...fileManager, files: newFiles });
           }}
         />
       )}
 
-      {contextMenu.isOpen && (
-        <div 
-          style={{ 
-            position: 'fixed', 
-            top: contextMenu.y, 
-            left: contextMenu.x, 
-            zIndex: 9999, 
-            background: '#1a1a2e', 
-            border: '1px solid var(--border-color)', 
-            borderRadius: '12px', 
-            padding: '8px', 
-            boxShadow: '0 20px 50px rgba(0,0,0,0.9)', 
-            minWidth: '220px' 
-          }}
-          onMouseLeave={() => setContextMenu({ ...contextMenu, isOpen: false })}
-        >
-          <button 
-            onClick={() => {
-              if (contextMenu.isLocked) return alert("Ushbu bosqichdagi yoki boshqa menedjer ochgan buyurtmani o'chirib bo'lmaydi.");
-              setDeleteModal({ isOpen: true, orderId: contextMenu.orderId, reason: '' });
-              setContextMenu({ ...contextMenu, isOpen: false });
+      {contextMenu.isOpen && (() => {
+        const contextOrder = allOrders.find(o => o._id === contextMenu.orderId);
+        const showCalculatedReturn = contextOrder && (contextOrder.pmStatus === 'yangi_kp_ariza' || contextOrder.pmStatus === 'kp_tayyor');
+        return (
+          <div 
+            style={{ 
+              position: 'fixed', 
+              top: contextMenu.y, 
+              left: contextMenu.x, 
+              zIndex: 9999, 
+              background: '#1a1a2e', 
+              border: '1px solid var(--border-color)', 
+              borderRadius: '12px', 
+              padding: '8px', 
+              boxShadow: '0 20px 50px rgba(0,0,0,0.9)', 
+              minWidth: '220px' 
             }}
+            onMouseLeave={() => setContextMenu({ ...contextMenu, isOpen: false })}
+          >
+            {showCalculatedReturn && (
+              <button 
+                onClick={async () => {
+                  const log = { type: 'system', text: `Hisoblandi, Sotuvchiga yuborildi`, time: new Date().toISOString(), user: user.name };
+                  try {
+                    await api.put(`/orders/${contextOrder._id}`, { 
+                      status: 'oylayabdi', 
+                      pmStatus: 'kp_tayyor', 
+                      timeline: [...(contextOrder.timeline || []), log] 
+                    });
+                    setContextMenu({ ...contextMenu, isOpen: false });
+                    loadData();
+                  } catch (err) {
+                    console.error("Return to sales error", err);
+                    alert("Sotuvchiga yuborishda xatolik yuz berdi");
+                  }
+                }}
+                style={{ 
+                  width: '100%', 
+                  padding: '12px', 
+                  textAlign: 'left', 
+                  background: 'rgba(20, 184, 166, 0.1)', 
+                  border: '1px solid rgba(20, 184, 166, 0.2)', 
+                  borderRadius: '8px',
+                  color: '#14b8a6', 
+                  fontSize: '13px', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px',
+                  fontWeight: '800',
+                  marginBottom: '8px'
+                }}
+              >
+                <Send size={16} /> Hisoblandi, Sotuvchiga yuborish
+              </button>
+            )}
+            <button 
+              onClick={() => {
+                if (contextMenu.isLocked) return alert("Ushbu bosqichdagi yoki boshqa menedjer ochgan buyurtmani o'chirib bo'lmaydi.");
+                setDeleteModal({ isOpen: true, orderId: contextMenu.orderId, reason: '' });
+                setContextMenu({ ...contextMenu, isOpen: false });
+              }}
             style={{ 
               width: '100%', 
               padding: '12px', 
@@ -914,7 +1599,7 @@ const Orders = () => {
             </div>
           )}
         </div>
-      )}
+      )})()}
 
       {deleteModal.isOpen && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999 }}>
@@ -923,13 +1608,16 @@ const Orders = () => {
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', textAlign: 'center', marginBottom: '24px' }}>O'chirish sababini tanlang:</p>
             
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {[
-                "Mijoz rad etdi",
-                "Narxi qimmatlik qildi",
-                "Muddat to'g'ri kelmadi",
-                "Boshqa joydan sotib oldi",
-                "Xato kiritilgan"
-              ].map(reason => (
+              {(rejectionReasons.length > 0
+                ? rejectionReasons.map(r => r.name)
+                : [
+                    "Mijoz rad etdi",
+                    "Narxi qimmatlik qildi",
+                    "Muddat to'g'ri kelmadi",
+                    "Boshqa joydan sotib oldi",
+                    "Xato kiritilgan"
+                  ]
+              ).map(reason => (
                 <button 
                   key={reason}
                   onClick={() => confirmDelete(reason)}
@@ -950,6 +1638,44 @@ const Orders = () => {
             </button>
           </div>
         </div>
+      )}
+
+      {previewFile && (
+        <DraggableResizableWindow
+          title={previewFile.name}
+          onClose={() => setPreviewFile(null)}
+          initialWidth={Math.min(900, window.innerWidth - 60)}
+          initialHeight={Math.min(700, window.innerHeight - 60)}
+          initialX={80}
+          initialY={80}
+          zIndex={12000}
+          headerActions={
+            <a 
+              href={previewFile.url} 
+              download={previewFile.name}
+              target="_blank" 
+              rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '8px 16px', background: 'rgba(251,191,36,0.1)', border: '1px solid var(--accent-gold)', borderRadius: '10px', color: 'var(--accent-gold)', textDecoration: 'none', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}
+            >
+              <Download size={16} /> Yuklab olish
+            </a>
+          }
+        >
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', padding: '10px', overflow: 'hidden' }}>
+            {isImageFile(previewFile.name) ? (
+              <ImageZoomPreview 
+                src={previewFile.url} 
+                alt={previewFile.name} 
+              />
+            ) : (
+              <iframe 
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.url)}&embedded=true`} 
+                style={{ width: '100%', height: '100%', border: 'none', borderRadius: '6px', background: 'white' }} 
+                title={previewFile.name}
+              />
+            )}
+          </div>
+        </DraggableResizableWindow>
       )}
     </div>
   );

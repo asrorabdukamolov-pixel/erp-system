@@ -2,37 +2,38 @@ const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getProposals = async (req, res) => {
     try {
-        const { role, id, showroom } = req.user;
-        console.log(`[PROPOSAL_FETCH] User: ${req.user.name}, Role: ${role}, ID: ${id}`);
-
         let queryRef = db.collection('proposals');
-
-        // Showroom filter (Super Admin sees all)
-        if (role !== 'super') {
-            const userShowroom = showroom || 'none';
-            queryRef = queryRef.where('showroom', '==', userShowroom);
+        
+        if (req.user.role !== 'super') {
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-
-        // Individual manager filter
-        if (role === 'sotuv_manager' || role === 'proekt_manager') {
-            queryRef = queryRef.where('managerId', '==', id);
-            console.log(`-> Strict filter applied: managerId === ${id}`);
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'sales_manager' || req.user.role === 'proekt_manager') {
+            queryRef = queryRef.where('managerId', '==', req.user.id);
         }
 
         const snapshot = await queryRef.get();
         let proposals = formatQuery(snapshot);
         
-        // Filter out trashed proposals in memory to avoid index issues with '!='
+        // Filter out trashed proposals in memory to avoid the composite index requirement
         proposals = proposals.filter(p => p.status !== 'trash');
-
-        // Final sorting
-        proposals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         
-        console.log(`-> Returning ${proposals.length} proposals`);
+        proposals.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         res.json(proposals);
     } catch (err) {
         console.error("Get Proposals Error:", err.message);
         res.status(500).json({ message: 'Takliflarni yuklashda xatolik yuz berdi: ' + err.message });
+    }
+};
+
+exports.getProposalById = async (req, res) => {
+    try {
+        const proposalRef = db.collection('proposals').doc(req.params.id);
+        const doc = await proposalRef.get();
+        if (!doc.exists) return res.status(404).json({ message: 'Taklif topilmadi' });
+        res.json(formatDoc(doc));
+    } catch (err) {
+        console.error("Get Proposal By ID Error:", err.message);
+        res.status(500).json({ message: 'Taklifni yuklashda serverda xatolik yuz berdi: ' + err.message });
     }
 };
 
@@ -93,25 +94,18 @@ exports.deleteProposal = async (req, res) => {
 
 exports.getTrashedProposals = async (req, res) => {
     try {
-        const { role, id, showroom } = req.user;
-        console.log(`[TRASH_FETCH] User: ${req.user.name}, Role: ${role}, ID: ${id}`);
-
         let queryRef = db.collection('proposals').where('status', '==', 'trash');
         
-        if (role !== 'super') {
-            const userShowroom = showroom || 'none';
-            queryRef = queryRef.where('showroom', '==', userShowroom);
+        if (req.user.role !== 'super') {
+            queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
-
-        if (role === 'sotuv_manager' || role === 'proekt_manager') {
-            queryRef = queryRef.where('managerId', '==', id);
+        if (req.user.role === 'sotuv_manager' || req.user.role === 'sales_manager' || req.user.role === 'proekt_manager') {
+            queryRef = queryRef.where('managerId', '==', req.user.id);
         }
 
         const snapshot = await queryRef.get();
         const proposals = formatQuery(snapshot);
         proposals.sort((a, b) => new Date(b.deletedAt) - new Date(a.deletedAt));
-        
-        console.log(`-> Returning ${proposals.length} trashed proposals`);
         res.json(proposals);
     } catch (err) {
         console.error("Get Trashed Proposals Error:", err.message);

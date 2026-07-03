@@ -162,7 +162,13 @@ exports.getDashboardStats = async (req, res) => {
         const allOrdersSnapshot = await allOrdersQuery.get();
         const allOrders = formatQuery(allOrdersSnapshot);
 
-        const allPurchasesSnapshot = await db.collection('purchases').get();
+        let allPurchasesQuery = db.collection('purchases');
+        if (req.user.role !== 'super') {
+            allPurchasesQuery = allPurchasesQuery.where('showroom', '==', req.user.showroom || '');
+        } else if (showroom && showroom !== 'all') {
+            allPurchasesQuery = allPurchasesQuery.where('showroom', '==', showroom);
+        }
+        const allPurchasesSnapshot = await allPurchasesQuery.get();
         const allPurchases = formatQuery(allPurchasesSnapshot);
 
         const cashIn = transactions.filter(t => t.type === 'income').reduce((s, t) => s + (t.amountUzs || 0), 0);

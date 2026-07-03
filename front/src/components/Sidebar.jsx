@@ -50,7 +50,7 @@ const Sidebar = () => {
   }, []);
 
   const superAdminLinks = [
-    { name: 'Dashboard', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
+    { name: 'Bosh sahifa', path: '/super-admin', icon: <LayoutDashboard size={20} /> },
     { name: 'Showroomlar', path: '/super-admin/showrooms', icon: <Store size={20} /> },
     { name: 'Fabrika', path: '/super-admin/fabrika', icon: <Factory size={20} /> },
     { name: 'Mijozlar Bazasi', path: '/super-admin/customers', icon: <Users size={20} /> },
@@ -67,8 +67,8 @@ const Sidebar = () => {
     { name: 'Dashboard', path: '/showroom-admin', icon: <LayoutDashboard size={20} /> },
     { name: 'Savdo bo\'limi', path: '/showroom-admin/orders', icon: <ShoppingCart size={20} /> },
     { name: 'Xarid bo\'limi', path: '/showroom-admin/purchases', icon: <Package size={20} /> },
-    { name: 'Moliya', path: '/showroom-admin/finance', icon: <Wallet size={20} /> },
     { name: 'Xodimlar', path: '/showroom-admin/staff', icon: <Users size={20} /> },
+    { name: 'Moliya', path: '/showroom-admin/finance', icon: <Wallet size={20} /> },
     { name: 'Yetkazib beruvchilar', path: '/showroom-admin/suppliers', icon: <Building2 size={20} /> },
     { name: 'Vazifalar', path: '/showroom-admin/tasks', icon: <CheckSquare size={20} /> },
     { name: 'Karzina', path: '/showroom-admin/trash', icon: <Trash2 size={20} /> },
@@ -243,29 +243,50 @@ const Sidebar = () => {
       <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
 
 
-        {user && !user.telegramChatId && (
-          <a 
-            href={`https://t.me/ERP_vazifa_bot?start=${user.id || user._id}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '12px', 
-              padding: '14px 16px', 
-              borderRadius: '12px',
-              color: '#3b82f6',
-              background: 'rgba(59, 130, 246, 0.05)',
-              width: '100%',
-              textDecoration: 'none',
-              marginBottom: '12px',
-              fontSize: '13px',
-              fontWeight: '600'
-            }}
-          >
-            <Send size={18} />
-            <span>Telegramni ulash</span>
-          </a>
+        {user && (
+          !user.telegramChatId ? (
+            <a 
+              href={`https://t.me/ERP_vazifa_bot?start=${user.id || user._id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '14px 16px', 
+                borderRadius: '12px',
+                color: '#3b82f6',
+                background: 'rgba(59, 130, 246, 0.05)',
+                width: '100%',
+                textDecoration: 'none',
+                marginBottom: '12px',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}
+            >
+              <Send size={18} />
+              <span>Telegramni ulash</span>
+            </a>
+          ) : (
+            <div
+              style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '12px', 
+                padding: '14px 16px', 
+                borderRadius: '12px',
+                color: '#10b981',
+                background: 'rgba(16, 185, 129, 0.05)',
+                width: '100%',
+                marginBottom: '12px',
+                fontSize: '13px',
+                fontWeight: '600'
+              }}
+            >
+              <CheckSquare size={18} />
+              <span>Telegram ulangan</span>
+            </div>
+          )
         )}
 
         <button 

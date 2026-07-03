@@ -8,6 +8,11 @@ const auth = require('../middleware/auth');
 // @access  Private
 router.get('/', auth, orderController.getOrders);
 
+// @route   GET api/orders/check/updates
+// @desc    Check for new or updated orders
+// @access  Private
+router.get('/check/updates', auth, orderController.checkUpdates);
+
 // @route   GET api/orders/:id
 // @desc    Get order by ID
 // @access  Private

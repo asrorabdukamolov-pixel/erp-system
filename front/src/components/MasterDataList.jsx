@@ -81,10 +81,16 @@ const MasterDataList = ({ title, description, endpoint, icon: Icon }) => {
         }
     };
 
-    const filteredItems = items.filter(i => 
-        i.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        i.code?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredItems = items
+        .filter(i => 
+            i.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            i.code?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => {
+            const codeA = String(a.code || '');
+            const codeB = String(b.code || '');
+            return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+        });
 
     if (loading) {
         return (

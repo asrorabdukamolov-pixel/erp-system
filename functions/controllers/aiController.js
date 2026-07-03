@@ -1,4 +1,4 @@
-const { db, formatDoc } = require('../config/firebase');
+const { db } = require('../config/firebase');
 const axios = require('axios');
 
 exports.handleAIChat = async (req, res) => {
@@ -23,22 +23,49 @@ exports.handleAIChat = async (req, res) => {
       console.error("Error saving user message:", dbErr);
     }
 
-    // 2. Prepare for Direct API Call
+    // 2. Prepare for Direct API Call - Gemini 2.5 Flash
     const apiKey = process.env.GEMINI_API_KEY;
-    // Using gemini-1.5-flash-latest which was confirmed to work with this key
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+      return res.status(500).json({
+        message: "GEMINI_API_KEY sozlanmagan. .env faylga API kalitni qo'shing."
+      });
+    }
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+    const systemInstruction = `Siz 'Express Mebel' kompaniyasining professional sotuv mentori va sun'iy intellekt yordamchisiz.
+
+Vazifalaringiz:
+- Xodimlarga mijozlar bilan gaplashishda yordam berish
+- Sotuvlarni oshirish bo'yicha maslahatlar berish
+- Motivatsiyani ko'tarish
+- Mebel sohasida professional bilimlar bilan yordam berish
+- ERP tizimi bo'yicha savolarga javob berish
+
+Qoidalar:
+- Javoblaringiz professional, do'stona va motivatsion bo'lsin
+- Har doim o'zbek tilida javob bering
+- Qisqa va aniq javob bering, ortiqcha ma'lumot bermang
+- Emoji ishlatishingiz mumkin`;
 
     const payload = {
+      system_instruction: {
+        parts: [{ text: systemInstruction }]
+      },
       contents: [{
-        parts: [{
-          text: `Siz 'Express Mebel' kompaniyasining professional sotuv mentori va sun'iy intellekt yordamchisiz. Vazifangiz - xodimlarga mijozlar bilan gaplashishda, sotuvlarni oshirishda va motivatsiyani ko'tarishda yordam berish. Javoblaringiz professional, do'stona, motivatsion va o'zbek tilida bo'lishi kerak. Foydalanuvchi xabari: ${message}`
-        }]
-      }]
+        role: 'user',
+        parts: [{ text: message }]
+      }],
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 1024
+      }
     };
 
-    // 3. Call Gemini API directly using axios
+    // 3. Call Gemini 2.5 Flash API
     const response = await axios.post(url, payload, {
-      headers: { 'Content-Type': 'application/json' }
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 30000
     });
 
     const aiResponse = response.data.candidates[0].content.parts[0].text;

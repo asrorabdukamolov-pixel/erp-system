@@ -2,8 +2,12 @@ const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getPartners = async (req, res) => {
     try {
-        // All roles can see all partners (super admin adds global partners for KP use)
-        const snapshot = await db.collection('partners').get();
+        let queryRef = db.collection('partners');
+        if (req.user.role !== 'super') {
+            queryRef = queryRef.where('showroom', 'in', [req.user.showroom || '', 'Asosiy (Super Admin)']);
+        }
+        
+        const snapshot = await queryRef.get();
         const partners = formatQuery(snapshot);
         partners.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
         

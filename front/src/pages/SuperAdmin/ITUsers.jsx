@@ -289,9 +289,11 @@ const ITUsers = () => {
                       <button onClick={() => handleOpenModal('edit', u)} className="action-btn" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}>
                         <Edit2 size={16} />
                       </button>
-                      <button onClick={() => handleDeleteUser(u._id)} className="action-btn" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
-                        <Trash2 size={16} />
-                      </button>
+                      {u.role !== 'super' && (
+                        <button onClick={() => handleDeleteUser(u._id)} className="action-btn" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444' }}>
+                          <Trash2 size={16} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

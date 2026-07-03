@@ -41,7 +41,9 @@ exports.register = async (req, res) => {
             } 
         };
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
+        const secret = process.env.JWT_SECRET || 'super_secret_key_antigravity_123';
+        jwt.sign(payload, secret, { expiresIn: '24h' }, (err, token) => {
+
             if (err) throw err;
             res.json({ token, user: payload.user });
         });
@@ -80,7 +82,9 @@ exports.login = async (req, res) => {
             } 
         };
 
-        jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' }, (err, token) => {
+        const secret = process.env.JWT_SECRET || 'super_secret_key_antigravity_123';
+        jwt.sign(payload, secret, { expiresIn: '24h' }, (err, token) => {
+
             if (err) throw err;
             res.json({ token, user: payload.user });
         });
@@ -100,7 +104,7 @@ exports.getMe = async (req, res) => {
         const userData = userDoc.data();
         delete userData.password;
         
-        res.json({ id: userDoc.id, _id: userDoc.id, ...userData });
+        res.json({ _id: userDoc.id, ...userData });
     } catch (err) {
         console.error("GetMe Error:", err.message);
         res.status(500).send('Server xatosi');

@@ -35,19 +35,15 @@ const dbPath = path.join(__dirname, '../local_db.json');
 
 // Ensure local_db.json exists
 if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify({ cash_flow_items: [], cost_centers: [] }, null, 2));
+    fs.writeFileSync(dbPath, JSON.stringify({ cash_flow_items: [], cost_centers: [], users: [] }, null, 2));
 }
 
 const getLocalData = () => JSON.parse(fs.readFileSync(dbPath, 'utf8'));
 const saveLocalData = (data) => fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
 
-// Target the 'default' database explicitly
-let db;
-try {
-    db = getFirestore(admin.app());
-} catch (err) {
-    console.warn("Fundamental Fix: Using local_db.json because Firebase key is missing.");
-    db = {
+// Create local DB mock
+function createLocalDb() {
+    return {
         collection: (name) => {
             let filterField, filterOp, filterVal;
             const collectionMock = {
@@ -65,16 +61,35 @@ try {
                     if (filterField && filterOp === '==' && filterVal !== undefined) {
                         items = items.filter(i => i[filterField] === filterVal);
                     }
+                    const docs = items.map(item => ({
+                        id: item.id,
+                        data: () => item,
+                        exists: true
+                    }));
                     return {
                         empty: items.length === 0,
-                        docs: items.map(item => ({
-                            id: item.id,
-                            data: () => item,
-                            exists: true
-                        }))
+                        size: items.length,
+                        docs,
+                        forEach: (cb) => docs.forEach(cb)
                     };
                 },
+                limit: function() { return this; },
                 doc: (id) => ({
+                    set: async (data, options) => {
+                        const store = getLocalData();
+                        if (!store[name]) store[name] = [];
+                        const idx = store[name].findIndex(i => i.id === id);
+                        if (idx !== -1) {
+                            if (options && options.merge) {
+                                store[name][idx] = { ...store[name][idx], ...data };
+                            } else {
+                                store[name][idx] = { id, ...data };
+                            }
+                        } else {
+                            store[name].push({ id, ...data });
+                        }
+                        saveLocalData(store);
+                    },
                     update: async (data) => {
                         const store = getLocalData();
                         if (store[name]) {
@@ -113,8 +128,38 @@ try {
             return collectionMock;
         }
     };
-
 }
+
+// Start with local DB - initDb() will switch to Firestore if available
+let _currentDb = createLocalDb();
+
+// Proxy that always delegates to _currentDb - works even after destructuring
+const db = new Proxy({}, {
+    get: (target, prop) => {
+        const val = _currentDb[prop];
+        if (typeof val === 'function') {
+            return val.bind(_currentDb);
+        }
+        return val;
+    }
+});
+
+// Test Firestore connection - call before starting server
+const initDb = async () => {
+    try {
+        const firestoreDb = getFirestore(admin.app());
+        await firestoreDb.collection('_health_check').limit(1).get();
+        _currentDb = firestoreDb;
+        console.log("Firestore connection verified. Using Firestore.");
+    } catch (err) {
+        if (err.code === 5 || (err.message && err.message.includes('NOT_FOUND'))) {
+            console.warn("WARNING: Firestore database not found. Using local_db.json");
+            console.warn("To fix: Firebase Console -> Firestore Database -> Create Database");
+        } else {
+            console.warn("Firestore failed:", err.message, "- Using local_db.json");
+        }
+    }
+};
 
 const formatDoc = (doc) => {
     if (!doc || !doc.exists) return null;
@@ -126,6 +171,5 @@ const formatQuery = (snapshot) => {
     return snapshot.docs.map(doc => ({ _id: doc.id, ...doc.data() }));
 };
 
-module.exports = { db, admin, formatDoc, formatQuery };
-
+module.exports = { db, admin, formatDoc, formatQuery, initDb };
 

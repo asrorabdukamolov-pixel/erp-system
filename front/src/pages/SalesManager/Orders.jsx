@@ -13,18 +13,19 @@ import api from '../../utils/api';
 
 // --- Constants ---
 const DEAL_STAGES = [
-  { id: 'amocrm_lead', title: 'Call Center (Amo) 📞', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
   { id: 'yangi', title: 'Yangi mijoz ✨', color: '#fbbf24', bg: 'rgba(251,191,36,0.05)' },
-  { id: 'uchrashuv', title: 'Uchrashuv 🤝', color: '#3b82f6', bg: 'rgba(59,130,246,0.05)' },
-  { id: 'kp_yuborildi', title: 'KP yuborildi 📩', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
-  { id: 'prezentatsiya', title: 'Prezentatsiya 📽️', color: '#ec4899', bg: 'rgba(236,72,153,0.05)' },
-  { id: 'oylayabdi', title: 'O\'ylayabdi 🤔', color: '#94a3b8', bg: 'rgba(148,163,184,0.05)' },
-  { id: 'shartnoma', title: 'Shartnoma ✍️', color: '#10b981', bg: 'rgba(16,185,129,0.05)' },
+  { id: 'mijoz_kotarmadi', title: 'Mijoz ko\'tarmadi 📵', color: '#ef4444', bg: 'rgba(239,68,68,0.05)' },
+  { id: 'malumot_berildi', title: 'Ma\'lumot berildi ℹ️', color: '#3b82f6', bg: 'rgba(59,130,246,0.05)' },
+  { id: 'zamer_olish', title: 'Zamer olish 📏', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
+  { id: 'zamer_olindi', title: 'Zamer olindi ✅', color: '#10b981', bg: 'rgba(16,185,129,0.05)' },
+  { id: 'kp_yuborildi', title: 'KP Tayyor 📄', color: '#f59e0b', bg: 'rgba(245,158,11,0.05)' },
+  { id: 'prezentatsiya', title: 'Prezintatsiya 🎯', color: '#ec4899', bg: 'rgba(236,72,153,0.05)' },
+  { id: 'shartnoma', title: 'Shartnoma imzolandi ✍️', color: '#0ea5e9', bg: 'rgba(14,165,233,0.05)' },
+  { id: 'qisman_tolov', title: 'Qisman to\'lov 💰', color: '#22c55e', bg: 'rgba(34,197,94,0.05)' },
 ];
 
 const ORDER_STAGES = [
-  { id: 'tasdiqlandi', title: 'Tasdiqlandi ✅', color: '#0ea5e9', bg: 'rgba(14,165,233,0.05)' },
-  { id: 'pm', title: 'PM ga o\'tkazildi ⚙️', color: '#f59e0b', bg: 'rgba(245,158,11,0.05)' },
+  { id: 'pm', title: 'PM ga o\'tkazildi 🏗️', color: '#f59e0b', bg: 'rgba(245,158,11,0.05)' },
   { id: 'kontrol_zamer', title: 'O\'lchov jarayonida 📏', color: '#3b82f6', bg: 'rgba(59,130,246,0.05)' },
   { id: 'chizma_chizish', title: 'Chizma chizish ✏️', color: '#8b5cf6', bg: 'rgba(139,92,246,0.05)' },
   { id: 'chizma_tasdiqlash', title: 'Chizma tasdiqlash 📋', color: '#ec4899', bg: 'rgba(236,72,153,0.05)' },
@@ -33,10 +34,11 @@ const ORDER_STAGES = [
   { id: 'ornatish', title: 'O\'rnatishda 🚚', color: '#a855f7', bg: 'rgba(168,85,247,0.05)' },
   { id: 'tayyor', title: 'Mijozga topshirishga tayyor 🎁', color: '#f59e0b', bg: 'rgba(245,158,11,0.05)' },
   { id: 'bajarildi', title: 'Bajarildi 🎉', color: '#22c55e', bg: 'rgba(34,197,94,0.05)' },
+  { id: 'bekor_qilindi', title: 'Bekor qilindi ❌', color: '#ef4444', bg: 'rgba(239,68,68,0.05)' },
 ];
 
 const STAGES = [...DEAL_STAGES, ...ORDER_STAGES];
-const LOCKED_STAGES = ['tasdiqlandi', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
+const LOCKED_STAGES = ['qisman_tolov', 'pm', 'ishlab_chiqarishda', 'ombor', 'ornatish', 'bajarildi', 'yopildi'];
 
 const PROPERTY_TYPES = [
   { label: 'Hovli', value: 'hovli' },
@@ -194,8 +196,8 @@ const AgentModal = ({ onClose, onSaved }) => {
     e.preventDefault(); 
     setLoading(true);
     try {
-      await api.post('/customers', { ...form, type: 'agent' });
-      if (onSaved) onSaved(); 
+      const res = await api.post('/customers', { ...form, type: 'agent' });
+      if (onSaved) onSaved(res.data); 
       onClose(); 
     } catch (err) {
       console.error("Agent save error", err);
@@ -326,8 +328,8 @@ const CustomerModal = ({ onClose, onSaved, user, initialType = 'B2C' }) => {
         };
       }
 
-      await api.post('/customers', payload);
-      if (onSaved) onSaved(); 
+      const res = await api.post('/customers', payload);
+      if (onSaved) onSaved(res.data); 
       onClose(); 
     } catch (err) {
       console.error("Customer save error", err);
@@ -337,7 +339,7 @@ const CustomerModal = ({ onClose, onSaved, user, initialType = 'B2C' }) => {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1500 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 2500 }}>
       <div className="premium-card" style={{ width: '800px', padding: '48px', maxHeight: '92vh', overflowY: 'auto' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
           <h3 style={{ fontSize: '32px', fontWeight: '900' }}>Yangi Mijoz Qo'shish</h3>
@@ -524,7 +526,8 @@ const Orders = () => {
     kpFiles: [], designFiles: [], checklist: { design3d: false, construction: false, color: false, handle: false, materials: false }, 
     status: 'yangi', description: '', timeline: [],
     proposalId: null, proposalNumber: '',
-    productionAmount: ''
+    productionAmount: '',
+    meetingFormat: '', meetingTime: ''
   };
 
   const [newOrder, setNewOrder] = useState(emptyOrder);
@@ -539,6 +542,8 @@ const Orders = () => {
   
   const timelineEndRef = useRef(null);
   const commentFileInputRef = useRef(null);
+  const lastCreatedAtRef = useRef('');
+  const lastStatusUpdatedAtRef = useRef('');
 
   const handleCommentFileChange = async (e) => {
     const files = Array.from(e.target.files);
@@ -574,6 +579,10 @@ const Orders = () => {
       try {
         const ordersRes = await api.get('/orders');
         setAllOrders(ordersRes.data || []);
+        const maxCreated = ordersRes.data.reduce((max, o) => !o.createdAt ? max : (o.createdAt > max ? o.createdAt : max), '');
+        const maxStatusUpdated = ordersRes.data.reduce((max, o) => !o.statusUpdatedAt ? max : (o.statusUpdatedAt > max ? o.statusUpdatedAt : max), '');
+        lastCreatedAtRef.current = maxCreated;
+        lastStatusUpdatedAtRef.current = maxStatusUpdated;
       } catch (err) {
         console.error("Orders load error", err);
       }
@@ -633,9 +642,36 @@ const Orders = () => {
     };
     loadData();
     
+    // Optimized auto-refresh using checkUpdates every 3 seconds
+    const intervalId = setInterval(async () => {
+      if (document.hidden) return;
+      if (!lastCreatedAtRef.current && !lastStatusUpdatedAtRef.current) return;
+      
+      try {
+        const res = await api.get('/orders/check/updates', {
+          params: {
+            lastCreatedAt: lastCreatedAtRef.current,
+            lastStatusUpdatedAt: lastStatusUpdatedAtRef.current
+          }
+        });
+        
+        if (res.data.hasUpdates) {
+          console.log("Updates detected, reloading data...");
+          lastCreatedAtRef.current = res.data.latestCreatedAt;
+          lastStatusUpdatedAtRef.current = res.data.latestStatusUpdatedAt;
+          loadData();
+        }
+      } catch (err) {
+        console.error("Failed to check for updates:", err);
+      }
+    }, 3000);
+
     const handleStorage = () => { loadData(); };
     window.addEventListener('storage', handleStorage); 
-    return () => window.removeEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      clearInterval(intervalId);
+    };
   }, []);
 
   useEffect(() => {
@@ -1044,9 +1080,6 @@ const Orders = () => {
             {currentView !== 'archive' && (
              <>
                <button onClick={() => setIsExpenseModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#fbbf24', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}><DollarSign size={18} /> +Sotuvoldi xarajat arizasi</button>
-               <button onClick={() => setCustomerModal({ isOpen: true, type: 'Agent' })} className="secondary-btn" style={{ height: '44px', color: '#8b5cf6', background: 'rgba(139,92,246,0.1)' }}><Smartphone size={18} /> Yangi Agent</button>
-               <button onClick={() => setCustomerModal({ isOpen: true, type: 'B2C' })} className="secondary-btn" style={{ height: '44px' }}><UserPlus size={18} /> Yangi Mijoz</button>
-               <button onClick={() => setIsKPModalOpen(true)} className="secondary-btn" style={{ height: '44px', color: '#10b981', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)' }}><FileText size={18} /> Tijorat Taklifi</button>
                <button onClick={() => { setEditingId(null); setNewOrder(emptyOrder); setIsOrderModalOpen(true); }} className="gold-btn" style={{ height: '44px' }}><Plus size={20} /> Yangi Buyurtma</button>
              </>
             )}
@@ -1301,6 +1334,30 @@ const Orders = () => {
                           style={{ height: '54px' }} 
                           readOnly={isOrderLocked} 
                         />
+                        {!isOrderLocked && (
+                          <button 
+                            type="button" 
+                            onClick={() => setCustomerModal({ isOpen: true, type: 'B2C' })}
+                            style={{ 
+                              marginTop: '12px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '8px', 
+                              color: 'var(--accent-gold)', 
+                              background: 'rgba(251,191,36,0.1)', 
+                              border: '1px solid rgba(251,191,36,0.2)', 
+                              padding: '10px 16px', 
+                              borderRadius: '8px', 
+                              fontSize: '13px',
+                              fontWeight: '700',
+                              width: '100%',
+                              justifyContent: 'center',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <UserPlus size={16} /> Yangi mijoz qo'shish
+                          </button>
+                        )}
                        {customerSuggestions.length > 0 && !isOrderLocked && (
                          <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}>
                            {customerSuggestions.map((c, idx) => (
@@ -1351,6 +1408,30 @@ const Orders = () => {
                              style={{ height: '54px' }}
                              readOnly={isOrderLocked}
                            />
+                           {!isOrderLocked && (
+                             <button 
+                               type="button" 
+                               onClick={() => setIsKPModalOpen(true)}
+                               style={{ 
+                                 marginTop: '12px', 
+                                 display: 'flex', 
+                                 alignItems: 'center', 
+                                 gap: '8px', 
+                                 color: '#10b981', 
+                                 background: 'rgba(16,185,129,0.1)', 
+                                 border: '1px solid rgba(16,185,129,0.3)', 
+                                 padding: '10px 16px', 
+                                 borderRadius: '8px', 
+                                 fontSize: '13px',
+                                 fontWeight: '700',
+                                 width: '100%',
+                                 justifyContent: 'center',
+                                 cursor: 'pointer'
+                               }}
+                             >
+                               <FileText size={16} /> Yangi tijorat taklifi
+                             </button>
+                           )}
                           {proposalSuggestions.length > 0 && !isOrderLocked && (
                             <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: '#1a1a2e', border: '1px solid var(--border-color)', borderRadius: '12px', zIndex: 2100, overflow: 'hidden', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
                               {proposalSuggestions.map(p => (
@@ -1467,6 +1548,35 @@ const Orders = () => {
                               <span>{type.icon}</span> {type.label}
                             </button>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* Yangi Uchrashuv maydonlari */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                        <div>
+                          <Lbl>Uchrashuv formati</Lbl>
+                          <select 
+                            name="meetingFormat" 
+                            value={newOrder.meetingFormat || ''} 
+                            onChange={e => !isOrderLocked && setNewOrder({...newOrder, meetingFormat: e.target.value})}
+                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 15px', color: 'white', fontSize: '14px' }}
+                            disabled={isOrderLocked}
+                          >
+                            <option value="">Tanlang...</option>
+                            <option value="showroom">Shoowromga keladi</option>
+                            <option value="measure">O'lcham olish kerak</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Lbl>Uchrashuv / Kelish vaqti</Lbl>
+                          <input 
+                            type="datetime-local" 
+                            name="meetingTime" 
+                            value={newOrder.meetingTime || ''} 
+                            onChange={e => !isOrderLocked && setNewOrder({...newOrder, meetingTime: e.target.value})} 
+                            style={{ width: '100%', height: '54px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '0 15px', color: 'white', fontSize: '14px' }}
+                            readOnly={isOrderLocked}
+                          />
                         </div>
                       </div>
 
@@ -1681,9 +1791,10 @@ const Orders = () => {
         customerModal.type === 'Agent' ? (
           <AgentModal 
             onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
-            onSaved={async () => {
+            onSaved={async (newC) => {
               const res = await api.get('/customers');
               setCustomers(res.data);
+              if (newC) handleSelectCustomer(newC);
             }}
           />
         ) : (
@@ -1691,14 +1802,15 @@ const Orders = () => {
             user={user} 
             initialType={customerModal.type}
             onClose={() => setCustomerModal({ ...customerModal, isOpen: false })} 
-            onSaved={async () => {
+            onSaved={async (newC) => {
               const res = await api.get('/customers');
               setCustomers(res.data);
+              if (newC) handleSelectCustomer(newC);
             }} 
           />
         )
       )}
-      {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} />}
+      {isKPModalOpen && <KPModal onClose={() => setIsKPModalOpen(false)} onSaved={handleSelectProposal} initialCustomer={newOrder.selectedCustomer} />}
 
       {fileManager.isOpen && (
         <FileManagerModal 

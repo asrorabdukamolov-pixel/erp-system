@@ -4,7 +4,7 @@ exports.getPartners = async (req, res) => {
     try {
         let queryRef = db.collection('partners');
         if (req.user.role !== 'super') {
-            queryRef = queryRef.where('showroom', '==', req.user.showroom);
+            queryRef = queryRef.where('showroom', 'in', [req.user.showroom || '', 'Asosiy (Super Admin)']);
         }
         
         const snapshot = await queryRef.get();

@@ -76,11 +76,7 @@ const AppContent = () => {
           <MainLayout><Dashboard /></MainLayout>
         </ProtectedRoute>
       } />
-      <Route path="/super-admin/showrooms" element={
-        <ProtectedRoute allowedRoles={['super']}>
-          <MainLayout><ShowroomsList /></MainLayout>
-        </ProtectedRoute>
-      } />
+      <Route path="/super-admin/showrooms" element={<Navigate to="/super-admin/settings" replace />} />
       <Route path="/super-admin/departments" element={
         <ProtectedRoute allowedRoles={['super']}>
           <MainLayout><Departments /></MainLayout>
@@ -248,6 +244,10 @@ const AppContent = () => {
           <MainLayout><SalesProfile /></MainLayout>
         </ProtectedRoute>
       } />
+
+      {/* Fallback routes for old/cached sales-manager route */}
+      <Route path="/sales-manager/orders" element={<Navigate to="/sotuv-manager/orders" replace />} />
+      <Route path="/sales-manager/*" element={<Navigate to="/sotuv-manager/orders" replace />} />
 
       {/* Project Manager Routes */}
       <Route path="/proekt-manager/orders" element={

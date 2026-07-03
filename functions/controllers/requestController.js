@@ -26,7 +26,7 @@ exports.createRequest = async (req, res) => {
             userId: req.user.id,
             userName: req.user.name,
             showroom: req.user.showroom || '',
-            status: 'pending',
+            status: req.body.status || 'pending',
             createdAt: new Date().toISOString()
         };
         const docRef = await db.collection('money_requests').add(newRequest);
@@ -44,7 +44,7 @@ exports.updateRequestStatus = async (req, res) => {
         const doc = await requestRef.get();
         if (!doc.exists) return res.status(404).json({ msg: 'So\'rov topilmadi' });
 
-        const updateData = { ...req.body };
+        const updateData = { status };
         if (status === 'approved') {
             updateData.approvedBy = req.user.name;
             updateData.approvedAt = new Date().toISOString();

@@ -27,6 +27,8 @@ exports.createCustomer = async (req, res) => {
         
         if (req.user.role !== 'super') {
             customerData.showroom = req.user.showroom || '';
+            customerData.managerId = req.user.id || req.user._id || '';
+            customerData.managerName = req.user.name || '';
         } else if (!customerData.showroom) {
             customerData.showroom = 'Bosh ofis';
         }
@@ -34,7 +36,8 @@ exports.createCustomer = async (req, res) => {
         const newCustomer = {
             ...customerData,
             addedBy: req.user.name,
-            managerName: req.user.name,
+            managerName: customerData.managerName || req.user.name,
+            managerId: customerData.managerId || (req.user.id || req.user._id || ''),
             createdAt: new Date().toISOString()
         };
  

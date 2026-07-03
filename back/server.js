@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const { db } = require('./config/firebase');
+const { db, initDb } = require('./config/firebase');
 const auth = require('./middleware/auth');
 const genericController = require('./controllers/genericController');
 
@@ -51,7 +51,7 @@ const masterDataCollections = [
     'product-types', 'prod-stages', 'operations', 'prod-order-statuses', 'qc-reasons',
     'warehouses', 'warehouse-types', 'material-groups', 'materials', 'units', 'wh-op-types',
     'supplier-types', 'purchase-cats', 'pr-statuses', 'po-statuses', 'delivery-terms',
-    'employees', 'roles'
+    'employees', 'roles', 'tasks'
 ];
 
 masterDataCollections.forEach(col => {
@@ -76,6 +76,18 @@ app.use((req, res) => {
 
 // Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT} with Firestore`);
-});
+
+const startServer = async () => {
+    await initDb();
+    app.listen(PORT, () => {
+        console.log(`Server is running on port ${PORT}`);
+    });
+
+    // Start task checks interval for AmoCRM leads
+    const { checkAmoLeadsAndTasksInternal } = require('./controllers/integrationController');
+    setInterval(() => {
+        checkAmoLeadsAndTasksInternal();
+    }, 5 * 60 * 1000);
+};
+
+startServer();

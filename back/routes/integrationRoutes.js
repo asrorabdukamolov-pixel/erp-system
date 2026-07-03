@@ -1,8 +1,11 @@
 const express = require('express');
 const router = express.Router();
+const integrationController = require('../controllers/integrationController');
 const aiController = require('../controllers/aiController');
-const auth = require('../middleware/auth');
 
-router.post('/ai-chat', auth, aiController.handleAIChat);
+router.post('/amocrm', integrationController.receiveAmoLead);
+router.post('/calls', integrationController.receiveCallLog);
+router.get('/cron-check', integrationController.checkAmoLeadsAndTasks);
+router.post('/ai-chat', aiController.handleAIChat);
 
 module.exports = router;

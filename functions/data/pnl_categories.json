@@ -1,0 +1,639 @@
+[
+  {
+    "id": "7FXshGZq0yA0dGJNeaCc",
+    "code": "1000",
+    "name": "Daromad",
+    "type": "Revenue",
+    "isCalculated": false
+  },
+  {
+    "id": "mD2FOQwPnyse2UfmwPZf",
+    "code": "1010",
+    "name": "Mebel mahsulotlaridan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "LTyLOZZzeeyXHk5LSaGt",
+    "code": "1020",
+    "name": "Individual buyurtmalardan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "DPcTkiPaLU7pn7GDIyCf",
+    "code": "1030",
+    "name": "Korporativ buyurtmalardan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "wcneMCkmqwaz10a0enUi",
+    "code": "1040",
+    "name": "Dilerlar orqali sotuvdan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "GPFe3FRVK1ABiKckdWUT",
+    "code": "1050",
+    "name": "Franshiza orqali daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "6dQfrKPsw9f3M4F7F6IP",
+    "code": "1060",
+    "name": "Yetkazib berish xizmatidan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "mck0UBYescGJaqAVluBj",
+    "code": "1070",
+    "name": "Montaj xizmatidan daromad",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "6UMZsIBmIkuB8L1YbOyh",
+    "code": "1080",
+    "name": "Boshqa sotuv daromadlari",
+    "type": "Revenue",
+    "isCalculated": false,
+    "parentId": "7FXshGZq0yA0dGJNeaCc"
+  },
+  {
+    "id": "IsnH4CzDYA1dxvHuSz5O",
+    "code": "2000",
+    "name": "Sotuvdan chegirmalar va qaytimlar",
+    "type": "Contra Revenue",
+    "isCalculated": false
+  },
+  {
+    "id": "lZ26w0eWBhEUFW59AUQA",
+    "code": "2010",
+    "name": "Chegirmalar",
+    "type": "Contra Revenue",
+    "isCalculated": false,
+    "parentId": "IsnH4CzDYA1dxvHuSz5O"
+  },
+  {
+    "id": "sO9BdCDc06Aj399uXq3J",
+    "code": "2020",
+    "name": "Qaytimlar",
+    "type": "Contra Revenue",
+    "isCalculated": false,
+    "parentId": "IsnH4CzDYA1dxvHuSz5O"
+  },
+  {
+    "id": "MmtiDRoToGHrR745FybZ",
+    "code": "2030",
+    "name": "Narx tuzatishlari",
+    "type": "Contra Revenue",
+    "isCalculated": false,
+    "parentId": "IsnH4CzDYA1dxvHuSz5O"
+  },
+  {
+    "id": "IhHZGSJcMXZTyf6HuKdJ",
+    "code": "2040",
+    "name": "Bekor qilingan sotuvlar",
+    "type": "Contra Revenue",
+    "isCalculated": false,
+    "parentId": "IsnH4CzDYA1dxvHuSz5O"
+  },
+  {
+    "id": "ypQkfYYShE06mw8Gd0Tt",
+    "code": "2050",
+    "name": "Reklamatsiya sababli kamaytirishlar",
+    "type": "Contra Revenue",
+    "isCalculated": false,
+    "parentId": "IsnH4CzDYA1dxvHuSz5O"
+  },
+  {
+    "id": "mnpASlbnTOJp1aMSb6Fp",
+    "code": "3000",
+    "name": "Tannarx / COGS",
+    "type": "COGS",
+    "isCalculated": false
+  },
+  {
+    "id": "pC2mlhHdhAyg7Gee0sTo",
+    "code": "3010",
+    "name": "Xom ashyo va asosiy materiallar tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "8Dj76QE8HHw3MmoEiAud",
+    "code": "3020",
+    "name": "Furnitura tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "R5UuLtNUZvcBNG8bcryv",
+    "code": "3030",
+    "name": "Qadoqlash materiallari tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "WT81ylwi1eX8GAS4M8ZO",
+    "code": "3040",
+    "name": "Bevosita mehnat xarajatlari",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "5CNgVQE1KKPQ7n56R9zn",
+    "code": "3050",
+    "name": "Tashqi xizmatlar tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "OFwOo0AyqZGeDFmxWemo",
+    "code": "3060",
+    "name": "Bilvosita ishlab chiqarish xarajatlari",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "vPszTV98dHRAIN2vaxKC",
+    "code": "3070",
+    "name": "Yetkazib berish tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "vnrwM4sNEzOwMrAJZ0vz",
+    "code": "3080",
+    "name": "Montaj tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "GL6QtGfWu0vhJFrqZ0ZY",
+    "code": "3090",
+    "name": "Brak va qayta ishlash tannarxi",
+    "type": "COGS",
+    "isCalculated": false,
+    "parentId": "mnpASlbnTOJp1aMSb6Fp"
+  },
+  {
+    "id": "l6lKY21b6Ptzjy132rh7",
+    "code": "4000",
+    "name": "Yalpi foyda",
+    "type": "Calculated",
+    "isCalculated": true
+  },
+  {
+    "id": "o50agBQOHFwZrXxGKVlS",
+    "code": "5000",
+    "name": "Sotuv va marketing xarajatlari",
+    "type": "Expense",
+    "isCalculated": false
+  },
+  {
+    "id": "3cQknTa0wlVoWC7i4Klw",
+    "code": "5010",
+    "name": "Reklama xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "3BgSaDNdb1BMKOZZEyhJ",
+    "code": "5020",
+    "name": "SMM va kontent xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "hQsqlpWDbH4OT00Wven2",
+    "code": "5030",
+    "name": "Target reklama xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "kOpmQHynqKXLucw9Bt8l",
+    "code": "5040",
+    "name": "Foto va video xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "Zf3YXLeoB66SfPOoBYJn",
+    "code": "5050",
+    "name": "Sales manager ish haqi",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "KXuW7vNFwRC2odhjfSe7",
+    "code": "5060",
+    "name": "Sales bonus",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "oAbVnVtec9zt51zlqrbh",
+    "code": "5070",
+    "name": "Komissiya xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "ZQAdMHWt5WGUlp8KyC6g",
+    "code": "5080",
+    "name": "Showroom xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "LYMr77xKIiCmwBKpREjR",
+    "code": "5090",
+    "name": "Mijozlar bilan ishlash xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "o3wGt6xeDXRQQfM29z18",
+    "code": "5100",
+    "name": "Sotuvoldi xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "Clubgwk1SR1hG3hA1Bzz",
+    "code": "5110",
+    "name": "Yo‘qotilgan KP bo‘yicha xarajatlar",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "fT2rmLYJMuv0LPH7VzeO",
+    "code": "5120",
+    "name": "Sovg‘a va mijozlarni kutib olish xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "o50agBQOHFwZrXxGKVlS"
+  },
+  {
+    "id": "2LBCPO0hd6QNuv5iyRtR",
+    "code": "6000",
+    "name": "Ma’muriy-boshqaruv xarajatlari",
+    "type": "Expense",
+    "isCalculated": false
+  },
+  {
+    "id": "OlcH9H3GMLDdacWKw4QW",
+    "code": "6010",
+    "name": "Rahbariyat ish haqi",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "ou452aJUEoczKB7CaZuU",
+    "code": "6020",
+    "name": "Moliya va buxgalteriya ish haqi",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "3FtdCt73TfSmHXSxYY2g",
+    "code": "6030",
+    "name": "HR xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "smN4mL7A0i3QRiejmI8K",
+    "code": "6040",
+    "name": "Yuridik xizmatlar",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "rHFdmy7mqvjxtnnVhrdb",
+    "code": "6050",
+    "name": "Ofis ijara xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "bzD32lu9ChIEGYCWrHcN",
+    "code": "6060",
+    "name": "Ofis kommunal xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "bN8K9KC54gNkTg32gAzH",
+    "code": "6070",
+    "name": "Internet va aloqa",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "Sy3a6YX5YscvHcqgyNhl",
+    "code": "6080",
+    "name": "Kanselyariya xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "5INyjFw5LBqOImEgtEzr",
+    "code": "6090",
+    "name": "Cleaning va security",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "8Cou8BvlSiwIL15NvRlj",
+    "code": "6100",
+    "name": "Konsalting xizmatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "Lp0zS4bKX6j1CwNTImUN",
+    "code": "6110",
+    "name": "Audit xizmatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "tzzTRFcZQ9yT3ZeLvzWb",
+    "code": "6120",
+    "name": "IT va raqamli infratuzilma xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "JBAwWVhCaySH4779LaLY",
+    "code": "6130",
+    "name": "Ofis uskunalari xarajatlari",
+    "type": "Expense",
+    "isCalculated": false,
+    "parentId": "2LBCPO0hd6QNuv5iyRtR"
+  },
+  {
+    "id": "T1dnHLXooMgozCTen0rX",
+    "code": "7000",
+    "name": "Boshqa operatsion daromad va xarajatlar",
+    "type": "Other Income / Expense",
+    "isCalculated": false
+  },
+  {
+    "id": "hy5rZHGLI4hviuxpmXpY",
+    "code": "7010",
+    "name": "Boshqa operatsion daromadlar",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "HlbHluKtrL6nPxoDbGlG",
+    "code": "7020",
+    "name": "Boshqa operatsion xarajatlar",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "LinoPsHQsu4Yao2ayIcZ",
+    "code": "7030",
+    "name": "Jarima va penya xarajatlari",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "p9RI85PZ3LBMyOED7L5K",
+    "code": "7040",
+    "name": "Materiallarni hisobdan chiqarish",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "7yGT2Rs7BfL0c4fRlqrW",
+    "code": "7050",
+    "name": "Inventarizatsiya kamomadi",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "ceznDgG6x8peAeKYYJEG",
+    "code": "7060",
+    "name": "Eskirgan materiallar hisobdan chiqarilishi",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "bIByJTd6zMzFc0bBFrTt",
+    "code": "7070",
+    "name": "Boshqa aktivlarni sotishdan daromad yoki zarar",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "S5FMOIJM8QqdbjogcvjU",
+    "code": "7080",
+    "name": "Kompensatsiya va qoplamalar",
+    "type": "Other Income / Expense",
+    "isCalculated": false,
+    "parentId": "T1dnHLXooMgozCTen0rX"
+  },
+  {
+    "id": "fyPRVhovtLnWlPnwmDjk",
+    "code": "8000",
+    "name": "Operatsion foyda",
+    "type": "Calculated",
+    "isCalculated": true
+  },
+  {
+    "id": "vIjAVG5wTbPP9DdH6JeK",
+    "code": "9000",
+    "name": "Moliyaviy daromad va xarajatlar",
+    "type": "Finance Income / Expense",
+    "isCalculated": false
+  },
+  {
+    "id": "xD12AAD7cypEPXUzp0kL",
+    "code": "9010",
+    "name": "Bank komissiyalari",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "B9gGb1qPxrlN9mDnxqJJ",
+    "code": "9020",
+    "name": "POS va online payment komissiyalari",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "skOGmKugNv5wUkM7gXy0",
+    "code": "9030",
+    "name": "Kredit foizlari",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "FN4PZlWWk7ijEG98JmMT",
+    "code": "9040",
+    "name": "Leasing foizlari",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "5bmx3vmVjm1mUgU7EEl6",
+    "code": "9050",
+    "name": "Valyuta kurs farqlari bo‘yicha zarar",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "63qEu6pNxPKJkQxTy7b6",
+    "code": "9060",
+    "name": "Valyuta kurs farqlari bo‘yicha daromad",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "1QOzjpYxFUgvcWjRYksf",
+    "code": "9070",
+    "name": "Foiz daromadlari",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "p3tNs2XjyMlX1K6Lccd8",
+    "code": "9080",
+    "name": "Boshqa moliyaviy xarajatlar",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "I2F9BwghG4dznSFHUfL6",
+    "code": "9090",
+    "name": "Boshqa moliyaviy daromadlar",
+    "type": "Finance Income / Expense",
+    "isCalculated": false,
+    "parentId": "vIjAVG5wTbPP9DdH6JeK"
+  },
+  {
+    "id": "QKoES3liYOJrO6K8ZngT",
+    "code": "10000",
+    "name": "Soliq xarajatlari",
+    "type": "Tax",
+    "isCalculated": false
+  },
+  {
+    "id": "MoV7reVKGok9P9SbU02r",
+    "code": "10010",
+    "name": "Foyda solig‘i",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "rHIKDaOWeKonvx5ZGBcQ",
+    "code": "10020",
+    "name": "Ijtimoiy soliq",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "ttKi0Qd9SciLYCpOiPUv",
+    "code": "10030",
+    "name": "Mol-mulk solig‘i",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "W28T3lPraoSYKx3jt8M9",
+    "code": "10040",
+    "name": "Yer solig‘i",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "n5XMjYUT6ijbR4tpI31C",
+    "code": "10050",
+    "name": "Suv resurslaridan foydalanganlik solig‘i",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "lO3pXy9vZ0QKTNWqfNu5",
+    "code": "10060",
+    "name": "Boshqa soliq xarajatlari",
+    "type": "Tax",
+    "isCalculated": false,
+    "parentId": "QKoES3liYOJrO6K8ZngT"
+  },
+  {
+    "id": "e5q6JCcJUi8ttulTfJNC",
+    "code": "11000",
+    "name": "Sof foyda",
+    "type": "Calculated",
+    "isCalculated": true
+  }
+]

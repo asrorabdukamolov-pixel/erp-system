@@ -87,10 +87,16 @@ const PositionsSettings = () => {
         }
     };
 
-    const filteredPositions = positions.filter(p => 
-        p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        p.code?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredPositions = positions
+        .filter(p => 
+            p.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+            p.code?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+        .sort((a, b) => {
+            const codeA = String(a.code || '');
+            const codeB = String(b.code || '');
+            return codeA.localeCompare(codeB, undefined, { numeric: true, sensitivity: 'base' });
+        });
 
     if (loading) {
         return (

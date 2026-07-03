@@ -4,14 +4,14 @@ exports.getOrders = async (req, res) => {
     try {
         let queryRef = db.collection('orders');
         
-        if (req.user.role !== 'super' && req.user.role !== 'fabrika') {
+        if (req.user.role !== 'super') {
             queryRef = queryRef.where('showroom', '==', req.user.showroom || '');
         }
 
         const snapshot = await queryRef.get();
         let orders = formatQuery(snapshot);
         
-        // Filter out trashed orders in memory to avoid index requirements
+        // Filter out trashed orders in memory to avoid the composite index requirement
         orders = orders.filter(o => o.status !== 'trash');
         
         orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -39,9 +39,7 @@ exports.createOrder = async (req, res) => {
             ...req.body,
             managerId: req.user.id,
             managerName: req.user.name,
-            managerPhone: req.user.phone || '',
             showroom: req.user.showroom || '',
-            showroomPhone: req.user.showroomPhone || '',
             createdAt: new Date().toISOString(),
             timeline: [{
                 type: 'system',
@@ -68,26 +66,30 @@ exports.updateOrder = async (req, res) => {
 
         const updateData = { ...req.body };
 
-        // Auto-clear factory status if PM re-submits to production
-        if (req.body.pmStatus === 'topshirildi') {
-            updateData.factoryStatus = null;
-        }
-
-        // Initialize production tracking if it doesn't exist
-        if (req.body.factoryStatus === 'accepted' && !order.productionPlan) {
-            updateData.productionStages = {
-                constructor: { status: 'pending', label: 'Konstruktor' },
-                distributor: { status: 'pending', label: 'Taqsimlovchi' },
-                warehouse: { status: 'pending', label: 'Xom-ashyo ombori' },
-                cutting: { status: 'pending', label: 'Raspil' },
-                edging: { status: 'pending', label: 'Kromka' },
-                drilling: { status: 'pending', label: 'Teshish' },
-                carpentry: { status: 'pending', label: 'Stolyarka' },
-                painting: { status: 'pending', label: 'Malyarka' },
-                qc: { status: 'pending', label: 'O\'TK' },
-                packaging: { status: 'pending', label: 'Upakovka' },
-                finished_warehouse: { status: 'pending', label: 'Tayyor mahsulot ombori' }
-            };
+        // Auto-assign best PM if moving to yangi_kp_ariza and no PM is assigned
+        if (req.body.pmStatus === 'yangi_kp_ariza' && req.body.status === 'pm' && !order.assignedPmId && !req.body.assignedPmId) {
+            try {
+                const { selectBestPM } = require('./integrationController');
+                const bestPm = await selectBestPM(order.showroom || req.body.showroom);
+                if (bestPm) {
+                    updateData.assignedPmId = bestPm.id || bestPm._id;
+                    updateData.assignedPmName = bestPm.name;
+                    updateData.assignedPmPhone = bestPm.phone || '';
+                    updateData.assignedAt = new Date().toISOString();
+                    
+                    updateData.timeline = [
+                        ...(updateData.timeline || order.timeline || []),
+                        {
+                            type: 'system',
+                            text: `Avtomatik taqsimlash: Loyiha menejeri biriktirildi - ${bestPm.name}`,
+                            user: 'Tizim',
+                            time: new Date().toISOString()
+                        }
+                    ];
+                }
+            } catch (assignErr) {
+                console.error("Auto-assign PM error:", assignErr.message);
+            }
         }
 
         if (req.body.status && req.body.status !== order.status) {
@@ -100,16 +102,81 @@ exports.updateOrder = async (req, res) => {
                     time: new Date().toISOString()
                 }
             ];
+
+            if (order.status === 'amocrm_lead' && req.body.status !== 'amocrm_lead') {
+                try {
+                    const tasksSnapshot = await db.collection('tasks')
+                        .where('orderId', '==', req.params.id)
+                        .get();
+                    
+                    const batch = db.batch();
+                    tasksSnapshot.forEach(doc => {
+                        const taskData = doc.data();
+                        if (taskData.status !== 'bajarildi') {
+                            batch.update(doc.ref, {
+                                status: 'bajarildi',
+                                completedAt: new Date().toISOString()
+                            });
+                        }
+                    });
+                    await batch.commit();
+                    console.log(`Closed active tasks for order ${req.params.id} as it moved out of amocrm_lead`);
+                } catch (taskErr) {
+                    console.error("Error auto-closing tasks on status change:", taskErr.message);
+                }
+            }
+            if (req.body.status === 'oylayabdi' && order.status !== 'oylayabdi') {
+                try {
+                    const taskDueDate = new Date();
+                    taskDueDate.setHours(taskDueDate.getHours() + 24); // Give 24 hours to schedule
+
+                    const newTask = {
+                        orderId: req.params.id,
+                        title: "Proekt menedjer KP ni tayyorlab yubordi, mijoz bilan kelishib uchrashuv vaqtini belgilang",
+                        status: 'yangi',
+                        dueDate: taskDueDate.toISOString(),
+                        createdAt: new Date().toISOString(),
+                        type: 'call',
+                        assigneeId: order.managerId,
+                        assigneeName: order.managerName || ''
+                    };
+                    
+                    const taskRef = await db.collection('tasks').add(newTask);
+                    console.log(`Created KP tayyor task ${taskRef.id} for order ${req.params.id}`);
+
+                    updateData.timeline = [
+                        ...(updateData.timeline || []),
+                        {
+                            type: 'task',
+                            text: "Yangi vazifa yaratildi: Proekt menedjer KP ni tayyorlab yubordi...",
+                            user: 'Tizim',
+                            time: new Date().toISOString()
+                        }
+                    ];
+                } catch (taskErr) {
+                    console.error("Error auto-creating task for KP tayyor:", taskErr.message);
+                }
+            }
         }
 
         if (req.body.status === 'tasdiqlandi' && order.proposalId) {
             await db.collection('proposals').doc(order.proposalId).update({ status: 'sold' });
         } else if (req.body.status === 'active' && order.proposalId) {
+            // If moved back to active deal stages
             await db.collection('proposals').doc(order.proposalId).update({ status: 'active' });
         }
 
         await orderRef.update(updateData);
         const updated = await orderRef.get();
+
+        // Trigger immediate check of tasks for the lead
+        try {
+            const { checkAmoLeadsAndTasksInternal } = require('./integrationController');
+            checkAmoLeadsAndTasksInternal().catch(e => console.error("Post-update task check failed:", e.message));
+        } catch (requireErr) {
+            console.error("Failed to require integrationController:", requireErr.message);
+        }
+
         res.json(formatDoc(updated));
     } catch (err) {
         console.error("UpdateOrder Error:", err.message);
@@ -143,6 +210,7 @@ exports.deleteOrder = async (req, res) => {
 
         await orderRef.update(updateData);
         
+        // Also mark linked proposal as lost
         if (order.proposalId) {
             await db.collection('proposals').doc(order.proposalId).update({ status: 'lost' });
         }
@@ -220,6 +288,7 @@ exports.restoreOrder = async (req, res) => {
 
         await orderRef.update(updateData);
 
+        // Also restore linked proposal status to active
         if (order.proposalId) {
             await db.collection('proposals').doc(order.proposalId).update({ status: 'active' });
         }
@@ -232,67 +301,28 @@ exports.restoreOrder = async (req, res) => {
     }
 };
 
-exports.factoryAcceptOrder = async (req, res) => {
+exports.checkUpdates = async (req, res) => {
     try {
-        const { deadline } = req.body;
-        const orderRef = db.collection('orders').doc(req.params.id);
-        const doc = await orderRef.get();
-        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
-        const order = doc.data();
-
-        const updateData = {
-            factoryStatus: 'accepted',
-            factoryDeadline: deadline,
-            factoryAcceptedAt: new Date().toISOString(),
-            pmStatus: 'ishlab_chiqarishda', // Move to processing stage
-            timeline: [
-                ...(order.timeline || []),
-                {
-                    type: 'system',
-                    text: `Fabrika buyurtmani qabul qildi. Tayyor bo'lish muddati: ${deadline}`,
-                    user: req.user.name,
-                    time: new Date().toISOString()
-                }
-            ]
-        };
-
-        await orderRef.update(updateData);
-        const updated = await orderRef.get();
-        res.json(formatDoc(updated));
+        const { lastCreatedAt, lastStatusUpdatedAt } = req.query;
+        
+        const [snapCreated, snapStatus] = await Promise.all([
+            db.collection('orders').orderBy('createdAt', 'desc').limit(1).get(),
+            db.collection('orders').orderBy('statusUpdatedAt', 'desc').limit(1).get()
+        ]);
+        
+        const latestCreatedTime = snapCreated.empty ? '' : (snapCreated.docs[0].data().createdAt || '');
+        const latestStatusTime = snapStatus.empty ? '' : (snapStatus.docs[0].data().statusUpdatedAt || '');
+        
+        const hasCreatedNew = latestCreatedTime && latestCreatedTime !== lastCreatedAt;
+        const hasStatusNew = latestStatusTime && latestStatusTime !== lastStatusUpdatedAt;
+        
+        res.json({
+            hasUpdates: hasCreatedNew || hasStatusNew,
+            latestCreatedAt: latestCreatedTime,
+            latestStatusUpdatedAt: latestStatusTime
+        });
     } catch (err) {
-        console.error("FactoryAcceptOrder Error:", err.message);
-        res.status(500).send('Server xatosi');
-    }
-};
-
-exports.factoryRejectOrder = async (req, res) => {
-    try {
-        const { reason } = req.body;
-        const orderRef = db.collection('orders').doc(req.params.id);
-        const doc = await orderRef.get();
-        if (!doc.exists) return res.status(404).json({ msg: 'Buyurtma topilmadi' });
-        const order = doc.data();
-
-        const updateData = {
-            factoryStatus: 'rejected',
-            factoryRejectReason: reason,
-            pmStatus: 'yangi_buyurtma', // Move back to PM review
-            timeline: [
-                ...(order.timeline || []),
-                {
-                    type: 'factory_rejection',
-                    text: `Fabrika buyurtmani rad etdi. Sabab: ${reason}`,
-                    user: req.user.name,
-                    time: new Date().toISOString()
-                }
-            ]
-        };
-
-        await orderRef.update(updateData);
-        const updated = await orderRef.get();
-        res.json(formatDoc(updated));
-    } catch (err) {
-        console.error("FactoryRejectOrder Error:", err.message);
+        console.error("CheckUpdates Error:", err.message);
         res.status(500).send('Server xatosi');
     }
 };

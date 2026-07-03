@@ -1,4 +1,4 @@
-const { db, formatQuery } = require('../config/firebase');
+const { db, formatQuery, formatDoc } = require('../config/firebase');
 
 exports.getDepartments = async (req, res) => {
     try {
@@ -7,7 +7,7 @@ exports.getDepartments = async (req, res) => {
         res.json(departments);
     } catch (err) {
         console.error("GetDepartments Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ msg: 'Server xatosi: ' + err.message });
     }
 };
 
@@ -24,7 +24,7 @@ exports.createDepartment = async (req, res) => {
         res.json({ _id: docRef.id, ...newDep });
     } catch (err) {
         console.error("CreateDepartment Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ msg: 'Server xatosi: ' + err.message });
     }
 };
 
@@ -43,10 +43,10 @@ exports.updateDepartment = async (req, res) => {
 
         await depRef.update(updateData);
         const updatedDoc = await depRef.get();
-        res.json({ _id: updatedDoc.id, ...updatedDoc.data() });
+        res.json(formatDoc(updatedDoc));
     } catch (err) {
         console.error("UpdateDepartment Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ msg: 'Server xatosi: ' + err.message });
     }
 };
 
@@ -61,6 +61,6 @@ exports.deleteDepartment = async (req, res) => {
         res.json({ msg: 'Bo\'lim o\'chirildi' });
     } catch (err) {
         console.error("DeleteDepartment Error:", err.message);
-        res.status(500).send('Server xatosi');
+        res.status(500).json({ msg: 'Server xatosi: ' + err.message });
     }
 };

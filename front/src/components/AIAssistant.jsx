@@ -35,8 +35,8 @@ const AIAssistant = () => {
     setIsTyping(true);
 
     try {
-      const baseUrl = import.meta.env.VITE_API_URL || 'https://api-35o3qdobxa-uc.a.run.app/api'; 
-      const token = localStorage.getItem('token');
+      const baseUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:5000/api'); 
+      const token = localStorage.getItem('erp_token');
       const response = await fetch(`${baseUrl}/integrations/ai-chat`, {
         method: 'POST',
         headers: { 

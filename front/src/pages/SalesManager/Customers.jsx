@@ -24,7 +24,10 @@ const NewCustomer = () => {
     commissionTerms: '',
     status: 'faol',
     managerId: user?.id || user?._id || '',
-    managerName: user?.name || ''
+    managerName: user?.name || '',
+    selectedAgent: null,
+    age: '',
+    gender: 'Erkak'
   });
 
   const [leadSources, setLeadSources] = useState([]);
@@ -32,6 +35,40 @@ const NewCustomer = () => {
   const [customerTypes, setCustomerTypes] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [agents, setAgents] = useState([]);
+  const [agentSearch, setAgentSearch] = useState('');
+  const [agentSuggestions, setAgentSuggestions] = useState([]);
+
+  // Fetch all agents when source becomes an agent-based source
+  useEffect(() => {
+    const isAgentSource = formData.source?.toLowerCase().includes('agent');
+    if (isAgentSource && agents.length === 0) {
+      const fetchAgents = async () => {
+        try {
+          const res = await api.get('/customers', { params: { type: 'agent' } });
+          setAgents(res.data);
+        } catch (err) {
+          console.error("Failed to fetch agents", err);
+        }
+      };
+      fetchAgents();
+    }
+  }, [formData.source]);
+
+  // Filter agents client-side based on search term
+  useEffect(() => {
+    if (agentSearch.trim().length > 0) {
+      const term = agentSearch.toLowerCase();
+      const filtered = agents.filter(a => {
+        const fullName = `${a.firstName || ''} ${a.lastName || ''}`.toLowerCase();
+        const agentName = (a.agentName || '').toLowerCase();
+        return fullName.includes(term) || agentName.includes(term);
+      });
+      setAgentSuggestions(filtered);
+    } else {
+      setAgentSuggestions([]);
+    }
+  }, [agentSearch, agents]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,8 +112,9 @@ const NewCustomer = () => {
     setLoading(true);
     try {
       let payload = { clientType };
-      const selectedManager = managers.find(m => m._id === formData.managerId);
-      const managerName = selectedManager ? `${selectedManager.name} ${selectedManager.surname}` : formData.managerName;
+      const finalManagerId = user?.role === 'super' ? formData.managerId : (user?.id || user?._id || formData.managerId);
+      const selectedManager = managers.find(m => m._id === finalManagerId);
+      const managerName = selectedManager ? `${selectedManager.name} ${selectedManager.surname}` : (user?.role === 'super' ? formData.managerName : (user?.name || formData.managerName));
 
       const selectedTypeObj = customerTypes.find(t => t.name === clientType);
       const isB2B = selectedTypeObj?.legalStatus?.toLowerCase().includes('yuridik');
@@ -85,9 +123,9 @@ const NewCustomer = () => {
       if (isAgent) {
         payload = { ...payload, type: 'agent', agentName: formData.agentName, phone: formData.phone, agentType: formData.agentType, commissionTerms: formData.commissionTerms, status: formData.status };
       } else if (isB2B) {
-        payload = { ...payload, type: 'customer', subType: 'b2b', companyName: formData.companyName, inn: formData.inn, contactPerson: formData.contactPerson, phone: formData.phone, legalAddress: formData.legalAddress, source: formData.source, managerId: formData.managerId, managerName };
+        payload = { ...payload, type: 'customer', subType: 'b2b', companyName: formData.companyName, inn: formData.inn, contactPerson: formData.contactPerson, phone: formData.phone, legalAddress: formData.legalAddress, source: formData.source, managerId: finalManagerId, managerName, selectedAgent: formData.selectedAgent };
       } else {
-        payload = { ...payload, type: 'customer', firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone, address: formData.address, propertyType: formData.propertyType, source: formData.source, managerId: formData.managerId, managerName };
+        payload = { ...payload, type: 'customer', firstName: formData.firstName, lastName: formData.lastName, phone: formData.phone, address: formData.address, propertyType: formData.propertyType, source: formData.source, managerId: finalManagerId, managerName, selectedAgent: formData.selectedAgent, age: formData.age, gender: formData.gender };
       }
 
       await api.post('/customers', payload);
@@ -190,17 +228,77 @@ const NewCustomer = () => {
                     <div><label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Yuridik manzil</label><input name="legalAddress" value={formData.legalAddress} onChange={handleChange} required style={{ width: '100%' }} /></div>
                     <div>
                       <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mijoz manbasi</label>
-                      <select name="source" value={formData.source} onChange={handleChange} required style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }}>
-                        <option value="">Tanlang...</option>
-                        {leadSources.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-                      </select>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                        {leadSources.map(s => (
+                          <button 
+                            key={s._id} 
+                            type="button" 
+                            onClick={() => setFormData({...formData, source: s.name})} 
+                            style={{ 
+                              height: '48px', 
+                              borderRadius: '10px', 
+                              background: formData.source === s.name ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                              color: s.name === formData.source ? 'black' : 'white', 
+                              border: '1px solid var(--border-color)', 
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {s.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mas’ul savdo menejeri</label>
-                      <select name="managerId" value={formData.managerId} onChange={handleChange} required disabled={user?.role !== 'super'} style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px', opacity: user?.role !== 'super' ? 0.7 : 1 }}>
-                        {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
-                      </select>
-                    </div>
+                    {formData.source?.toLowerCase().includes('agent') && (
+                      <div style={{ position: 'relative' }}>
+                        <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Agentni tanlang</label>
+                        <input 
+                          type="text" 
+                          value={agentSearch} 
+                          onChange={(e) => {
+                            setAgentSearch(e.target.value);
+                            if (formData.selectedAgent) {
+                              setFormData(prev => ({ ...prev, selectedAgent: null }));
+                            }
+                          }} 
+                          placeholder="Agent ismini kiriting..." 
+                          autoComplete="off" 
+                          style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} 
+                          required={!formData.selectedAgent}
+                        />
+                        {agentSuggestions.length > 0 && (
+                          <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', marginTop: '4px' }}>
+                            {agentSuggestions.map(a => {
+                              const name = a.agentName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Noma\'lum';
+                              return (
+                                <div 
+                                  key={a._id} 
+                                  onClick={() => {
+                                    setFormData(prev => ({ ...prev, selectedAgent: a }));
+                                    setAgentSearch(name);
+                                    setAgentSuggestions([]);
+                                  }} 
+                                  style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', transition: 'background 0.2s' }}
+                                  onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                  onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                >
+                                  {name} ({a.phone})
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {user?.role === 'super' && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mas’ul savdo menejeri</label>
+                        <select name="managerId" value={formData.managerId} onChange={handleChange} required style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }}>
+                          {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                        </select>
+                      </div>
+                    )}
                   </>
                 );
               }
@@ -210,6 +308,44 @@ const NewCustomer = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
                     <div><label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Ism</label><input name="firstName" value={formData.firstName} onChange={handleChange} required style={{ width: '100%' }} /></div>
                     <div><label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Familiya</label><input name="lastName" value={formData.lastName} onChange={handleChange} required style={{ width: '100%' }} /></div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Yoshi</label>
+                      <input 
+                        type="number" 
+                        name="age" 
+                        value={formData.age} 
+                        onChange={handleChange} 
+                        required 
+                        placeholder="Masalan: 35" 
+                        style={{ width: '100%' }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Jinsi</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        {['Erkak', 'Ayol'].map(g => (
+                          <button 
+                            key={g} 
+                            type="button" 
+                            onClick={() => setFormData({...formData, gender: g})} 
+                            style={{ 
+                              height: '48px', 
+                              borderRadius: '10px', 
+                              background: formData.gender === g ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                              color: g === formData.gender ? 'black' : 'white', 
+                              border: '1px solid var(--border-color)', 
+                              fontWeight: '700',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                          >
+                            {g}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                   <div><label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Telefon</label><input name="phone" value={formData.phone} onChange={handleChange} required style={{ width: '100%' }} /></div>
                   <div><label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Manzil</label><input name="address" value={formData.address} onChange={handleChange} required style={{ width: '100%' }} /></div>
@@ -221,19 +357,79 @@ const NewCustomer = () => {
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mijoz manbasi</label>
-                    <select name="source" value={formData.source} onChange={handleChange} required style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }}>
-                      <option value="">Tanlang...</option>
-                      {leadSources.map(s => <option key={s._id} value={s.name}>{s.name}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mas’ul savdo menejeri</label>
-                    <select name="managerId" value={formData.managerId} onChange={handleChange} required disabled={user?.role !== 'super'} style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px', opacity: user?.role !== 'super' ? 0.7 : 1 }}>
-                      {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
-                    </select>
-                  </div>
+                   <div>
+                     <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mijoz manbasi</label>
+                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                       {leadSources.map(s => (
+                         <button 
+                           key={s._id} 
+                           type="button" 
+                           onClick={() => setFormData({...formData, source: s.name})} 
+                           style={{ 
+                             height: '48px', 
+                             borderRadius: '10px', 
+                             background: formData.source === s.name ? 'var(--accent-gold)' : 'rgba(255,255,255,0.03)', 
+                             color: s.name === formData.source ? 'black' : 'white', 
+                             border: '1px solid var(--border-color)', 
+                             fontWeight: '700',
+                             cursor: 'pointer',
+                             transition: 'all 0.2s'
+                           }}
+                         >
+                           {s.name}
+                         </button>
+                       ))}
+                     </div>
+                   </div>
+                  {formData.source?.toLowerCase().includes('agent') && (
+                    <div style={{ position: 'relative' }}>
+                      <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Agentni tanlang</label>
+                      <input 
+                        type="text" 
+                        value={agentSearch} 
+                        onChange={(e) => {
+                          setAgentSearch(e.target.value);
+                          if (formData.selectedAgent) {
+                            setFormData(prev => ({ ...prev, selectedAgent: null }));
+                          }
+                        }} 
+                        placeholder="Agent ismini kiriting..." 
+                        autoComplete="off" 
+                        style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }} 
+                        required={!formData.selectedAgent}
+                      />
+                      {agentSuggestions.length > 0 && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, width: '100%', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', zIndex: 10, maxHeight: '200px', overflowY: 'auto', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', marginTop: '4px' }}>
+                          {agentSuggestions.map(a => {
+                            const name = a.agentName || `${a.firstName || ''} ${a.lastName || ''}`.trim() || 'Noma\'lum';
+                            return (
+                              <div 
+                                key={a._id} 
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, selectedAgent: a }));
+                                  setAgentSearch(name);
+                                  setAgentSuggestions([]);
+                                }} 
+                                style={{ padding: '12px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', transition: 'background 0.2s' }}
+                                onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                              >
+                                {name} ({a.phone})
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                    {user?.role === 'super' && (
+                      <div>
+                        <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '8px', fontWeight: '600' }}>Mas’ul savdo menejeri</label>
+                        <select name="managerId" value={formData.managerId} onChange={handleChange} required style={{ width: '100%', height: '48px', background: 'var(--secondary-bg)', border: '1px solid var(--border-color)', color: 'white', borderRadius: '10px', padding: '0 12px' }}>
+                          {managers.map(m => <option key={m._id} value={m._id}>{m.name} {m.surname}</option>)}
+                        </select>
+                      </div>
+                    )}
                 </>
               );
             })()}

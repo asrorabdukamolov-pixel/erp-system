@@ -25,6 +25,18 @@ exports.getProposals = async (req, res) => {
     }
 };
 
+exports.getProposalById = async (req, res) => {
+    try {
+        const proposalRef = db.collection('proposals').doc(req.params.id);
+        const doc = await proposalRef.get();
+        if (!doc.exists) return res.status(404).json({ message: 'Taklif topilmadi' });
+        res.json(formatDoc(doc));
+    } catch (err) {
+        console.error("Get Proposal By ID Error:", err.message);
+        res.status(500).json({ message: 'Taklifni yuklashda serverda xatolik yuz berdi: ' + err.message });
+    }
+};
+
 exports.createProposal = async (req, res) => {
     try {
         const newProposal = {

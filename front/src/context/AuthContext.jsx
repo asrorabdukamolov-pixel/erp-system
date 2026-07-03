@@ -25,6 +25,19 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+
+    // Send initial heartbeat
+    api.post('/users/heartbeat').catch(err => console.error("Heartbeat error", err));
+
+    const interval = setInterval(() => {
+      api.post('/users/heartbeat').catch(err => console.error("Heartbeat error", err));
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const login = async (loginValue, password) => {
     try {
       const res = await api.post('/auth/login', { login: loginValue, password });

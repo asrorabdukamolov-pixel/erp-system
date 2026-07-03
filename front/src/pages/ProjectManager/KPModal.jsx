@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import KPImageTool from './KPImageTool';
 
 // PARTNERS array moved inside the component to be dynamic
 
@@ -28,6 +29,51 @@ const formatAmount = (val) => {
   if (val === undefined || val === null || val === "") return "";
   const num = val.toString().replace(/\D/g, "");
   return num.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+};
+
+// --- Client-side Image Compressor for Slow Internet ---
+const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.75) => {
+  return new Promise((resolve) => {
+    if (!file.type.startsWith('image/')) {
+      resolve(file);
+      return;
+    }
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      let width = img.width;
+      let height = img.height;
+      if (width > height) {
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(file);
+          return;
+        }
+        const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+          type: "image/jpeg",
+          lastModified: Date.now()
+        });
+        resolve(compressedFile);
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => resolve(file);
+  });
 };
 
 const KPModal = ({ onClose, editData = null }) => {
@@ -125,15 +171,88 @@ const KPModal = ({ onClose, editData = null }) => {
     } else setSuggestions([]);
   }, [customerSearch]);
 
+  const [croppingFile, setCroppingFile] = useState(null);
+  const [croppingItemId, setCroppingItemId] = useState(null);
+
   // Items helpers
   const addItem    = () => setItems(p => [...p, emptyItem()]);
   const removeItem = id => setItems(p => p.filter(i => i.id !== id));
   const updateItem = (id, field, value) => setItems(p => p.map(i => i.id === id ? { ...i, [field]: value } : i));
-  const handleItemImage = (id, file) => {
+  
+  const handleItemImage = async (id, file) => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => updateItem(id, 'image', e.target.result);
-    reader.readAsDataURL(file);
+
+    // PDFs must always be cropped/snipped
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+      setCroppingItemId(id);
+      setCroppingFile(file);
+      return;
+    }
+
+    // For images, ask the user
+    const wantToCrop = window.confirm("Rasmni yuklashdan oldin qirqib olmoqchimisiz?\n\n[OK] - Qirqib olish\n[Cancel] - To'g'ridan-to'g'ri yuklash");
+
+    if (wantToCrop) {
+      setCroppingItemId(id);
+      setCroppingFile(file);
+    } else {
+      // Direct Upload
+      try {
+        updateItem(id, 'image', 'loading...');
+        
+        // Compress image (speeds up upload on slow mobile internet)
+        const compressedFile = await compressImage(file);
+        
+        const formData = new FormData();
+        formData.append('file', compressedFile);
+
+        const res = await api.post('/upload', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        updateItem(id, 'image', res.data.url);
+      } catch (err) {
+        console.error("Direct upload error:", err);
+        alert("Rasmni yuklashda xatolik yuz berdi");
+        updateItem(id, 'image', null);
+      }
+    }
+  };
+
+  const dataURLtoBlob = (dataurl) => {
+    let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+    while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new Blob([u8arr], {type:mime});
+  };
+
+  const handleSnipConfirm = async (dataUrl) => {
+    try {
+      // 1. Convert base64 to blob
+      const blob = dataURLtoBlob(dataUrl);
+      const file = new File([blob], "snip.png", { type: "image/png" });
+
+      // 2. Upload to server
+      updateItem(croppingItemId, 'image', 'loading...'); 
+
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const res = await api.post('/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      // 3. Save URL instead of base64
+      updateItem(croppingItemId, 'image', res.data.url);
+    } catch (err) {
+      console.error("Image upload error:", err);
+      alert("Rasmni yuklashda xatolik yuz berdi");
+      updateItem(croppingItemId, 'image', ''); 
+    } finally {
+      setCroppingFile(null);
+      setCroppingItemId(null);
+    }
   };
 
   const togglePartner = id => setSelectedPartners(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
@@ -741,14 +860,20 @@ const KPModal = ({ onClose, editData = null }) => {
                   <div key={item.id} style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:'16px', padding:'18px', position:'relative' }}>
                     <div style={{ display:'flex', gap:'14px', marginBottom:'12px' }}>
                       <label style={{ width:'66px', height:'66px', borderRadius:'12px', background: item.image ? 'transparent' : 'rgba(255,255,255,0.05)', border:'2px dashed rgba(255,255,255,0.15)', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, overflow:'hidden' }}>
-                        {item.image ? <img src={item.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/> : <Package size={22} color="rgba(255,255,255,0.3)"/>}
-                        <input type="file" accept="image/*" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>
+                        {item.image === 'loading...' ? (
+                          <span style={{ fontSize: '10px', color: 'var(--accent-gold)' }}>Yuklanmoqda...</span>
+                        ) : item.image ? (
+                          <img src={item.image} alt="" style={{ width:'100%', height:'100%', objectFit:'cover' }}/>
+                        ) : (
+                          <Package size={22} color="rgba(255,255,255,0.3)"/>
+                        )}
+                        <input type="file" accept="image/*,.pdf" onChange={e => handleItemImage(item.id, e.target.files[0])} style={{ display:'none' }}/>
                       </label>
                       <div style={{ flex:1, display:'flex', flexDirection:'column', gap:'8px' }}>
                         <input value={item.name} onChange={e => updateItem(item.id, 'name', e.target.value)} placeholder={`Mahsulot nomi (${idx + 1})`}
                           style={{ width:'100%', height:'38px', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'8px', color:'white', padding:'0 12px', fontSize:'14px', fontWeight:'700' }}/>
-                        <input value={item.desc} onChange={e => updateItem(item.id, 'desc', e.target.value)} placeholder="Tavsif, o'lcham, material... (ixtiyoriy)"
-                          style={{ width:'100%', height:'34px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', color:'white', padding:'0 12px', fontSize:'12px' }}/>
+                        <textarea value={item.desc} onChange={e => updateItem(item.id, 'desc', e.target.value)} placeholder="Tavsif, o'lcham, material... (ixtiyoriy)"
+                          style={{ width:'100%', minHeight:'50px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)', borderRadius:'8px', color:'white', padding:'8px 12px', fontSize:'12px', resize:'vertical', fontFamily:'inherit', lineHeight:'1.4' }}/>
                       </div>
                       {items.length > 1 && (
                         <button onClick={() => removeItem(item.id)} style={{ color:'#ef4444', background:'transparent', border:'none', padding:'4px', alignSelf:'flex-start', flexShrink:0, cursor:'pointer' }}><Trash2 size={16}/></button>
@@ -830,6 +955,14 @@ const KPModal = ({ onClose, editData = null }) => {
             <Printer size={18}/> Preview & Chop etish
           </button>
         </div>
+        
+        {croppingFile && (
+          <KPImageTool 
+            file={croppingFile}
+            onConfirm={handleSnipConfirm}
+            onCancel={() => { setCroppingFile(null); setCroppingItemId(null); }}
+          />
+        )}
       </div>
     </div>
   );

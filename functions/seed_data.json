@@ -1,0 +1,1131 @@
+{
+  "cash_flow_items": [
+    {
+      "id": "cf_1",
+      "name": "Savdodan tushum",
+      "type": "inflow",
+      "category": "operating",
+      "code": "CF-OP-01"
+    },
+    {
+      "id": "cf_2",
+      "name": "Debitor qarzdorliklardan tushum",
+      "type": "inflow",
+      "category": "operating",
+      "code": "CF-OP-02"
+    },
+    {
+      "id": "cf_3",
+      "name": "Mahsulot uchun to'lov",
+      "type": "outflow",
+      "category": "operating",
+      "code": "CF-OP-03"
+    },
+    {
+      "id": "cf_4",
+      "name": "Xom ashyo uchun to'lov",
+      "type": "outflow",
+      "category": "operating",
+      "code": "CF-OP-04"
+    },
+    {
+      "id": "cf_32",
+      "name": "Elektr, gaz va suv uchun to'lov",
+      "type": "outflow",
+      "category": "operating",
+      "code": "CF-OP-23"
+    },
+    {
+      "id": "cf_inv_1",
+      "name": "Asosiy vositalarni sotishdan tushum",
+      "type": "inflow",
+      "category": "investing",
+      "code": "CF-INV-01"
+    },
+    {
+      "id": "cf_inv_2",
+      "name": "Uskunalar va texnikalar xaridi",
+      "type": "outflow",
+      "category": "investing",
+      "code": "CF-INV-02"
+    },
+    {
+      "id": "cf_fin_1",
+      "name": "Bank kreditlari bo'yicha tushum",
+      "type": "inflow",
+      "category": "financing",
+      "code": "CF-FIN-01"
+    },
+    {
+      "id": "cf_fin_2",
+      "name": "Kredit asosiy qarzini qaytarish",
+      "type": "outflow",
+      "category": "financing",
+      "code": "CF-FIN-02"
+    },
+    {
+      "id": "cf_fin_3",
+      "name": "Ta'sischilarga dividendlar to'lash",
+      "type": "outflow",
+      "category": "financing",
+      "code": "CF-FIN-03"
+    }
+  ],
+  "cost_center_categories": [
+    {
+      "id": "cat_1",
+      "name": "Fabrika",
+      "color": "#fbbf24"
+    },
+    {
+      "id": "cat_2",
+      "name": "Showroom",
+      "color": "#3b82f6"
+    },
+    {
+      "id": "cat_3",
+      "name": "Savdo",
+      "color": "#10b981"
+    },
+    {
+      "id": "cat_4",
+      "name": "Marketing",
+      "color": "#ef4444"
+    },
+    {
+      "id": "cat_5",
+      "name": "Loyiha-dizayn",
+      "color": "#c026d3"
+    },
+    {
+      "id": "cat_6",
+      "name": "Ombor",
+      "color": "#6366f1"
+    },
+    {
+      "id": "cat_7",
+      "name": "Xarid",
+      "color": "#14b8a6"
+    },
+    {
+      "id": "cat_8",
+      "name": "Logistika",
+      "color": "#8b5cf6"
+    },
+    {
+      "id": "cat_9",
+      "name": "Montaj",
+      "color": "#ec4899"
+    },
+    {
+      "id": "cat_10",
+      "name": "Moliya",
+      "color": "#f59e0b"
+    },
+    {
+      "id": "cat_11",
+      "name": "Admin",
+      "color": "#94a3b8"
+    },
+    {
+      "id": "cat_12",
+      "name": "HR",
+      "color": "#64748b"
+    },
+    {
+      "id": "cat_13",
+      "name": "IT",
+      "color": "#475569"
+    },
+    {
+      "id": "cat_14",
+      "name": "Rahbariyat",
+      "color": "#0f172a"
+    }
+  ],
+  "cost_centers": [
+    {
+      "id": "cc_fab",
+      "name": "Fabrika",
+      "code": "CC-FAB",
+      "category": "Fabrika",
+      "responsiblePerson": "Direktor",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_sho",
+      "name": "Showroom",
+      "code": "CC-SHO",
+      "category": "Showroom",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_sav",
+      "name": "Savdo",
+      "code": "CC-SAV",
+      "category": "Savdo",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_mar",
+      "name": "Marketing",
+      "code": "CC-MAR",
+      "category": "Marketing",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_diz",
+      "name": "Loyiha-dizayn",
+      "code": "CC-DIZ",
+      "category": "Loyiha-dizayn",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_omb",
+      "name": "Ombor",
+      "code": "CC-OMB",
+      "category": "Ombor",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_xar",
+      "name": "Xarid",
+      "code": "CC-XAR",
+      "category": "Xarid",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_log",
+      "name": "Logistika",
+      "code": "CC-LOG",
+      "category": "Logistika",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_mon",
+      "name": "Montaj",
+      "code": "CC-MON",
+      "category": "Montaj",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_mol",
+      "name": "Moliya",
+      "code": "CC-MOL",
+      "category": "Moliya",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_adm",
+      "name": "Admin",
+      "code": "CC-ADM",
+      "category": "Admin",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_hr",
+      "name": "HR",
+      "code": "CC-HR",
+      "category": "HR",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_it",
+      "name": "IT",
+      "code": "CC-IT",
+      "category": "IT",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_rah",
+      "name": "Rahbariyat",
+      "code": "CC-RAH",
+      "category": "Rahbariyat",
+      "responsiblePerson": "Menejer",
+      "isActive": true,
+      "parentId": null
+    },
+    {
+      "id": "cc_1778321235491",
+      "name": "Ishlab chiqarish ombori",
+      "category": "Ombor",
+      "code": "CC-FAB-OMB-001",
+      "description": "",
+      "responsiblePerson": "Izzatilla",
+      "isActive": true,
+      "parentId": "cc_fab"
+    },
+    {
+      "id": "cc_1778321293691",
+      "name": "Tayyor mahsulot ombori",
+      "category": "Ombor",
+      "code": "CC-SAV-OMB-001",
+      "description": "",
+      "responsiblePerson": "Asror",
+      "isActive": true,
+      "parentId": "cc_sav"
+    }
+  ],
+  "expense_items": [
+    {
+      "id": "exp_1",
+      "code": "1000",
+      "name": "Bevosita ishlab chiqarish xarajatlari"
+    },
+    {
+      "id": "exp_1010",
+      "code": "1010",
+      "name": "Xom ashyo va asosiy materiallar sarfi",
+      "parentId": "exp_1"
+    },
+    {
+      "id": "exp_1020",
+      "code": "1020",
+      "name": "Furnitura sarfi",
+      "parentId": "exp_1"
+    },
+    {
+      "id": "exp_8000",
+      "code": "8000",
+      "name": "Sotuvoldi xarajatlari"
+    },
+    {
+      "id": "exp_8010",
+      "code": "8010",
+      "name": "Zamer xarajatlari",
+      "parentId": "exp_8000"
+    },
+    {
+      "id": "exp_8020",
+      "code": "8020",
+      "name": "Transport / Yo'l xarajatlari",
+      "parentId": "exp_8000"
+    },
+    {
+      "id": "exp_8030",
+      "code": "8030",
+      "name": "Oziq-ovqat xarajatlari",
+      "parentId": "exp_8000"
+    },
+    {
+      "id": "exp_8110",
+      "code": "8110",
+      "name": "Boshqa sotuvoldi xarajatlari",
+      "parentId": "exp_8000"
+    }
+  ],
+  "users": [
+    {
+      "id": "admin-id",
+      "name": "Admin",
+      "surname": "Super",
+      "role": "super",
+      "login": "admin",
+      "password": "$2b$10$hcbg6LdVqqBzeBsNTX.xkOTlp35lMMK1vC/hemi6IJepEeXGh8RJe",
+      "isActive": true,
+      "status": "active"
+    }
+  ],
+  "pnl_categories": [
+    {
+      "id": "pnl_1000",
+      "code": "1000",
+      "name": "Sotuvdan tushum",
+      "type": "Revenue",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_2000",
+      "code": "2000",
+      "name": "Sotuvdan chegirmalar va qaytimlar",
+      "type": "Contra Revenue",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_3000",
+      "code": "3000",
+      "name": "Tannarx / COGS",
+      "type": "COGS",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_4000",
+      "code": "4000",
+      "name": "Yalpi foyda",
+      "type": "Calculated",
+      "isCalculated": true
+    },
+    {
+      "id": "pnl_5000",
+      "code": "5000",
+      "name": "Sotuv va marketing xarajatlari",
+      "type": "Expense",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_6000",
+      "code": "6000",
+      "name": "Ma'muriy-boshqaruv xarajatlari",
+      "type": "Expense",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_7000",
+      "code": "7000",
+      "name": "Boshqa operatsion daromad va xarajatlar",
+      "type": "Other Income / Expense",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_8000",
+      "code": "8000",
+      "name": "Operatsion foyda",
+      "type": "Calculated",
+      "isCalculated": true
+    },
+    {
+      "id": "pnl_9000",
+      "code": "9000",
+      "name": "Moliyaviy daromad va xarajatlar",
+      "type": "Finance Income / Expense",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_10000",
+      "code": "10000",
+      "name": "Soliq xarajatlari",
+      "type": "Tax",
+      "isCalculated": false
+    },
+    {
+      "id": "pnl_11000",
+      "code": "11000",
+      "name": "Sof foyda",
+      "type": "Calculated",
+      "isCalculated": true
+    }
+  ],
+  "warehouse-types": [
+    {
+      "id": "wt_1",
+      "code": "WH-TYPE-01",
+      "name": "Xom ashyo",
+      "description": "Xom ashyo ombori turi"
+    },
+    {
+      "id": "wt_2",
+      "code": "WH-TYPE-02",
+      "name": "Ishlab chiqarish",
+      "description": "Ishlab chiqarish bosqichlari uchun ombor"
+    },
+    {
+      "id": "wt_3",
+      "code": "WH-TYPE-03",
+      "name": "Tayyor mahsulot",
+      "description": "Tayyor mahsulotlar ombori"
+    },
+    {
+      "id": "wt_4",
+      "code": "WH-TYPE-04",
+      "name": "Brak",
+      "description": "Sifatsiz yoki brak mahsulotlar ombori"
+    }
+  ],
+  "positions": [
+    {
+      "id": "1DOVunH4zthKXmYJTW5z",
+      "name": "Furnitura omborchisi",
+      "code": "404",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:28.561Z"
+    },
+    {
+      "id": "1FVSK2GRLps7kUKBissY",
+      "name": "Xarid menejeri",
+      "code": "501",
+      "description": "",
+      "departmentId": "qryCVHexaRro8Jz6CNq4",
+      "departmentName": "Xaridlar bo'limi",
+      "createdAt": "2026-06-11T05:16:30.216Z"
+    },
+    {
+      "id": "2f2n4SqlNbOxQn0xgx3B",
+      "name": "Dasturchi",
+      "code": "1003",
+      "description": "",
+      "departmentId": "wmC5QwE5hI8fBq7NlQ8o",
+      "departmentName": "Inf Tex bo'limi",
+      "createdAt": "2026-06-11T05:16:40.767Z"
+    },
+    {
+      "id": "4hkkGtq6WXckxzPTdqN7",
+      "name": "Agentlar bilan ishlash menejeri",
+      "code": "104",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:17.112Z"
+    },
+    {
+      "id": "5WVzZ58zAB19XNHhHTk1",
+      "name": "Bosh buxgalter",
+      "code": "702",
+      "description": "",
+      "departmentId": "bpt91HmQNSEqHnaWP6QZ",
+      "departmentName": "Moliya bo'limi",
+      "createdAt": "2026-06-11T05:16:33.990Z"
+    },
+    {
+      "id": "6gPstQhImFKLQG7zpkp6",
+      "name": "QC / Sifat nazoratchisi",
+      "code": "312",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:26.264Z"
+    },
+    {
+      "id": "7DESvPfqkOk76zigGwyV",
+      "name": "Buxgalter",
+      "code": "703",
+      "description": "",
+      "departmentId": "bpt91HmQNSEqHnaWP6QZ",
+      "departmentName": "Moliya bo'limi",
+      "createdAt": "2026-06-11T05:16:34.299Z"
+    },
+    {
+      "id": "7xFCby2zfXGIF8IOoE6u",
+      "name": "Xom ashyo omborchisi",
+      "code": "403",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:28.255Z"
+    },
+    {
+      "id": "CFQmmocHbf7gVBkjZFYj",
+      "name": "Reception",
+      "code": "902",
+      "description": "",
+      "departmentId": "9xUCALQaznypt5vN3dN9",
+      "departmentName": "Xo'jalik bo'limi",
+      "createdAt": "2026-06-11T05:16:37.880Z"
+    },
+    {
+      "id": "EPXKrZcLkRMXOXTOsTrL",
+      "name": "Call center operatori",
+      "code": "103",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:16.687Z"
+    },
+    {
+      "id": "Eh3lLZxVoTlvGNgqMZ1g",
+      "name": "Ofis administrator",
+      "code": "901",
+      "description": "",
+      "departmentId": "9xUCALQaznypt5vN3dN9",
+      "departmentName": "Xo'jalik bo'limi",
+      "createdAt": "2026-06-11T05:16:37.166Z"
+    },
+    {
+      "id": "GC1KcEGCnq7VwaCgCZaf",
+      "name": "Master / Brigadir",
+      "code": "305",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:22.912Z"
+    },
+    {
+      "id": "GpI1YOM2PihwEhkiEVqL",
+      "name": "Ishlab chiqarish yordamchi ishchisi",
+      "code": "313",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:26.719Z"
+    },
+    {
+      "id": "II1EPMLjPVmUXENGr5CW",
+      "name": "Raspil ustasi",
+      "code": "306",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:23.412Z"
+    },
+    {
+      "id": "KLYYaLWt4yR3p9kBxbmn",
+      "name": "Logistika koordinatori",
+      "code": "503",
+      "description": "",
+      "departmentId": "qryCVHexaRro8Jz6CNq4",
+      "departmentName": "Xaridlar bo'limi",
+      "createdAt": "2026-06-11T05:16:31.135Z"
+    },
+    {
+      "id": "NJMzUYYYawUBZVUxs330",
+      "name": "Sex boshlig'i",
+      "code": "303",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:22.003Z"
+    },
+    {
+      "id": "Nq7PXcoiX7nQwru24Y8s",
+      "name": "Moliyaviy menejer",
+      "code": "701",
+      "description": "",
+      "departmentId": "bpt91HmQNSEqHnaWP6QZ",
+      "departmentName": "Moliya bo'limi",
+      "createdAt": "2026-06-11T05:16:33.375Z"
+    },
+    {
+      "id": "Pg1cQbQXmAdHG4jhENUo",
+      "name": "Kassir",
+      "code": "705",
+      "description": "",
+      "departmentId": "bpt91HmQNSEqHnaWP6QZ",
+      "departmentName": "Moliya bo'limi",
+      "createdAt": "2026-06-11T05:16:35.219Z"
+    },
+    {
+      "id": "Pv8vRLAzWCL7n4kz3uZX",
+      "name": "Yig'ish ustasi",
+      "code": "309",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:24.890Z"
+    },
+    {
+      "id": "QnmBZR3tK6FljHlU6VgR",
+      "name": "Ta'minot menejeri",
+      "code": "502",
+      "description": "",
+      "departmentId": "qryCVHexaRro8Jz6CNq4",
+      "departmentName": "Xaridlar bo'limi",
+      "createdAt": "2026-06-11T05:16:30.611Z"
+    },
+    {
+      "id": "SpOhyJOL7NlIYu4TRHD4",
+      "name": "CNC operatori",
+      "code": "308",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:24.365Z"
+    },
+    {
+      "id": "T6D6asyayFHf7tp8Ddbj",
+      "name": "Omborchi",
+      "code": "402",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:27.636Z"
+    },
+    {
+      "id": "UHJj3wIr9xAoeuT3JpdY",
+      "name": "Ombor mudiri",
+      "code": "401",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:27.250Z"
+    },
+    {
+      "id": "VGmwbeoATf0lLesQvVIc",
+      "name": "Xo'jalik ishlari mas'uli",
+      "code": "903",
+      "description": "",
+      "departmentId": "9xUCALQaznypt5vN3dN9",
+      "departmentName": "Xo'jalik bo'limi",
+      "createdAt": "2026-06-11T05:16:38.148Z"
+    },
+    {
+      "id": "Vcd3J0epBfnTSJvpNTBu",
+      "name": "B2B sotuv menejeri",
+      "code": "105",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:17.710Z"
+    },
+    {
+      "id": "WGHWlJvfpQwI5k7DJ6wy",
+      "name": "Kadrlar bo'yicha inspektor",
+      "code": "803",
+      "description": "",
+      "departmentId": "0oWvrNczkcBMh4Eq0KUk",
+      "departmentName": "HR bo'limi",
+      "createdAt": "2026-06-11T05:16:36.874Z"
+    },
+    {
+      "id": "ZK4TLPMCbeETzYIZ90to",
+      "name": "Haydovchi",
+      "code": "602",
+      "description": "",
+      "departmentId": "qViP2sSrHhmfzjprEUU9",
+      "departmentName": "Logistika va montaj",
+      "createdAt": "2026-06-11T05:16:32.038Z"
+    },
+    {
+      "id": "ZVcmRVwPUVBgjVglMmUH",
+      "name": "Showroom rahbari",
+      "code": "101",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:15.681Z"
+    },
+    {
+      "id": "frBxhQUOTW5z9lYGhHo2",
+      "name": "Qo'riqlash xodimi",
+      "code": "905",
+      "description": "",
+      "departmentId": "9xUCALQaznypt5vN3dN9",
+      "departmentName": "Xo'jalik bo'limi",
+      "createdAt": "2026-06-11T05:16:39.110Z"
+    },
+    {
+      "id": "gXal8j9tgaZg5vRfNLSZ",
+      "name": "Texnik dizayner",
+      "code": "203",
+      "description": "",
+      "departmentId": "gcKZyUzVjvkQ3N22DwTZ",
+      "departmentName": "Loyiha bo'limi",
+      "createdAt": "2026-06-11T05:16:19.756Z"
+    },
+    {
+      "id": "hYVDgGQsgR1ksUIpBWqk",
+      "name": "Montajchi",
+      "code": "603",
+      "description": "",
+      "departmentId": "qViP2sSrHhmfzjprEUU9",
+      "departmentName": "Logistika va montaj",
+      "createdAt": "2026-06-11T05:16:32.456Z"
+    },
+    {
+      "id": "hj2n8t62w9ps9NzDgKZr",
+      "name": "HR menejeri",
+      "code": "801",
+      "description": "",
+      "departmentId": "0oWvrNczkcBMh4Eq0KUk",
+      "departmentName": "HR bo'limi",
+      "createdAt": "2026-06-11T05:16:35.936Z"
+    },
+    {
+      "id": "i8fv163PcNN0n2fptOm1",
+      "name": "Farrosh",
+      "code": "904",
+      "description": "",
+      "departmentId": "9xUCALQaznypt5vN3dN9",
+      "departmentName": "Xo'jalik bo'limi",
+      "createdAt": "2026-06-11T05:16:38.801Z"
+    },
+    {
+      "id": "kLRzaZsz78zkdKgUCDVv",
+      "name": "Dizayner",
+      "code": "202",
+      "description": "",
+      "departmentId": "gcKZyUzVjvkQ3N22DwTZ",
+      "departmentName": "Loyiha bo'limi",
+      "createdAt": "2026-06-11T05:16:19.143Z"
+    },
+    {
+      "id": "kNJn46sE7iIjAvY1TwMo",
+      "name": "Sotuv menejeri",
+      "code": "102",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:16.071Z"
+    },
+    {
+      "id": "kn8Ofd8a8nJ3QwkUutFV",
+      "name": "Inventarizatsiya mas'uli",
+      "code": "406",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:29.588Z"
+    },
+    {
+      "id": "l2nFxjRdtazXP7gtnl9T",
+      "name": "Loyiha menejeri / Project manager",
+      "code": "201",
+      "description": "",
+      "departmentId": "gcKZyUzVjvkQ3N22DwTZ",
+      "departmentName": "Loyiha bo'limi",
+      "createdAt": "2026-06-11T05:16:18.733Z"
+    },
+    {
+      "id": "l3L0wPS7sksSR9VSTBBD",
+      "name": "Texnolog",
+      "code": "304",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:22.502Z"
+    },
+    {
+      "id": "lcpxLAejAeW3vT5TPpMj",
+      "name": "Vizualizator",
+      "code": "205",
+      "description": "",
+      "departmentId": "gcKZyUzVjvkQ3N22DwTZ",
+      "departmentName": "Loyiha bo'limi",
+      "createdAt": "2026-06-11T05:16:20.679Z"
+    },
+    {
+      "id": "mnTr8mM0MUpwDhZmOlc9",
+      "name": "Bosh direktor",
+      "code": "001",
+      "description": "",
+      "departmentId": "GwC4Uz2iGLGOrZqbpsgv",
+      "departmentName": "Rahbariyat",
+      "createdAt": "2026-06-11T05:16:13.666Z"
+    },
+    {
+      "id": "n5LH00rcOtC2Ymi4pdGz",
+      "name": "Korporativ mijozlar menejeri",
+      "code": "106",
+      "description": "",
+      "departmentId": "QGNT27chbc7lv4GQrgQs",
+      "departmentName": "Savdo bo'limi",
+      "createdAt": "2026-06-11T05:16:18.133Z"
+    },
+    {
+      "id": "o8aplXUhorpsUTojBcS1",
+      "name": "Zamerchi",
+      "code": "204",
+      "description": "",
+      "departmentId": "gcKZyUzVjvkQ3N22DwTZ",
+      "departmentName": "Loyiha bo'limi",
+      "createdAt": "2026-06-11T05:16:20.069Z"
+    },
+    {
+      "id": "oZGRgRiIKEXvej7ADnjf",
+      "name": "Logistika menejeri",
+      "code": "601",
+      "description": "",
+      "departmentId": "qViP2sSrHhmfzjprEUU9",
+      "departmentName": "Logistika va montaj",
+      "createdAt": "2026-06-11T05:16:31.534Z"
+    },
+    {
+      "id": "r6RHQ5btm0l8Z4f6XYI0",
+      "name": "Tayyor mahsulot omborchisi",
+      "code": "405",
+      "description": "",
+      "departmentId": "QvqgVXWhqNd7ldTI0YHC",
+      "departmentName": "Ombor",
+      "createdAt": "2026-06-11T05:16:29.178Z"
+    },
+    {
+      "id": "rfz8CaCmnV5bPKd3bq53",
+      "name": "Fabrika menejeri",
+      "code": "301",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:21.089Z"
+    },
+    {
+      "id": "rgGZe3W0HBzDAq7CP91I",
+      "name": "Bosh kassir",
+      "code": "704",
+      "description": "",
+      "departmentId": "bpt91HmQNSEqHnaWP6QZ",
+      "departmentName": "Moliya bo'limi",
+      "createdAt": "2026-06-11T05:16:34.911Z"
+    },
+    {
+      "id": "t2jdslePKB5K0IAUDLHO",
+      "name": "Yuk ko'taruvchi / Loader",
+      "code": "604",
+      "description": "",
+      "departmentId": "qViP2sSrHhmfzjprEUU9",
+      "departmentName": "Logistika va montaj",
+      "createdAt": "2026-06-11T05:16:33.054Z"
+    },
+    {
+      "id": "tSeDzYZ05iuJ1OU3wZ28",
+      "name": "HR mutaxassis",
+      "code": "802",
+      "description": "",
+      "departmentId": "0oWvrNczkcBMh4Eq0KUk",
+      "departmentName": "HR bo'limi",
+      "createdAt": "2026-06-11T05:16:36.241Z"
+    },
+    {
+      "id": "tsX88rFiOM9GL7xWDsbU",
+      "name": "Qadoqlash ustasi",
+      "code": "311",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:25.801Z"
+    },
+    {
+      "id": "uVZM93GIOhlyolYesmvK",
+      "name": "Moliyaviy rahbar",
+      "code": "004",
+      "description": "",
+      "departmentId": "GwC4Uz2iGLGOrZqbpsgv",
+      "departmentName": "Rahbariyat",
+      "createdAt": "2026-06-11T05:16:14.903Z"
+    },
+    {
+      "id": "uv5f1pOrXlBkzcifGJQ3",
+      "name": "ERP administratori",
+      "code": "1002",
+      "description": "",
+      "departmentId": "wmC5QwE5hI8fBq7NlQ8o",
+      "departmentName": "Inf Tex bo'limi",
+      "createdAt": "2026-06-11T05:16:40.136Z"
+    },
+    {
+      "id": "v9iCUMlO5tbkJGeV0UQ2",
+      "name": "Savdo rahbari",
+      "code": "002",
+      "description": "",
+      "departmentId": "GwC4Uz2iGLGOrZqbpsgv",
+      "departmentName": "Rahbariyat",
+      "createdAt": "2026-06-11T05:16:13.980Z"
+    },
+    {
+      "id": "vRsofHphI9a4crVVB5yQ",
+      "name": "IT menejer",
+      "code": "1001",
+      "description": "",
+      "departmentId": "wmC5QwE5hI8fBq7NlQ8o",
+      "departmentName": "Inf Tex bo'limi",
+      "createdAt": "2026-06-11T05:16:39.828Z"
+    },
+    {
+      "id": "x7udKd0yOcrwZGQbDQhO",
+      "name": "Ishlab chiqarish boshlig'i",
+      "code": "302",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:21.600Z"
+    },
+    {
+      "id": "yQ2CxsILmDTgJdTFkcnT",
+      "name": "Kromka ustasi",
+      "code": "307",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:23.854Z"
+    },
+    {
+      "id": "ycTdlHclxmGHL9aocNSL",
+      "name": "Bo'yash ustasi",
+      "code": "310",
+      "description": "",
+      "departmentId": "sYYEbSNGrI2LTsYOIP2c",
+      "departmentName": "Ishlab chiqarish bo'limi",
+      "createdAt": "2026-06-11T05:16:25.338Z"
+    },
+    {
+      "id": "zq2qVqsrEvjZaTYtY4Qn",
+      "name": "Ishlab chiqarish rahbari",
+      "code": "003",
+      "description": "",
+      "departmentId": "GwC4Uz2iGLGOrZqbpsgv",
+      "departmentName": "Rahbariyat",
+      "createdAt": "2026-06-11T05:16:14.599Z"
+    }
+  ],
+  "departments": [
+    {
+      "id": "0oWvrNczkcBMh4Eq0KUk",
+      "name": "HR bo'limi",
+      "key": "hr",
+      "description": "Xodimlar bilan ishlash va kadrlar boshqaruvi",
+      "createdAt": "2026-05-07T09:08:27.579Z"
+    },
+    {
+      "id": "9xUCALQaznypt5vN3dN9",
+      "name": "Xo'jalik bo'limi",
+      "key": "administration",
+      "description": "",
+      "createdAt": "2026-06-11T05:04:45.947Z"
+    },
+    {
+      "id": "GwC4Uz2iGLGOrZqbpsgv",
+      "name": "Rahbariyat",
+      "key": "management",
+      "description": "Kompaniya rahbariyati va super adminlar",
+      "createdAt": "2026-05-07T09:08:25.797Z"
+    },
+    {
+      "id": "QGNT27chbc7lv4GQrgQs",
+      "name": "Savdo bo'limi",
+      "key": "sales",
+      "description": "Showroomlar, savdo menejerlari va mijozlar bilan ishlash",
+      "createdAt": "2026-05-07T09:08:28.442Z"
+    },
+    {
+      "id": "QvqgVXWhqNd7ldTI0YHC",
+      "name": "Ombor",
+      "key": "warehouse",
+      "description": "",
+      "createdAt": "2026-06-11T04:57:56.333Z"
+    },
+    {
+      "id": "bpt91HmQNSEqHnaWP6QZ",
+      "name": "Moliya bo'limi",
+      "key": "finance",
+      "description": "Buxgalteriya, kassa va moliyaviy hisobotlar",
+      "createdAt": "2026-05-07T09:08:26.693Z"
+    },
+    {
+      "id": "cztUYVyTSPovaYdQJOeE",
+      "name": "Marketing bo'limi",
+      "key": "marketing",
+      "description": "Reklama, marketing va brending",
+      "createdAt": "2026-05-07T09:08:29.297Z"
+    },
+    {
+      "id": "gcKZyUzVjvkQ3N22DwTZ",
+      "name": "Loyiha bo'limi",
+      "key": "project",
+      "description": "Loyiha menejerlari (PM) va dizaynerlar",
+      "createdAt": "2026-05-07T09:08:31.026Z"
+    },
+    {
+      "id": "qViP2sSrHhmfzjprEUU9",
+      "name": "Logistika va montaj",
+      "key": "logistics",
+      "description": "",
+      "createdAt": "2026-06-11T05:01:35.767Z"
+    },
+    {
+      "id": "qryCVHexaRro8Jz6CNq4",
+      "name": "Xaridlar bo'limi",
+      "key": "supply chain",
+      "description": "",
+      "createdAt": "2026-06-11T04:58:55.571Z"
+    },
+    {
+      "id": "sYYEbSNGrI2LTsYOIP2c",
+      "name": "Ishlab chiqarish bo'limi",
+      "key": "production",
+      "description": "Fabrika, ishlab chiqarish va texnologlar",
+      "createdAt": "2026-05-07T09:08:30.161Z"
+    },
+    {
+      "id": "wmC5QwE5hI8fBq7NlQ8o",
+      "name": "Inf Tex bo'limi",
+      "key": "it",
+      "description": "",
+      "createdAt": "2026-06-11T05:09:55.500Z"
+    }
+  ],
+  "approval-matrix": [
+    {
+      "id": "3y7UUUzPGj5bmrHcgroG",
+      "key": "purchase_request",
+      "name": "Xarid arizalari (Purchase Requests)",
+      "description": "Xoma-ashyo yoki ofis ehtiyojlari uchun sotib olish so'rovlari.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Ombor mudiri / Sex boshlig'i",
+          "condition": "Barcha arizalar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Bosh direktor (CEO)",
+          "condition": "Agar summa > 15,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:00.898Z"
+    },
+    {
+      "id": "CBz5X6BqdG79uf4HVVyj",
+      "key": "cash_outflow",
+      "name": "Kassadan chiqim qilish arizalari (Cash Outflow)",
+      "description": "Kassadan yoki bank hisobidan to'lov qilish so'rovlari.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Bosh Buxgalter",
+          "condition": "Barcha chiqimlar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Moliyaviy rahbar (CFO)",
+          "condition": "Barcha chiqimlar uchun",
+          "status": "active"
+        },
+        {
+          "id": 3,
+          "role": "Bosh direktor (CEO)",
+          "condition": "Agar summa > 50,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:01.510Z"
+    },
+    {
+      "id": "teCsAPaUk32qZcCisiKf",
+      "key": "pre_sale",
+      "name": "Sotuvoldi xarajatlar arizalari (Pre-sale Expenses)",
+      "description": "Sales Manager tomonidan sotuvoldi arizalarining tasdiqlanish jarayoni.",
+      "steps": [
+        {
+          "id": 1,
+          "role": "Savdo Rahbari (Sales Head)",
+          "condition": "Barcha arizalar uchun",
+          "status": "active"
+        },
+        {
+          "id": 2,
+          "role": "Moliyaviy Rahbar (CFO)",
+          "condition": "Agar summa > 5,000,000 UZS bo'lsa",
+          "status": "active"
+        }
+      ],
+      "createdAt": "2026-06-11T06:14:00.491Z"
+    }
+  ]
+}

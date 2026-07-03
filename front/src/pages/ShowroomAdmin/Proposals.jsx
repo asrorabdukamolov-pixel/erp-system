@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, FileText, Printer, Trash2, 
-  Calendar, Clock, DollarSign, User, Briefcase, ArrowLeft, X
+  Calendar, Clock, DollarSign, User, Briefcase, ArrowLeft, X, FileSpreadsheet
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
+import { exportProposalToExcel } from '../../utils/excelExport';
 
 const ShowroomProposals = ({ onBack }) => {
   const { user } = useAuth();
@@ -311,6 +312,9 @@ const ShowroomProposals = ({ onBack }) => {
                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                       <button onClick={() => handlePrint(p)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', color: 'var(--accent-gold)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Chop etish">
                         <Printer size={18} />
+                      </button>
+                      <button onClick={() => exportProposalToExcel(p)} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Excel eksport">
+                        <FileSpreadsheet size={18} />
                       </button>
                       {p.status === 'active' && (
                         <button onClick={() => handleStatusUpdate(p._id, 'rejected')} style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="O'tkaz qilish">

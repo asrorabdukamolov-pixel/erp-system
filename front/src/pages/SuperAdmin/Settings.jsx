@@ -13,6 +13,7 @@ import RolesPermissionsSettings from './RolesPermissionsSettings';
 import CompanySettings from './CompanySettings';
 import Partners from './Partners';
 import FactoryAccounts from './FactoryAccounts';
+import Showrooms from './Showrooms';
 import WarehousesSettings from './WarehousesSettings';
 import MasterDataList from '../../components/MasterDataList';
 import ITUsers from './ITUsers';
@@ -24,7 +25,7 @@ import {
     Tag, MessageSquare, ClipboardList, Ban, Box, GitBranch, Settings2,
     CheckCircle2, AlertTriangle, Database, Bookmark, Boxes, Ruler, 
     ArrowRightLeft, UserCheck, FolderTree, FileQuestion, FileCheck, Truck,
-    FileText, Key
+    FileText, Key, Store
 } from 'lucide-react';
 
 const Settings = () => {
@@ -99,6 +100,8 @@ const Settings = () => {
     const generalCategories = [
         { id: 'company', label: 'Kompaniya Ma\'lumotlari', icon: <Building2 size={18} /> },
         { id: 'kp', label: 'Tijorat Taklifi Identikasi', icon: <FileText size={18} /> },
+        { id: 'showrooms', label: 'Showroomlar', icon: <Store size={18} /> },
+        { id: 'staff', label: 'Xodimlar', icon: <Users size={18} /> },
         { id: 'accounts', label: 'Fabrika Akkauntlari', icon: <Key size={18} /> }
     ];
 
@@ -148,6 +151,8 @@ const Settings = () => {
                         <div className="fade-in">
                             {activeGeneralSubTab === 'company' && <CompanySettings />}
                             {activeGeneralSubTab === 'kp' && <Partners />}
+                            {activeGeneralSubTab === 'showrooms' && <Showrooms />}
+                            {activeGeneralSubTab === 'staff' && <Staff />}
                             {activeGeneralSubTab === 'accounts' && <FactoryAccounts />}
                         </div>
                     </div>

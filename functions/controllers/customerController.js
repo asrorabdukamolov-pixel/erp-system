@@ -12,9 +12,9 @@ exports.getCustomers = async (req, res) => {
         }
 
         const snapshot = await queryRef.get();
-        let results = formatQuery(snapshot);
-        results.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        res.json(results);
+        const customers = formatQuery(snapshot);
+        customers.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        res.json(customers);
     } catch (err) {
         console.error("Get Customers Error:", err.message);
         res.status(500).json({ message: 'Mijozlarni yuklashda xatolik yuz berdi: ' + err.message });
@@ -27,6 +27,8 @@ exports.createCustomer = async (req, res) => {
         
         if (req.user.role !== 'super') {
             customerData.showroom = req.user.showroom || '';
+            customerData.managerId = req.user.id || req.user._id || '';
+            customerData.managerName = req.user.name || '';
         } else if (!customerData.showroom) {
             customerData.showroom = 'Bosh ofis';
         }
@@ -34,7 +36,8 @@ exports.createCustomer = async (req, res) => {
         const newCustomer = {
             ...customerData,
             addedBy: req.user.name,
-            managerName: req.user.name,
+            managerName: customerData.managerName || req.user.name,
+            managerId: customerData.managerId || (req.user.id || req.user._id || ''),
             createdAt: new Date().toISOString()
         };
  

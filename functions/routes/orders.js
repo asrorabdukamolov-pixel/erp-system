@@ -8,6 +8,11 @@ const auth = require('../middleware/auth');
 // @access  Private
 router.get('/', auth, orderController.getOrders);
 
+// @route   GET api/orders/check/updates
+// @desc    Check for new or updated orders
+// @access  Private
+router.get('/check/updates', auth, orderController.checkUpdates);
+
 // @route   GET api/orders/:id
 // @desc    Get order by ID
 // @access  Private
@@ -42,15 +47,5 @@ router.post('/:id/restore', auth, orderController.restoreOrder);
 // @desc    Add timeline log to order
 // @access  Private
 router.post('/:id/log', auth, orderController.addOrderLog);
-
-// @route   POST api/orders/:id/factory-accept
-// @desc    Accept order by factory
-// @access  Private
-router.post('/:id/factory-accept', auth, orderController.factoryAcceptOrder);
-
-// @route   POST api/orders/:id/factory-reject
-// @desc    Reject order by factory
-// @access  Private
-router.post('/:id/factory-reject', auth, orderController.factoryRejectOrder);
 
 module.exports = router;

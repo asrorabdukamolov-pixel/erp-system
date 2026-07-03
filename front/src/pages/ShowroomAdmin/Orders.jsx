@@ -13,10 +13,10 @@ import ShowroomCustomersPage from './Customers';
 
 // --- Constants ---
 const DEAL_STAGES = [
-  { id: 'yangi', title: 'Yangi mijoz ✨', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
-  { id: 'uchrashuv', title: 'Uchrashuv 🤝', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
-  { id: 'kp_yuborildi', title: 'KP yuborildi 📩', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
-  { id: 'prezentatsiya', title: 'Prezentatsiya 📽️', color: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
+  { id: 'yangi', title: 'Mijoz ko\'tarmadi 📞', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' },
+  { id: 'uchrashuv', title: 'Ma\'lumot berildi', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  { id: 'kp_yuborildi', title: 'Zamer olish', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)' },
+  { id: 'prezentatsiya', title: "O'lcham olindi", color: '#ec4899', bg: 'rgba(236,72,153,0.1)' },
   { id: 'oylayabdi', title: 'O\'ylayabdi 🤔', color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' },
   { id: 'shartnoma', title: 'Shartnoma ✍️', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
 ];
@@ -168,7 +168,7 @@ const AdminOrders = () => {
             assignedPmName: pmName,
             assignedPmPhone: pm?.phone || '',
             showroomPhone: user.showroomPhone || '',
-            pmStatus: 'yangi_buyurtma',
+            pmStatus: 'yangi_kp_ariza',
             assignedAt: new Date().toISOString(),
             timeline: [...(order?.timeline || []), log]
         });
@@ -458,7 +458,7 @@ const AdminOrders = () => {
             {(currentView === 'deals' ? DEAL_STAGES : ORDER_STAGES).map(stage => {
               const stageOrders = showroomOrders.filter(o => {
                   let currentStatus = o.status;
-                  if (o.status === 'pm' && o.pmStatus && o.pmStatus !== 'yangi_buyurtma') {
+                  if (o.status === 'pm' && o.pmStatus && o.pmStatus !== 'yangi_buyurtma' && o.pmStatus !== 'yangi_kp_ariza') {
                       currentStatus = o.pmStatus;
                   } else if (o.status === 'ishlab_chiqarishda' && o.pmStatus === 'topshirildi') {
                       currentStatus = 'ishlab_chiqarishda';
